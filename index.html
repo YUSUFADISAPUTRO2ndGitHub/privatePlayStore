@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <title>VANTSING INTERNATIONAL ACCESS CONTROL</title>
+</head>
+<body>
+<h1>VANTSING INTERNATIONAL ACCESS CONTROL</h1>
+</body>
+<script>
+    window.onload=function(){
+        //document.getElementById("submitForToken").click();
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const access_token = urlParams.get('access_token');
+        alert(urlParams);
+        alert(access_token);
+    };
+</script>
