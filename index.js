@@ -462,17 +462,121 @@ app.get('/get-item', (req, res) => {
 
 var allItems = {};
 
+function retrieveItems(clientAccessToken, clientSessionId, addedCondition, pageRequested, itemName, itemList){
+    var request = require('request');
+    var url = 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.pageSize=' + 100 + '&sp.page=' + pageRequested + addedCondition + "&fields=charField6,numericField2,id,name,no,shortName,itemCategoryId,unitPrice,defaultDiscount,unit1Name,totalUnit1Quantity,availableToSell,detailItemImage,charField1,numericField1,charField2,notes";
+    // console.log(url);
+    var options = {
+        'method': 'GET',
+        'url': url,
+        'headers': {
+            'Authorization': 'Bearer ' + clientAccessToken,
+            'X-Session-ID': clientSessionId
+        }
+    };
+    request(options, function (error, response) {
+        if (error) console.log(error);
+        if(response != undefined || response != null){
+            var result = JSON.parse(response.body);
+            var i = 0;
+            var resultItemObject = {}; 
+            for (i ; i < (result.d).length; i ++){
+                // console.log(result.d[i]);
+                // console.log(result.d[i].numericField2);
+                resultItemObject = {
+                    itemId : result.d[i].id,
+                    name: result.d[i].name,
+                    shortName: result.d[i].shortName,
+                    category: result.d[i].itemCategoryId,
+                    no: result.d[i].no,
+                    unitPrice: result.d[i].unitPrice,
+                    defaultDiscount: result.d[i].defaultDiscount,
+                    unitNameWarehouse: result.d[i].unit1Name,
+                    totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                    availableToSell: result.d[i].availableToSell,
+                    // itemMainImage: "https://public.accurate.id" + result.d[i].detailItemImage[0].fileName,
+                    // itemImages: result.d[i].detailItemImage,
+                    groupBuyStatus: result.d[i].charField1,
+                    groupBuyAvaiableQuantity: result.d[i].numericField1,
+                    groupBuyDiscount: result.d[i].numericField2,
+                    promotedNew: result.d[i].charField2,
+                    notes: result.d[i].notes
+                };
+                if(itemName != undefined && resultItemObject.name != undefined){
+                    if(resultItemObject.name.includes(itemName.toUpperCase())){
+                        // console.log("here");
+                        if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                    }else if (resultItemObject.name.includes(itemName.toLowerCase())){
+                        // console.log("here");
+                        if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                    }else if (resultItemObject.name.includes(itemName)){
+                        // console.log("here");
+                        if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                    }
+                }else{
+                    if(result.d[i].charField6 == "yes"){
+                        itemList.push(resultItemObject);
+                    }
+                }
+            }
+        }
+    });
+}
+
+function compare( a, b ) {
+    if ( a.last_nom < b.last_nom ){
+      return -1;
+    }
+    if ( a.last_nom > b.last_nom ){
+      return 1;
+    }
+    return 0;
+}
+
 app.get('/get-item-all', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list all complete");
     console.log("here");
+    var itemName = req.query.itemName;
     if(Object.keys(allItems).length != 0){
         console.log("accessing saved content");
-        res.send(allItems);
+        if(itemName != undefined){
+            var i = 0;
+            var itemList = allItems.itemList;
+            var itemListFiltered = [];
+            for(i ; i < itemList.length; i++){
+                if((itemList[i].name).toUpperCase().includes(itemName.toUpperCase())){
+                    itemListFiltered.push(itemList[i]);
+                }
+            }
+            if(req.query.sortBy != undefined && req.query.sortDirection !=undefined){
+                if(req.query.sortBy == "unitPrice" && req.query.sortDirection == "up"){
+                    itemListFiltered.sort((a,b) => (a.unitPrice > b.unitPrice) ? 1 : ((b.unitPrice > a.unitPrice) ? -1 : 0));
+                }else if(req.query.sortBy == "name" && req.query.sortDirection == "up"){
+                    itemListFiltered.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+                }else if(req.query.sortBy == "unitPrice" && req.query.sortDirection == "down"){
+                    itemListFiltered.sort((a,b) => (a.unitPrice < b.unitPrice) ? 1 : ((b.unitPrice < a.unitPrice) ? -1 : 0));
+                }else if(req.query.sortBy == "name" && req.query.sortDirection == "down"){
+                    itemListFiltered.sort((a,b) => (a.name < b.name) ? 1 : ((b.name < a.name) ? -1 : 0));
+                }
+            }
+            itemList = itemListFiltered;
+            var filterResult = {
+                itemList: itemList
+            };
+            res.send(filterResult);
+        }else{
+            res.send(allItems);
+        }
     }else{
         var itemList = [];
         var clientAccessToken = req.query.accessToken;
         var clientSessionId = req.query.sessionId;
-        var itemName = req.query.itemName;
         var pageRequested = 1;
         var pageCount = 0;
         console.log("clientAccessToken : " + clientAccessToken);
@@ -498,69 +602,8 @@ app.get('/get-item-all', (req, res) => {
                         addedCondition = addedCondition + req.query.sortBy + "|" + req.query.sortDirection;
                     }
                     while(status){
-                        var url = 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.pageSize=' + 100 + '&sp.page=' + pageRequested + addedCondition + "&fields=charField6,numericField2,id,name,no,shortName,itemCategoryId,unitPrice,defaultDiscount,unit1Name,totalUnit1Quantity,availableToSell,detailItemImage,charField1,numericField1,charField2,notes";
-                        // console.log(url);
-                        var options = {
-                            'method': 'GET',
-                            'url': url,
-                            'headers': {
-                                'Authorization': 'Bearer ' + clientAccessToken,
-                                'X-Session-ID': clientSessionId
-                            }
-                        };
-                        request(options, function (error, response) {
-                            if (error) console.log(error);
-                            if(response != undefined || response != null){
-                                var result = JSON.parse(response.body);
-                                var i = 0;
-                                var resultItemObject = {}; 
-                                for (i ; i < (result.d).length; i ++){
-                                    // console.log(result.d[i]);
-                                    // console.log(result.d[i].numericField2);
-                                    resultItemObject = {
-                                        itemId : result.d[i].id,
-                                        name: result.d[i].name,
-                                        shortName: result.d[i].shortName,
-                                        category: result.d[i].itemCategoryId,
-                                        no: result.d[i].no,
-                                        unitPrice: result.d[i].unitPrice,
-                                        defaultDiscount: result.d[i].defaultDiscount,
-                                        unitNameWarehouse: result.d[i].unit1Name,
-                                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                                        availableToSell: result.d[i].availableToSell,
-                                        // itemMainImage: "https://public.accurate.id" + result.d[i].detailItemImage[0].fileName,
-                                        // itemImages: result.d[i].detailItemImage,
-                                        groupBuyStatus: result.d[i].charField1,
-                                        groupBuyAvaiableQuantity: result.d[i].numericField1,
-                                        groupBuyDiscount: result.d[i].numericField2,
-                                        promotedNew: result.d[i].charField2,
-                                        notes: result.d[i].notes
-                                    };
-                                    if(req.query.itemName != undefined && resultItemObject.name != undefined){
-                                        if(resultItemObject.name.includes(itemName.toUpperCase())){
-                                            // console.log("here");
-                                            if(result.d[i].charField6 == "yes"){
-                                                itemList.push(resultItemObject);
-                                            }
-                                        }else if (resultItemObject.name.includes(itemName.toLowerCase())){
-                                            // console.log("here");
-                                            if(result.d[i].charField6 == "yes"){
-                                                itemList.push(resultItemObject);
-                                            }
-                                        }else if (resultItemObject.name.includes(itemName)){
-                                            // console.log("here");
-                                            if(result.d[i].charField6 == "yes"){
-                                                itemList.push(resultItemObject);
-                                            }
-                                        }
-                                    }else{
-                                        if(result.d[i].charField6 == "yes"){
-                                            itemList.push(resultItemObject);
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                        console.log("addedCondition : " + addedCondition + " || itemName: " + itemName);
+                        retrieveItems(clientAccessToken, clientSessionId, addedCondition, pageRequested, itemName, itemList);
                         pageRequested++;
                         if(pageRequested > pageCount){
                             status = false;
@@ -608,11 +651,56 @@ setInterval(() => {
 
 var groupBuyItems = {};
 
+function retrieveGroupBuyItems(clientAccessToken, clientSessionId, pageRequested, itemList, totalObjects){
+    var request = require('request');
+    var options = {
+        'method': 'GET',
+        'url': 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.page=' + pageRequested + "&fields=charField6,numericField2,id,name,no,shortName,itemCategoryId,unitPrice,defaultDiscount,unit1Name,totalUnit1Quantity,availableToSell,detailItemImage,charField1,numericField1,charField2,notes",
+        'headers': {
+            'Authorization': 'Bearer ' + clientAccessToken,
+            'X-Session-ID': clientSessionId
+        }
+    };
+    request(options, function (error, response) {
+        if (error) console.log(error);
+        if(response != undefined || response != null){
+            var result = JSON.parse(response.body);
+            time = (result.d).length;
+            var i = 0;
+            totalObjects = totalObjects + (result.d).length;
+            for (i ; i < (result.d).length; i ++){
+                var resultItemObject = {};
+                resultItemObject = {
+                    itemId : result.d[i].id,
+                    name: result.d[i].name,
+                    shortName: result.d[i].shortName,
+                    category: result.d[i].itemCategoryId,
+                    no: result.d[i].no,
+                    unitPrice: result.d[i].unitPrice,
+                    defaultDiscount: result.d[i].defaultDiscount,
+                    unitNameWarehouse: result.d[i].unit1Name,
+                    totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                    availableToSell: result.d[i].availableToSell,
+                    groupBuyStatus: result.d[i].charField1,
+                    groupBuyAvaiableQuantity: result.d[i].numericField1,
+                    groupBuyDiscount: result.d[i].numericField2,
+                    promotedNew: result.d[i].charField2,
+                    notes: result.d[i].notes
+                };
+                if(resultItemObject.groupBuyStatus == "yes"){
+                    if(result.d[i].charField6 == "yes"){
+                        itemList.push(resultItemObject);
+                    }
+                }
+            }
+        }
+    });
+}
+
 app.get('/get-item-all-group-buy', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list all group complete");
     if(Object.keys(groupBuyItems).length !== 0){
         console.log("accessing saved content with timeout");
-        // setTimeout(function(){ res.send(groupBuyItems); }, 5000);
         res.send(groupBuyItems);
     }else{
         var itemList = [];
@@ -621,7 +709,6 @@ app.get('/get-item-all-group-buy', (req, res) => {
         var clientSessionId = req.query.sessionId;
         var pageRequested = 1;
         var pageCount = 0;
-        var time = 1;
         var request = require('request');
         var options = {
             'method': 'GET',
@@ -639,54 +726,7 @@ app.get('/get-item-all-group-buy', (req, res) => {
                     pageCount = result.sp.pageCount;
                     var status = true;
                     while(status){
-                        var options = {
-                            'method': 'GET',
-                            'url': 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.page=' + pageRequested + "&fields=charField6,numericField2,id,name,no,shortName,itemCategoryId,unitPrice,defaultDiscount,unit1Name,totalUnit1Quantity,availableToSell,detailItemImage,charField1,numericField1,charField2,notes",
-                            'headers': {
-                                'Authorization': 'Bearer ' + clientAccessToken,
-                                'X-Session-ID': clientSessionId
-                            }
-                        };
-                        request(options, function (error, response) {
-                            if (error) console.log(error);
-                            if(response != undefined || response != null){
-                                var result = JSON.parse(response.body);
-                                time = (result.d).length;
-                                var i = 0;
-                                totalObjects = totalObjects + (result.d).length;
-                                for (i ; i < (result.d).length; i ++){
-                                    var resultItemObject = {};
-                                    // var coverPic = "";
-                                    // con.query("select default_pic from vtportal.goods g where goods_intro like '%" + result.d[i].no + "%' limit 1;", function (err, mySQlResult, fields) {
-                                    //     if (err) console.log(err);
-                                    //     coverPic = "http://149.129.226.151:8103" + mySQlResult[0].default_pic;
-                                    // });
-                                    resultItemObject = {
-                                        itemId : result.d[i].id,
-                                        name: result.d[i].name,
-                                        shortName: result.d[i].shortName,
-                                        category: result.d[i].itemCategoryId,
-                                        no: result.d[i].no,
-                                        unitPrice: result.d[i].unitPrice,
-                                        defaultDiscount: result.d[i].defaultDiscount,
-                                        unitNameWarehouse: result.d[i].unit1Name,
-                                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                                        availableToSell: result.d[i].availableToSell,
-                                        groupBuyStatus: result.d[i].charField1,
-                                        groupBuyAvaiableQuantity: result.d[i].numericField1,
-                                        groupBuyDiscount: result.d[i].numericField2,
-                                        promotedNew: result.d[i].charField2,
-                                        notes: result.d[i].notes
-                                        // coverPic: coverPic
-                                    };
-                                    if(resultItemObject.groupBuyStatus == "yes"){
-                                        if(result.d[i].charField6 == "yes"){
-                                            itemList.push(resultItemObject);
-                                        }
-                                    }
-                                }
-                            }
-                        });
+                        retrieveGroupBuyItems(clientAccessToken, clientSessionId, pageRequested, itemList, totalObjects);
                         pageRequested++;
                         if(pageRequested > pageCount){
                             status = false;
@@ -733,6 +773,52 @@ setInterval(() => {
 
 var newItems = {};
 
+function retrieveNewItems(clientAccessToken, clientSessionId, pageRequested, itemList, totalObjects){
+    var request = require('request');
+    var options = {
+        'method': 'GET',
+        'url': 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.page=' + pageRequested + "&fields=charField6,numericField2,id,name,no,shortName,itemCategoryId,unitPrice,defaultDiscount,unit1Name,totalUnit1Quantity,availableToSell,detailItemImage,charField1,numericField1,charField2,notes",
+        'headers': {
+            'Authorization': 'Bearer ' + clientAccessToken,
+            'X-Session-ID': clientSessionId
+        }
+    };
+    request(options, function (error, response) {
+        if (error) console.log(error);
+        if(response != undefined || response != null){
+            var result = JSON.parse(response.body);
+            totalObjects = totalObjects + (result.d).length;
+            time = (result.d).length;
+            var i = 0;
+            for (i ; i < (result.d).length; i ++){
+                var resultItemObject = {};
+                resultItemObject = {
+                    itemId : result.d[i].id,
+                    name: result.d[i].name,
+                    shortName: result.d[i].shortName,
+                    category: result.d[i].itemCategoryId,
+                    no: result.d[i].no,
+                    unitPrice: result.d[i].unitPrice,
+                    defaultDiscount: result.d[i].defaultDiscount,
+                    unitNameWarehouse: result.d[i].unit1Name,
+                    totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                    availableToSell: result.d[i].availableToSell,
+                    groupBuyStatus: result.d[i].charField1,
+                    groupBuyAvaiableQuantity: result.d[i].numericField1,
+                    groupBuyDiscount: result.d[i].numericField2,
+                    promotedNew: result.d[i].charField2,
+                    notes: result.d[i].notes
+                };
+                if(resultItemObject.promotedNew == "yes"){
+                    if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                }
+            }
+        }
+    });
+}
+
 app.get('/get-item-all-new', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list all complete");
     if(Object.keys(newItems).length !== 0){
@@ -763,49 +849,7 @@ app.get('/get-item-all-new', (req, res) => {
                     pageCount = result.sp.pageCount;
                     var status = true;
                     while(status){
-                        var options = {
-                            'method': 'GET',
-                            'url': 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.page=' + pageRequested + "&fields=charField6,numericField2,id,name,no,shortName,itemCategoryId,unitPrice,defaultDiscount,unit1Name,totalUnit1Quantity,availableToSell,detailItemImage,charField1,numericField1,charField2,notes",
-                            'headers': {
-                                'Authorization': 'Bearer ' + clientAccessToken,
-                                'X-Session-ID': clientSessionId
-                            }
-                        };
-                        request(options, function (error, response) {
-                            if (error) console.log(error);
-                            if(response != undefined || response != null){
-                                var result = JSON.parse(response.body);
-                                totalObjects = totalObjects + (result.d).length;
-                                time = (result.d).length;
-                                var i = 0;
-                                for (i ; i < (result.d).length; i ++){
-                                    var resultItemObject = {};
-                                    resultItemObject = {
-                                        itemId : result.d[i].id,
-                                        name: result.d[i].name,
-                                        shortName: result.d[i].shortName,
-                                        category: result.d[i].itemCategoryId,
-                                        no: result.d[i].no,
-                                        unitPrice: result.d[i].unitPrice,
-                                        defaultDiscount: result.d[i].defaultDiscount,
-                                        unitNameWarehouse: result.d[i].unit1Name,
-                                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                                        availableToSell: result.d[i].availableToSell,
-                                        groupBuyStatus: result.d[i].charField1,
-                                        groupBuyAvaiableQuantity: result.d[i].numericField1,
-                                        groupBuyDiscount: result.d[i].numericField2,
-                                        promotedNew: result.d[i].charField2,
-                                        notes: result.d[i].notes
-                                    };
-                                    if(resultItemObject.promotedNew == "yes"){
-                                        if(result.d[i].charField6 == "yes"){
-                                                itemList.push(resultItemObject);
-                                            }
-                                    }
-                                }
-                            }
-                        });
-                        // console.log(pageRequested);
+                        retrieveNewItems(clientAccessToken, clientSessionId, pageRequested, itemList, totalObjects);
                         pageRequested++;
                         if(pageRequested > pageCount){
                             status = false;
@@ -1256,8 +1300,9 @@ app.post('/make-sales-order-normal', (req, res) => {
     var accurateRequestURL = 'https://public.accurate.id/accurate/api/sales-order/save.do?customerNo=' + customerNo + '&transDate=' + transDate + '&toAddress=' + address + '&paymentTermName=' + paymentTermName + '&branchId=50&branchName=Head Quarter';
     var i = 0;
     for(i ; i < items.length ; i++){
-        accurateRequestURL = accurateRequestURL + `&detailItem[${i}].itemNo=${items[i].no}&detailItem[${i}].unitPrice=${items[i].unitPrice}&detailItem[n].quantity=${items[i].requestQuantity}`;
+        accurateRequestURL = accurateRequestURL + `&detailItem[${i}].itemNo=${items[i].no}&detailItem[${i}].unitPrice=${items[i].unitPrice}&detailItem[${i}].quantity=${items[i].requestQuantity}`;
     }
+    console.log(accurateRequestURL);
     var request = require('request');
     var options = {
         'method': 'POST',
