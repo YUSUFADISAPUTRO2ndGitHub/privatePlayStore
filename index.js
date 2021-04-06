@@ -529,16 +529,6 @@ function retrieveItems(clientAccessToken, clientSessionId, addedCondition, pageR
     });
 }
 
-function compare( a, b ) {
-    if ( a.last_nom < b.last_nom ){
-      return -1;
-    }
-    if ( a.last_nom > b.last_nom ){
-      return 1;
-    }
-    return 0;
-}
-
 app.get('/get-item-all', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list all complete");
     console.log("here");
