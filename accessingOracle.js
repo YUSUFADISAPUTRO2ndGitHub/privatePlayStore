@@ -41,11 +41,19 @@ async function runOracle() {
 }
 
 app.get('/test-oracle-access', async (req, res) => {
+    // const result = await connection.execute(
+    //     `INSERT INTO AJT_SO (LNGSTOCKORDEROID, STRSTOCKORDERID, DELETED, STATUS, DATAPPDEF4, DATAPPDEF5, STRPAYMENT, STRAPPDEF2, STRAPPDEF3, STRAPPDEF9, STRAPPDEF10, LNGAPPDEF2, LNGAPPDEF3)
+    //     VALUES(23223232323, '23223232323', 'DEV', 232313, TO_DATE('2020-09-11','YYYY-MM-DD'), TO_DATE('2020-09-11','YYYY-MM-DD') + 90, 'period', 'Fajar', '2000', 'Bagus', 'TB Tuongku Jaya Jaya Jl.KH. Abdullah Syafei;Tebet;Kota Administrasi Jakarta Selatan;DKI Jakarta', 24, 600000)`
+    // );
+
     const result = await connection.execute(
-        `INSERT INTO VT.AJT_SO (LNGSTOCKORDEROID, STRSTOCKORDERID, DELETED, STATUS, DATAPPDEF4, DATAPPDEF5, STRPAYMENT, STRAPPDEF2, STRAPPDEF3, STRAPPDEF9, STRAPPDEF10, LNGAPPDEF2, LNGAPPDEF3)
-        VALUES(123123132, '20200911091952', 'DEV', 232313, TIMESTAMP '2020-09-11 02:14:34.000000', NULL, '印尼盾', '个人', 'Fajar', '商城网单', 'TB Tuongku Jaya Jaya (Jl.KH. Abdullah Syafei;Tebet;Kota Administrasi Jakarta Selatan;DKI Jakarta', 24, 600000)`
+        "INSERT INTO AJT_SO (LNGSTOCKORDEROID, STRSTOCKORDERID, DELETED, STATUS, DATAPPDEF4, DATAPPDEF5, STRPAYMENT, STRAPPDEF2, STRAPPDEF3, STRAPPDEF9, STRAPPDEF10, LNGAPPDEF2, LNGAPPDEF3)" +
+        " VALUES " + 
+        "(:0, :1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13)", 
+        ["23232323232", "23232323232", "DEV", "232313", "TO_DATE(\'2020-09-11\',\'YYYY-MM-DD\')", "TO_DATE(\'2020-09-11\',\'YYYY-MM-DD\')", "period", "Fajar", "2000", "Bagus", "TB Tuongku Jaya Jaya Jl.KH. Abdullah Syafei;Tebet;Kota Administrasi Jakarta Selatan;DKI Jakarta", "24", "600000"],
+        { autoCommit: true }
     );
-    res.send(result.rows[0][0]);
+    res.send(result);
 })
 
 app.get('/get-accurate-token-and-session', async (req, res) => {
