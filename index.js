@@ -1404,17 +1404,23 @@ app.get('/get-sales-order-by-customer-id', (req, res) => {
         if (error) console.log(error);
         if(response != undefined || response != null){
             var result = JSON.parse(response.body);
-            pageCount = result.sp.pageCount;
-            var totalObjectsInPage = result.d.length;
-            if(pageCount != undefined){
-                for(pageFlipper; pageFlipper <= pageCount; pageFlipper++){
-                    gettingSalesOrderListPerPage(clientAccessToken, clientSessionId, pageFlipper, salesOrders, customerId, customerNo, pageCount);
+            if(result != undefined && result.sp != undefined){
+                pageCount = result.sp.pageCount;
+                var totalObjectsInPage = result.d.length;
+                if(pageCount != undefined){
+                    for(pageFlipper; pageFlipper <= pageCount; pageFlipper++){
+                        gettingSalesOrderListPerPage(clientAccessToken, clientSessionId, pageFlipper, salesOrders, customerId, customerNo, pageCount);
+                    }
+                    // res.send(salesOrders);
+                    console.log("totalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPage");
+                    console.log((1000*pageCount) + (1000*totalObjectsInPage));
+                    setTimeout(function(){ res.send(salesOrders); }, (1000*pageCount) + (1000*totalObjectsInPage));   
+                }else{
+                    console.log("Bad pagecount");
                 }
-                // res.send(salesOrders);
-                // console.log(pageCount*totalObjectsInPage);
-                setTimeout(function(){ res.send(salesOrders); }, 100*pageCount*totalObjectsInPage);   
             }else{
-                console.log("Bad pagecount");
+                console.log("token incorrect");
+                res.send(false);
             }
         }
     });

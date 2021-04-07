@@ -41,19 +41,30 @@ async function runOracle() {
 }
 
 app.get('/test-oracle-access', async (req, res) => {
-    // const result = await connection.execute(
-    //     `INSERT INTO AJT_SO (LNGSTOCKORDEROID, STRSTOCKORDERID, DELETED, STATUS, DATAPPDEF4, DATAPPDEF5, STRPAYMENT, STRAPPDEF2, STRAPPDEF3, STRAPPDEF9, STRAPPDEF10, LNGAPPDEF2, LNGAPPDEF3)
-    //     VALUES(23223232323, '23223232323', 'DEV', 232313, TO_DATE('2020-09-11','YYYY-MM-DD'), TO_DATE('2020-09-11','YYYY-MM-DD') + 90, 'period', 'Fajar', '2000', 'Bagus', 'TB Tuongku Jaya Jaya Jl.KH. Abdullah Syafei;Tebet;Kota Administrasi Jakarta Selatan;DKI Jakarta', 24, 600000)`
-    // );
+    // var sql = `insert into vtportal.sales_order_list_accurate values 
+    // ('SO.2021.03.00044', '2021-03-26', '2021-03-26', 'C.O.D', 'Tb Wsm', '3788', 'Lutfhi Maulana Bachtiar', 'Fatmawati\nCilandak DKI Jakarta\nIndoneisa', 84, '1440000');`;
+    // con.query(sql, function (err, result) {
+    //     if (err) console.log(err);
+    // });
+    // var sql = `select * from vtportal.sales_order_list_accurate where so_number = 'SO.2021.03.00044';`;
+    // con.query(sql, function (err, result) {
+    //     if (err) console.log(err);
+    //     res.send(result[0] == undefined);
+    // });
+    var test = "26 Mar 2021";
+    var thedate = new Date(test);
+    // thedate.setDate(thedate.getDate() + 30);
+    var day = thedate.getDate().toString();
+    var month = (thedate.getMonth() + 1).toString();
+    var year = thedate.getUTCFullYear().toString();
 
-    const result = await connection.execute(
-        "INSERT INTO AJT_SO (LNGSTOCKORDEROID, STRSTOCKORDERID, DELETED, STATUS, DATAPPDEF4, DATAPPDEF5, STRPAYMENT, STRAPPDEF2, STRAPPDEF3, STRAPPDEF9, STRAPPDEF10, LNGAPPDEF2, LNGAPPDEF3)" +
-        " VALUES " + 
-        "(:0, :1, :2, :3, :4, :5, :6, :7, :8, :9, :10, :11, :12, :13)", 
-        ["23232323232", "23232323232", "DEV", "232313", "TO_DATE(\'2020-09-11\',\'YYYY-MM-DD\')", "TO_DATE(\'2020-09-11\',\'YYYY-MM-DD\')", "period", "Fajar", "2000", "Bagus", "TB Tuongku Jaya Jaya Jl.KH. Abdullah Syafei;Tebet;Kota Administrasi Jakarta Selatan;DKI Jakarta", "24", "600000"],
-        { autoCommit: true }
-    );
-    res.send(result);
+    // var day = thedate.getDate() + 30;
+    // if(day > 31 ){
+
+    // }
+    // var month = (thedate.getMonth() + 1);
+    // var year = thedate.getUTCFullYear();
+    res.send(year + "-" + month + "-" + day);
 })
 
 app.get('/get-accurate-token-and-session', async (req, res) => {
@@ -77,7 +88,7 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
     };
     await request(options, async function (error, response) {
         if (error) throw new Error(error);
-        console.log(response.body);
+        // console.log(response.body);
         var token_and_session = JSON.parse(response.body);
         var token = token_and_session.access_token;
         var session = token_and_session.session_id;
@@ -109,7 +120,7 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
                 setTimeout(function(){ 
                     var sorted_out_saved_sales_order_id_list_with_details = [];
                     sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details);
-                    // sendDataToORCL(sorted_out_saved_sales_order_id_list_with_details);
+                    sendDataToMySQL(sorted_out_saved_sales_order_id_list_with_details);
                     var responseTemp = {
                         totalLength : saved_sales_order_id_list.length,
                         totalLengthAfterDetails : saved_sales_order_id_list_with_details.length,
@@ -117,43 +128,114 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
                     };
                     console.log(responseTemp);
                     res.send(sorted_out_saved_sales_order_id_list_with_details);
-                }, saved_sales_order_id_list.length*1000*1.2);
+                }, saved_sales_order_id_list.length*3000*1.2);
                 // res.send(saved_sales_order_id_list);
             }, total_page_available*1000);
         });
     });
 })
 
-async function sendDataToORCL(sorted_out_saved_sales_order_id_list_with_details){
+async function sendDataToMySQL(sorted_out_saved_sales_order_id_list_with_details){
     var i=0;
     for(i; i < sorted_out_saved_sales_order_id_list_with_details.length; i++){
-        const result = await connection.execute(
-            `SELECT strstockorderid FROM ajt_so WHERE strstockorderid = \'${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}\'`
-        );
-        console.log(result.rows);
-        if((result.rows).length == 0){
-            console.log(sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number + " NOT FOUND IN ORCL");
-            let sectionId = await connection.execute(
-                    `select bs_danju.nextval from dual`
-            );
-            sectionId = sectionId.rows[0][0];
-            const insertIntoORCL = await connection.execute(
-                `insert into AJT_SO(lngstockorderoid, strstockorderid, deleted, status,  datappdef4, trappdef9, strpayment, strappdef2, strappdef6, strappdef9, strappdef10, lngappdef2, lngappdef3) 
-                values(${sectionId}, ${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}, 'dev', '232314', order_date(yyyy/mm/dd), ${sorted_out_saved_sales_order_id_list_with_details[i].payment_method}, ${sorted_out_saved_sales_order_id_list_with_details[i].customer_name}, ${sorted_out_saved_sales_order_id_list_with_details[i].customer_code},${sorted_out_saved_sales_order_id_list_with_details[i].salesman},${sorted_out_saved_sales_order_id_list_with_details[i].delivery_address},${sorted_out_saved_sales_order_id_list_with_details[i].total_quantities},${sorted_out_saved_sales_order_id_list_with_details[i].total_amount}) `
-            );
-        }else{
-            
-        }
-        // const result = await connection.execute(
-        //     `insert into AJT_SO(lngstockorderoid, strstockorderid, deleted, status,  datappdef4, trappdef9, strpayment, strappdef2, strappdef6, strappdef9, strappdef10, lngappdef2, lngappdef3) 
-        //     values(sales_order_number, sales_order_number, 'dev', '232314', order_date(yyyy/mm/dd), payment_method, customer_name, customer_code,salesman,delivery_address,total_quantities,total_amount) `
-        // );
-        // const result = await connection.execute(
-        //     `insert into AJT_SO_DETAIL(lngstockorderoid, status,  strappdef3, strappdef2, lngnumber, fltprice, fltpricenum) 
-        //     values(sales_order_number, '232314', name, product_code, quantity_bought, price_per_unit, total_price_based_on_quantity) `
-        // );
+        accessingMySQL(sorted_out_saved_sales_order_id_list_with_details, i);
     }
 }
+
+async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details, i){
+    var existingData;
+    var sql = `select * from vtportal.sales_order_list_accurate where so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
+    con.query(sql, function (err, result) {
+        if (err) console.log(err);
+        existingData = result[0];
+    });
+    console.log("hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+    console.log(existingData);
+    setTimeout(() => {
+        if(existingData == undefined){ // data does not exist
+            var thedate = new Date(sorted_out_saved_sales_order_id_list_with_details[i].order_date);
+            var day = thedate.getDate().toString();
+            var month = (thedate.getMonth() + 1).toString();
+            var year = thedate.getUTCFullYear().toString();
+            thedate.setDate(thedate.getDate() + sorted_out_saved_sales_order_id_list_with_details[i].period_date);
+            var dayPeriod = thedate.getDate().toString();
+            var monthPeriod = (thedate.getMonth() + 1).toString();
+            var yearPeriod = thedate.getUTCFullYear().toString();
+            var sql = `insert into vtportal.sales_order_list_accurate values 
+            ('${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}'
+            , '${year + "-" + month + "-" + day}'
+            , '${yearPeriod + "-" + monthPeriod + "-" + dayPeriod}'
+            , '${sorted_out_saved_sales_order_id_list_with_details[i].payment_method}'
+            , '${sorted_out_saved_sales_order_id_list_with_details[i].customer_name}'
+            , '${sorted_out_saved_sales_order_id_list_with_details[i].customer_code}'
+            , '${sorted_out_saved_sales_order_id_list_with_details[i].salesman}'
+            , '${sorted_out_saved_sales_order_id_list_with_details[i].delivery_address}'
+            , ${sorted_out_saved_sales_order_id_list_with_details[i].total_quantities}
+            , '${sorted_out_saved_sales_order_id_list_with_details[i].total_amount}');`;
+            con.query(sql, function (err, result) {
+                if (err) console.log(err);
+            });
+            var x = 0;
+            for(x ; x < sorted_out_saved_sales_order_id_list_with_details[i].order_details.length; x++){
+                insertOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x);
+            }
+        }else{
+            var thedate = new Date(sorted_out_saved_sales_order_id_list_with_details[i].order_date);
+            var day = thedate.getDate().toString();
+            var month = (thedate.getMonth() + 1).toString();
+            var year = thedate.getUTCFullYear().toString();
+            thedate.setDate(thedate.getDate() + sorted_out_saved_sales_order_id_list_with_details[i].period_date);
+            var dayPeriod = thedate.getDate().toString();
+            var monthPeriod = (thedate.getMonth() + 1).toString();
+            var yearPeriod = thedate.getUTCFullYear().toString();
+            var sql = `UPDATE vtportal.sales_order_list_accurate SET 
+            order_date = '${year + "-" + month + "-" + day}'
+            , period_date = '${yearPeriod + "-" + monthPeriod + "-" + dayPeriod}'
+            , payment_method = '${sorted_out_saved_sales_order_id_list_with_details[i].payment_method}'
+            , customer_name = '${sorted_out_saved_sales_order_id_list_with_details[i].customer_name}'
+            , customer_code = '${sorted_out_saved_sales_order_id_list_with_details[i].customer_code}'
+            , salesman = '${sorted_out_saved_sales_order_id_list_with_details[i].salesman}'
+            , delivery_address = '${sorted_out_saved_sales_order_id_list_with_details[i].delivery_address}'
+            , total_quantities = ${sorted_out_saved_sales_order_id_list_with_details[i].total_quantities}
+            , total_amount = '${sorted_out_saved_sales_order_id_list_with_details[i].total_amount}'
+            WHERE so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
+            con.query(sql, function (err, result) {
+                if (err) console.log(err);
+            });
+            var x = 0;
+            for(x ; x < sorted_out_saved_sales_order_id_list_with_details[i].order_details.length; x++){
+                updateOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x);
+            }
+        }
+    }, 2000);
+}
+
+async function updateOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x){
+    var sql = `UPDATE vtportal.sales_order_details_accurate SET 
+    name = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].name}'
+    , product_code = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].product_code}'
+    , quantity_bought = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].quantity_bought}'
+    , price_per_unit = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].price_per_unit}'
+    , total_price = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].total_price_based_on_quantity}'
+    WHERE so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
+    con.query(sql, function (err, result) {
+        if (err) console.log(err);
+    });
+}
+
+async function insertOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x){
+    var sql = `insert into vtportal.sales_order_details_accurate values 
+    ('${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}'
+    , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].name}'
+    , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].product_code}'
+    , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].quantity_bought}'
+    , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].price_per_unit}'
+    , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].total_price_based_on_quantity}');`;
+    con.query(sql, function (err, result) {
+        if (err) console.log(err);
+    });
+}
+
 
 async function sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details){
     var i=0;
@@ -212,7 +294,7 @@ async function gettingSalesOrderListWithDetails(token, session, id, saved_sales_
             console.log(id);
             saved_sales_order_id_list_with_details.push(JSON.parse(response.body).d);
         });
-    }, time*1000);   
+    }, time*3000);   
 }
 
 async function gettingSalesOrderList(token, session, page_requested, saved_sales_order_id_list){
