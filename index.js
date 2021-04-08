@@ -51,16 +51,16 @@ app.get('/', (req, res) => {
 })
 
 // this is just a token at the beginning, token will be dynamic and refreshed based on time interval
-var refresh_token = '0ce60729-10e5-47d4-afc1-0661bec9fc34';
-var access_token = '467cfae6-d5ad-4f88-804e-e3a88bfc5e27';
+var refresh_token = 'f919a3ab-ab56-421d-9ea1-b1a1f90d4e31';
+var access_token = '55ddab18-e21f-4515-99a0-02cd64e44eb1';
 var session_id_for_accurate_db = '';
 var request = require('request');
 function getRefreshedToken() {
     console.log("################################################################");
     con.query("select access_token, refresh_token from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1", function (err, result, fields) {
         if (err) console.log(err);
-        // access_token = result[0].access_token;
-        // refresh_token = result[0].refresh_token;
+        access_token = result[0].access_token;
+        refresh_token = result[0].refresh_token;
         console.log("last updated access token : " + access_token);
         console.log("last updated refresh token : " + refresh_token);
         var options = {
@@ -89,7 +89,7 @@ function getRefreshedToken() {
         });
     });
 }
-setInterval(getRefreshedToken, 18000000);
+setInterval(getRefreshedToken, 13579135);//1357913
 
 function getSessionId(accessToken){
     var request = require('request');
@@ -637,7 +637,7 @@ setInterval(() => {
             });
         }
     });
-}, 30000);
+}, 1234567);
 
 var groupBuyItems = {};
 
@@ -759,7 +759,7 @@ setInterval(() => {
             });
         }
     });
-}, 30000);
+}, 1234567);
 
 var newItems = {};
 
@@ -883,7 +883,7 @@ setInterval(() => {
             });
         }
     });
-}, 30000);
+}, 1234567);
 
 app.get('/get-item-details-by-name', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list details complete");
@@ -1486,7 +1486,7 @@ setInterval(() => {
             }
         });
     });
-}, 600000);
+}, 224682);
 
 function gettingSalesOrderListPerPageToBeStoredInMEM(clientAccessToken, clientSessionId, pageFlipper, collectedSalesOrdersWithDetails, pageCount){
     options = {
@@ -2045,6 +2045,22 @@ app.get('/get-product-image-from-query', (req, res) => {
             mainImage : mainImage
         }
         res.send(responseObject);
+    });
+})
+
+app.get('/get-faq', (req, res) => {
+    con.query("select * from vtportal.faqCustomerService;", function (err, result, fields) {
+        if (err) console.log(err);
+        var allFAQ = [];
+        var i =0;
+        for(i; i < result.length; i++){
+            allFAQ.push({
+                id : result[i].id,
+                frequently_ask_question : result[i].frequently_ask_question,
+                answer : result[i].answer
+            });
+        }
+        res.send(allFAQ);
     });
 })
 
