@@ -51,16 +51,16 @@ app.get('/', (req, res) => {
 })
 
 // this is just a token at the beginning, token will be dynamic and refreshed based on time interval
-var refresh_token = 'fbbf1914-8f1c-4ad3-ad0e-079518dfc426';
-var access_token = '047fc264-618b-4cff-a393-d0009f776b31';
+var refresh_token = '0ce60729-10e5-47d4-afc1-0661bec9fc34';
+var access_token = '467cfae6-d5ad-4f88-804e-e3a88bfc5e27';
 var session_id_for_accurate_db = '';
 var request = require('request');
 function getRefreshedToken() {
     console.log("################################################################");
     con.query("select access_token, refresh_token from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1", function (err, result, fields) {
         if (err) console.log(err);
-        access_token = result[0].access_token;
-        refresh_token = result[0].refresh_token;
+        // access_token = result[0].access_token;
+        // refresh_token = result[0].refresh_token;
         console.log("last updated access token : " + access_token);
         console.log("last updated refresh token : " + refresh_token);
         var options = {
@@ -89,7 +89,7 @@ function getRefreshedToken() {
         });
     });
 }
-setInterval(getRefreshedToken, 1800000);
+setInterval(getRefreshedToken, 18000000);
 
 function getSessionId(accessToken){
     var request = require('request');
@@ -1383,9 +1383,10 @@ app.get('/delete-customer', (req, res) => {
 
 app.get('/get-sales-order-by-customer-id', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting sales order customer");
+    console.log(collectedSalesOrdersWithDetails.length);
+    var filteredSalesOrderBasedOnCustomerNo = [];
     if(collectedSalesOrdersWithDetails.length != 0 && req.query.customerNo != undefined){
         var customerNo = req.query.customerNo;
-        var filteredSalesOrderBasedOnCustomerNo = [];
         var i = 0;
         for(i; i < collectedSalesOrdersWithDetails.length; i++){
             if(collectedSalesOrdersWithDetails[i].customerNo == customerNo && customerNo != undefined){
@@ -1394,49 +1395,49 @@ app.get('/get-sales-order-by-customer-id', (req, res) => {
             }
         }
         res.send(filteredSalesOrderBasedOnCustomerNo);
-    }else{
-        var clientAccessToken = req.query.accessToken;
-        var clientSessionId = req.query.sessionId;
-        var customerId = req.query.customerId;
-        var customerNo = req.query.customerNo;
-        var salesOrders = [];
-        var pageFlipper = 1;
-        var pageCount = 0;
-        var request = require('request');
-        var options = {
-            'method': 'GET',
-            'url': 'https://public.accurate.id/accurate/api/sales-order/list.do?sp.page=' + pageFlipper,
-            'headers': {
-                'Authorization': 'Bearer ' + clientAccessToken,
-                'X-Session-ID': clientSessionId,
-                'Cookie': 'JSESSIONID=tTrDoBGFq486NAmzITBZ.accurate_accurateapp_containertomcataccurate2'
-            }
-        };
-        request(options, function (error, response) {
-            if (error) console.log(error);
-            if(response != undefined || response != null){
-                var result = JSON.parse(response.body);
-                if(result != undefined && result.sp != undefined){
-                    pageCount = result.sp.pageCount;
-                    var totalObjectsInPage = result.d.length;
-                    if(pageCount != undefined){
-                        for(pageFlipper; pageFlipper <= pageCount; pageFlipper++){
-                            gettingSalesOrderListPerPage(clientAccessToken, clientSessionId, pageFlipper, salesOrders, customerId, customerNo, pageCount);
-                        }
-                        // res.send(salesOrders);
-                        console.log("totalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPage");
-                        console.log((totalObjectsInPage*1000*1.5));
-                        // res.send(salesOrders);
-                        setTimeout(function(){ res.send(salesOrders); }, (totalObjectsInPage*1000*1.5));   
-                    }else{
-                        console.log("Bad pagecount");
-                    }
-                }else{
-                    console.log("token incorrect");
-                    res.send(false);
-                }
-            }
-        });
+    }else if(filteredSalesOrderBasedOnCustomerNo.length == 0){
+        res.send(false);
+        // var clientAccessToken = req.query.accessToken;
+        // var clientSessionId = req.query.sessionId;
+        // var customerId = req.query.customerId;
+        // var customerNo = req.query.customerNo;
+        // var salesOrders = [];
+        // var pageFlipper = 1;
+        // var pageCount = 0;
+        // var request = require('request');
+        // var options = {
+        //     'method': 'GET',
+        //     'url': 'https://public.accurate.id/accurate/api/sales-order/list.do?sp.page=' + pageFlipper,
+        //     'headers': {
+        //         'Authorization': 'Bearer ' + clientAccessToken,
+        //         'X-Session-ID': clientSessionId
+        //     }
+        // };
+        // request(options, function (error, response) {
+        //     if (error) console.log(error);
+        //     if(response != undefined || response != null){
+        //         var result = JSON.parse(response.body);
+        //         if(result != undefined && result.sp != undefined && result.d != undefined){
+        //             pageCount = result.sp.pageCount;
+        //             var totalObjectsInPage = result.d.length;
+        //             if(pageCount != undefined){
+        //                 for(pageFlipper; pageFlipper <= pageCount; pageFlipper++){
+        //                     gettingSalesOrderListPerPage(clientAccessToken, clientSessionId, pageFlipper, salesOrders, customerId, customerNo, pageCount);
+        //                 }
+        //                 // res.send(salesOrders);
+        //                 console.log("totalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPagetotalObjectsInPage");
+        //                 console.log((totalObjectsInPage*1000*1.5));
+        //                 // res.send(salesOrders);
+        //                 setTimeout(function(){ res.send(salesOrders); }, (totalObjectsInPage*1000*1.5));   
+        //             }else{
+        //                 console.log("Bad pagecount");
+        //             }
+        //         }else{
+        //             console.log("token incorrect");
+        //             res.send(false);
+        //         }
+        //     }
+        // });
     }
 })
 
@@ -1485,7 +1486,7 @@ setInterval(() => {
             }
         });
     });
-}, 120000);
+}, 600000);
 
 function gettingSalesOrderListPerPageToBeStoredInMEM(clientAccessToken, clientSessionId, pageFlipper, collectedSalesOrdersWithDetails, pageCount){
     options = {
@@ -1512,7 +1513,7 @@ function gettingSalesOrderListPerPageToBeStoredInMEM(clientAccessToken, clientSe
 function gettingSalesOrderDetails(id, clientAccessToken, clientSessionId, collectedSalesOrdersWithDetails, pageCount, pageFlipper, time){
     setTimeout(() => {
         var request = require('request');
-        console.log(id);
+        console.log("saving data to MEM -> " + id);
         options = {
             'method': 'GET',
             'url': 'https://public.accurate.id/accurate/api/sales-order/detail.do?id=' + id,
@@ -1528,28 +1529,32 @@ function gettingSalesOrderDetails(id, clientAccessToken, clientSessionId, collec
                 pageFlipper = pageCount + 1;
                 var u = 0;
                 var detailItem = [];
-                for(u; u < result.d.detailItem.length; u ++){
-                    detailItem.push({
-                        name: result.d.detailItem[u].item.shortName,
-                        no: result.d.detailItem[u].item.no,
-                        itemId: result.d.detailItem[u].itemId,
-                        pricePerItem: result.d.detailItem[u].totalPrice,
-                        quantity: result.d.detailItem[u].quantity
-                    })
+                if(result.d != undefined ){
+                    if(result.d.detailItem != undefined ){
+                        for(u; u < result.d.detailItem.length; u ++){
+                            detailItem.push({
+                                name: result.d.detailItem[u].item.shortName,
+                                no: result.d.detailItem[u].item.no,
+                                itemId: result.d.detailItem[u].itemId,
+                                pricePerItem: result.d.detailItem[u].totalPrice,
+                                quantity: result.d.detailItem[u].quantity
+                            })
+                        }
+                        collectedSalesOrdersWithDetails.push({
+                            status: result.d.percentShipped,
+                            salesOrderId: result.d.id,
+                            salesOrderNumber: result.d.number,
+                            customerId: result.d.customerId,
+                            customerNo: result.d.customer.customerNo,
+                            transDate: result.d.transDateView,
+                            toAddress: result.d.toAddress,
+                            subTotal: result.d.subTotal,
+                            totalAmount: result.d.totalAmount,
+                            paymentTerm: result.d.paymentTerm.name,
+                            detailItem: detailItem
+                        });
+                    }
                 }
-                collectedSalesOrdersWithDetails.push({
-                    status: result.d.percentShipped,
-                    salesOrderId: result.d.id,
-                    salesOrderNumber: result.d.number,
-                    customerId: result.d.customerId,
-                    customerNo: result.d.customer.customerNo,
-                    transDate: result.d.transDateView,
-                    toAddress: result.d.toAddress,
-                    subTotal: result.d.subTotal,
-                    totalAmount: result.d.totalAmount,
-                    paymentTerm: result.d.paymentTerm.name,
-                    detailItem: detailItem
-                });
             }
         });
     }, 1500*time);
