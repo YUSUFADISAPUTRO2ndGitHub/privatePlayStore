@@ -130,9 +130,9 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
                         setTimeout(() => {
                             res.send(sorted_out_saved_customer_id_list_with_details);
                         }, 3000*sorted_out_saved_customer_id_list_with_details);
-                    }, sorted_out_saved_customer_id_list_with_details * 3100);
-                }, saved_customer_id_list.length*3000*1.2);
-            }, total_page_available*1500);
+                    }, sorted_out_saved_customer_id_list_with_details * 3600);
+                }, saved_customer_id_list.length*3500*1.2);
+            }, total_page_available*2500);
         });
     });
 })
@@ -237,7 +237,7 @@ async function gettingCustomerListWithDetails(token, session, id, saved_customer
             console.log(id);
             saved_customer_id_list_with_details.push(JSON.parse(response.body).d);
         });
-    }, time*3000);   
+    }, time*3500);   
 }
 
 async function gettingCustomerList(token, session, page_requested, saved_customer_id_list){
@@ -258,7 +258,7 @@ async function gettingCustomerList(token, session, page_requested, saved_custome
                 await saved_customer_id_list.push(JSON.parse(response.body).d[i]);
             }
         });
-    }, 1200*page_requested);
+    }, 2000*page_requested);
 }
 
 
@@ -335,13 +335,13 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
                     var responseTemp = {
                         totalLength : saved_sales_order_id_list.length,
                         totalLengthAfterDetails : saved_sales_order_id_list_with_details.length,
-                        totalLengthAfterDetailsSorted : sorted_out_saved_sales_order_id_list_with_details
+                        totalLengthAfterDetailsSorted : sorted_out_saved_sales_order_id_list_with_details.length
                     };
                     console.log(responseTemp);
                     setTimeout(() => {
                         res.send(sorted_out_saved_sales_order_id_list_with_details);
-                    }, sorted_out_saved_sales_order_id_list_with_details * 3600);
-                }, saved_sales_order_id_list.length*3500*1.2);
+                    }, sorted_out_saved_sales_order_id_list_with_details * 3000);
+                }, saved_sales_order_id_list.length*3600*1.2);
                 // res.send(saved_sales_order_id_list);
             }, total_page_available*1000);
         });
@@ -357,6 +357,7 @@ async function sendDataToMySQL(sorted_out_saved_sales_order_id_list_with_details
 
 async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details, i){
     setTimeout(() => {
+        console.log(sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number);
         var existingData;
         var sql = `select * from vtportal.sales_order_list_accurate where so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
         con.query(sql, function (err, result) {
@@ -373,6 +374,12 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
                 var dayPeriod = thedate.getDate().toString();
                 var monthPeriod = (thedate.getMonth() + 1).toString();
                 var yearPeriod = thedate.getUTCFullYear().toString();
+                var contactNumber;
+                if(sorted_out_saved_sales_order_id_list_with_details[i].contact_number == null){
+                    contactNumber = `${sorted_out_saved_sales_order_id_list_with_details[i].workPhone}`;
+                }else{
+                    contactNumber = `${sorted_out_saved_sales_order_id_list_with_details[i].contact_number} / ${sorted_out_saved_sales_order_id_list_with_details[i].workPhone}`;
+                }
                 var sql = `insert into vtportal.sales_order_list_accurate values 
                 ('${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}'
                 , '${year + "-" + month + "-" + day}'
@@ -386,6 +393,7 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
                 , '${sorted_out_saved_sales_order_id_list_with_details[i].total_amount}'
                 , '232314'
                 , 'DEV'
+                , '${contactNumber}'
                 );`;
                 con.query(sql, function (err, result) {
                     if (err) console.log(err);
@@ -403,6 +411,12 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
                 var dayPeriod = thedate.getDate().toString();
                 var monthPeriod = (thedate.getMonth() + 1).toString();
                 var yearPeriod = thedate.getUTCFullYear().toString();
+                var contactNumber;
+                if(sorted_out_saved_sales_order_id_list_with_details[i].contact_number == null){
+                    contactNumber = `${sorted_out_saved_sales_order_id_list_with_details[i].workPhone}`;
+                }else{
+                    contactNumber = `${sorted_out_saved_sales_order_id_list_with_details[i].contact_number} / ${sorted_out_saved_sales_order_id_list_with_details[i].workPhone}`;
+                }
                 var sql = `UPDATE vtportal.sales_order_list_accurate SET 
                 order_date = '${year + "-" + month + "-" + day}'
                 , period_date = '${yearPeriod + "-" + monthPeriod + "-" + dayPeriod}'
@@ -415,6 +429,7 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
                 , total_amount = '${sorted_out_saved_sales_order_id_list_with_details[i].total_amount}'
                 , status = '232314'
                 , deleted = 'DEV'
+                , contact_number = '${contactNumber}'
                 WHERE so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
                 con.query(sql, function (err, result) {
                     if (err) console.log(err);
@@ -430,13 +445,41 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
 
 async function updateOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x){
     setTimeout(() => {
+        var thedate = new Date();
+        var uniqueCode = 
+            (
+            (Math.floor((Math.random() * 10) + 1)*2) +
+            (Math.floor((Math.random() * 20) + 11)*3) +
+            (Math.floor((Math.random() * 30) + 21)*4) +
+            (Math.floor((Math.random() * 40) + 31)*5) +
+            (Math.floor((Math.random() * 50) + 41)*6) +
+            (Math.floor((Math.random() * 60) + 51)*7) +
+            (Math.floor((Math.random() * 70) + 61)*8) +
+            (Math.floor((Math.random() * 80) + 71)*9) +
+            (Math.floor((Math.random() * 90) + 81)*10) +
+            (Math.floor((Math.random() * 100) + 91)*11) +
+            (Math.floor((Math.random() * 110) + 101)*12) +
+            (Math.floor((Math.random() * 210) + 201)*13) +
+            (Math.floor((Math.random() * 310) + 301)*14) +
+            (Math.floor((Math.random() * 410) + 401)*15) +
+            (Math.floor((Math.random() * 510) + 501)*16) +
+            (Math.floor((Math.random() * 610) + 601)*17) +
+            (Math.floor((Math.random() * 710) + 701)*18) +
+            (Math.floor((Math.random() * 810) + 801)*19) +
+            (Math.floor((Math.random() * 910) + 901)*20) +
+            (Math.floor((Math.random() * 1010) + 1001)*21) +
+            (Math.floor((Math.random() * 1110) + 1101)*22) +
+            (Math.floor((Math.random() * 1210) + 1201)*23) +
+            (Math.floor((Math.random() * 1310) + 1301)*24)
+            ) * (Math.floor((Math.random() * 10) + 1)*2) * (Math.floor((Math.random() * 7) + 1)*7) + thedate.getMilliseconds()
+        ;
         var sql = `UPDATE vtportal.sales_order_details_accurate SET 
         name = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].name}'
         , product_code = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].product_code}'
         , quantity_bought = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].quantity_bought}'
         , price_per_unit = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].price_per_unit}'
         , total_price = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].total_price_based_on_quantity}'
-        , oid = '${i + x + (i*x)}'
+        , oid = '${uniqueCode}'
         WHERE so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
         con.query(sql, function (err, result) {
             if (err) console.log(err);
@@ -446,6 +489,34 @@ async function updateOrderDetails(sorted_out_saved_sales_order_id_list_with_deta
 
 async function insertOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x){
     setTimeout(() => {
+        var thedate = new Date();
+        var uniqueCode = 
+            (
+            (Math.floor((Math.random() * 10) + 1)*2) +
+            (Math.floor((Math.random() * 20) + 11)*3) +
+            (Math.floor((Math.random() * 30) + 21)*4) +
+            (Math.floor((Math.random() * 40) + 31)*5) +
+            (Math.floor((Math.random() * 50) + 41)*6) +
+            (Math.floor((Math.random() * 60) + 51)*7) +
+            (Math.floor((Math.random() * 70) + 61)*8) +
+            (Math.floor((Math.random() * 80) + 71)*9) +
+            (Math.floor((Math.random() * 90) + 81)*10) +
+            (Math.floor((Math.random() * 100) + 91)*11) +
+            (Math.floor((Math.random() * 110) + 101)*12) +
+            (Math.floor((Math.random() * 210) + 201)*13) +
+            (Math.floor((Math.random() * 310) + 301)*14) +
+            (Math.floor((Math.random() * 410) + 401)*15) +
+            (Math.floor((Math.random() * 510) + 501)*16) +
+            (Math.floor((Math.random() * 610) + 601)*17) +
+            (Math.floor((Math.random() * 710) + 701)*18) +
+            (Math.floor((Math.random() * 810) + 801)*19) +
+            (Math.floor((Math.random() * 910) + 901)*20) +
+            (Math.floor((Math.random() * 1010) + 1001)*21) +
+            (Math.floor((Math.random() * 1110) + 1101)*22) +
+            (Math.floor((Math.random() * 1210) + 1201)*23) +
+            (Math.floor((Math.random() * 1310) + 1301)*24)
+            ) * (Math.floor((Math.random() * 10) + 1)*2) * (Math.floor((Math.random() * 7) + 1)*7) + thedate.getMilliseconds()
+        ;
         var sql = `insert into vtportal.sales_order_details_accurate values 
         ('${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}'
         , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].name}'
@@ -453,14 +524,13 @@ async function insertOrderDetails(sorted_out_saved_sales_order_id_list_with_deta
         , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].quantity_bought}'
         , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].price_per_unit}'
         , '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].total_price_based_on_quantity}'
-        , '${i + x + (i*x)}'
+        , '${uniqueCode}'
         );`;
         con.query(sql, function (err, result) {
             if (err) console.log(err);
         });
     }, 1000);
 }
-
 
 async function sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details){
     var i=0;
@@ -486,6 +556,7 @@ async function sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, 
             payment_method: saved_sales_order_id_list_with_details[i].paymentTerm.name,
             customer_name: saved_sales_order_id_list_with_details[i].customer.name,
             customer_code: saved_sales_order_id_list_with_details[i].customer.customerNo,
+            contact_number: saved_sales_order_id_list_with_details[i].customer.contactInfo.mobilePhone,
             salesman: saved_sales_order_id_list_with_details[i].detailItem[0].salesmanName,
             delivery_address: saved_sales_order_id_list_with_details[i].toAddress,
             // delivery_address_details: saved_sales_order_id_list_with_details[i].customer.shipAddress,
@@ -519,7 +590,7 @@ async function gettingSalesOrderListWithDetails(token, session, id, saved_sales_
             console.log(id);
             saved_sales_order_id_list_with_details.push(JSON.parse(response.body).d);
         });
-    }, time*3000);   
+    }, time*3500);   
 }
 
 async function gettingSalesOrderList(token, session, page_requested, saved_sales_order_id_list){

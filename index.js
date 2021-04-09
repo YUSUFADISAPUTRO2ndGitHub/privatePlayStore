@@ -1688,7 +1688,7 @@ app.get('/create-automated-sales', (req, res) => {
 })
 
 function initiateSalesOrders(vaNumber, res){
-    var getSalesOrderInformation = "http://147.139.169.108:8080/getSalesOrderFromVA.jsp?vaNumber=" + vaNumber;
+    var getSalesOrderInformation = "http://localhost:8080/getSalesOrderFromVA.jsp?vaNumber=" + vaNumber;
 
     var request = require('request');
     var options = {
@@ -1703,7 +1703,7 @@ function initiateSalesOrders(vaNumber, res){
             var datas = JSON.parse(response.body);
             options = {
                 'method': 'GET',
-                'url': 'http://147.139.169.108:8888/get-lastest-token-and-session',
+                'url': 'http://localhost:8888/get-lastest-token-and-session',
                 'headers': {
                 }
             };
@@ -1716,7 +1716,7 @@ function initiateSalesOrders(vaNumber, res){
                 var items = {"item":datas.item};
                 options = {
                     'method': 'POST',
-                    'url': 'http://147.139.169.108:8888/make-sales-order-normal?accessToken=' + result.access_token + '&sessionId=' + result.session_id + '&customerNo=' + datas.customerDetails.customerNo + '&transDate=' + datas.customerDetails.transDate + '&address=' + datas.customerDetails.address + '&paymentTermName=' + datas.customerDetails.paymentTermName + '',
+                    'url': 'http://localhost:8888/make-sales-order-normal?accessToken=' + result.access_token + '&sessionId=' + result.session_id + '&customerNo=' + datas.customerDetails.customerNo + '&transDate=' + datas.customerDetails.transDate + '&address=' + datas.customerDetails.address + '&paymentTermName=' + datas.customerDetails.paymentTermName + '',
                     'headers': {
                         'Content-Type': 'application/json'
                     },
