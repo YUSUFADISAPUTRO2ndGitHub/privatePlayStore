@@ -131,7 +131,7 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
                             res.send(sorted_out_saved_customer_id_list_with_details);
                         }, 3000*sorted_out_saved_customer_id_list_with_details);
                     }, sorted_out_saved_customer_id_list_with_details * 3600);
-                }, saved_customer_id_list.length*3500*1.2);
+                }, saved_customer_id_list.length*4600*1.2);
             }, total_page_available*2500);
         });
     });
@@ -237,7 +237,7 @@ async function gettingCustomerListWithDetails(token, session, id, saved_customer
             console.log(id);
             saved_customer_id_list_with_details.push(JSON.parse(response.body).d);
         });
-    }, time*3500);   
+    }, time*4500);   
 }
 
 async function gettingCustomerList(token, session, page_requested, saved_customer_id_list){
