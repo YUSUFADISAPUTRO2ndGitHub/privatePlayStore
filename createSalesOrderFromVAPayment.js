@@ -19,6 +19,24 @@ con.connect(function(err) {
     console.log("Connected! to MySQL");
 });
 
+app.get('/get-lastest-token-and-session',  (req, res) => {
+    console.log("---------------------------------------------------------------------------- requesting token and session");
+    var sql = `select access_token, session_id from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1;`;
+     con.query(sql, function (err, result) {
+        if (err) console.log(err);
+        console.log("accessing latest token and session request");
+        console.log("result[0].access_token : " + result[0].access_token);
+        console.log("result[0].session_id : " + result[0].session_id);
+        access_token = result[0].access_token;
+        session_id_for_accurate_db = result[0].session_id;
+        var result = {
+            access_token: result[0].access_token,
+            session_id: result[0].session_id
+        };
+        res.send(result);
+    });
+})
+
 app.post('/make-sales-order-normal', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting sales order");
     var clientAccessToken = req.query.accessToken;
@@ -80,7 +98,7 @@ function initiateSalesOrders(vaNumber, res){
             var datas = JSON.parse(response.body);
             options = {
                 'method': 'GET',
-                'url': 'http://localhost:8888/get-lastest-token-and-session',
+                'url': 'http://localhost:3000/get-lastest-token-and-session',
                 'headers': {
                 }
             };

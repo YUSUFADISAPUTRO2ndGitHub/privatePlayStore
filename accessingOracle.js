@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 8888;
+const port = 8888;//8888
 app.use(cors(), express.json());
 var oracledb = require('oracledb'); 
 var mysql = require('mysql');
@@ -79,6 +79,11 @@ app.get('/get-accurate-token-and-session', async (req, res) => {
     });
 })
 
+/* 
+    customer data back up area
+    codes below are just for customer data back only
+*/
+
 app.get('/access-customer-data-from-accurate', async (req, res) => {
     var options = {
         'method': 'GET',
@@ -105,33 +110,36 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
         await request(options, async function (error, response) {
             if (error) throw new Error(error);
             total_page_available = JSON.parse(response.body).sp.pageCount;
-            while(page_requested <= total_page_available){
+            while(page_requested <= total_page_available){ //total_page_available
                 gettingCustomerList(token, session, page_requested, saved_customer_id_list);
                 page_requested++;
             }
             setTimeout(function(){  
+                console.log("===================== saved_customer_id_list has been collected =====================");
                 var saved_customer_id_list_with_details = [];
                 var i = 0;
-                for(i; i < saved_customer_id_list.length; i ++){
+                for(i; i < saved_customer_id_list.length; i ++){ // saved_customer_id_list.length
                     gettingCustomerListWithDetails(token, session, saved_customer_id_list[i].id, saved_customer_id_list_with_details, i);
                 }
-                setTimeout(function(){ 
+                setTimeout(function(){
+                    console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details); 
                     setTimeout(() => {
-                        console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details);
+                        console.log("===================== saved_customer_id_list_with_details has been collected =====================");
+                        // console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details);
                         var sorted_out_saved_customer_id_list_with_details = [];
                         sortOutCustomerDetails(saved_customer_id_list_with_details, sorted_out_saved_customer_id_list_with_details);
                         sendCustomerDataToMySQL(sorted_out_saved_customer_id_list_with_details);
                         var responseTemp = {
                             totalLength : saved_customer_id_list.length,
                             totalLengthAfterDetails : saved_customer_id_list_with_details.length,
-                            totalLengthAfterDetailsSorted : sorted_out_saved_customer_id_list_with_details
+                            totalLengthAfterDetailsSorted : sorted_out_saved_customer_id_list_with_details.length
                         };
                         console.log(responseTemp);
                         setTimeout(() => {
                             res.send(sorted_out_saved_customer_id_list_with_details);
-                        }, 3000*sorted_out_saved_customer_id_list_with_details);
-                    }, sorted_out_saved_customer_id_list_with_details * 3600);
-                }, saved_customer_id_list.length*4600*1.2);
+                        }, saved_customer_id_list.length*3000);
+                    }, saved_customer_id_list.length * 3600);
+                }, saved_customer_id_list.length*2100*1.2);
             }, total_page_available*2500);
         });
     });
@@ -146,6 +154,7 @@ async function sendCustomerDataToMySQL(sorted_out_saved_customer_id_list_with_de
 
 async function accessingMySQLWithCustomerData(sorted_out_saved_customer_id_list_with_details, i){
     setTimeout(() => {
+        console.log("inserting to MySQL : " + sorted_out_saved_customer_id_list_with_details[i].customer_no);
         var existingData;
         var sql = `select * from vtportal.customer_list_accurate where customer_no = '${sorted_out_saved_customer_id_list_with_details[i].customer_no}';`;
         con.query(sql, function (err, result) {
@@ -237,7 +246,7 @@ async function gettingCustomerListWithDetails(token, session, id, saved_customer
             console.log(id);
             saved_customer_id_list_with_details.push(JSON.parse(response.body).d);
         });
-    }, time*4500);   
+    }, time*2000);   
 }
 
 async function gettingCustomerList(token, session, page_requested, saved_customer_id_list){
@@ -261,34 +270,10 @@ async function gettingCustomerList(token, session, page_requested, saved_custome
     }, 2000*page_requested);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* 
+    customer data back up area
+    codes above are just for customer data back only
+*/
 
 app.get('/access-sales-orders-from-accurate', async (req, res) => {
     var options = {
