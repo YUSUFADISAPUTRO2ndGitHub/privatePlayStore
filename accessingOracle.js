@@ -122,8 +122,8 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
                     gettingCustomerListWithDetails(token, session, saved_customer_id_list[i].id, saved_customer_id_list_with_details, i);
                 }
                 setTimeout(function(){
-                    console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details); 
-                    setTimeout(() => {
+                    // console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details); 
+                    // setTimeout(() => {
                         console.log("===================== saved_customer_id_list_with_details has been collected =====================");
                         // console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details);
                         var sorted_out_saved_customer_id_list_with_details = [];
@@ -138,7 +138,7 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
                         setTimeout(() => {
                             res.send(sorted_out_saved_customer_id_list_with_details);
                         }, saved_customer_id_list.length*3000);
-                    }, saved_customer_id_list.length * 3600);
+                    // }, saved_customer_id_list.length);
                 }, saved_customer_id_list.length*2100*1.2);
             }, total_page_available*2500);
         });
