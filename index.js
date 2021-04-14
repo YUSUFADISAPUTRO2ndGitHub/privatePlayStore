@@ -116,6 +116,92 @@ function getSessionId(accessToken){
 
 }
 
+engineJumpStart();
+function engineJumpStart(){
+    allItems = {};
+    var request = require('request');
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:8888/get-lastest-token-and-session',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) console.log(error);
+        if(response != undefined || response != null){
+            var result = JSON.parse(response.body);
+            options = {
+                'method': 'GET',
+                'url': 'http://localhost:8888/get-item-all?accessToken=' + result.access_token + '&sessionId=' + result.session_id + '',
+                'headers': {
+                }
+            };
+            request(options, function (error, response) {
+                if (error) console.log(error);
+                if(response != undefined){
+                    allItems = JSON.parse(response.body);
+                    console.log(allItems);
+                }
+            });
+        }
+    });
+    groupBuyItems = {};
+    var request = require('request');
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:8888/get-lastest-token-and-session',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) console.log(error);
+        if(response != undefined || response != null){
+            var result = JSON.parse(response.body);
+            options = {
+                'method': 'GET',
+                'url': 'http://localhost:8888/get-item-all-group-buy?accessToken=' + result.access_token + '&sessionId=' + result.session_id + '',
+                'headers': {
+                }
+            };
+            request(options, function (error, response) {
+                if (error) console.log(error);
+                // groupBuyItems = JSON.parse(response.body);
+                if(response != undefined){
+                    groupBuyItems = JSON.parse(response.body);
+                }
+            });
+        }
+    });
+    newItems = {};
+    var request = require('request');
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:8888/get-lastest-token-and-session',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) console.log(error);
+        if(response != undefined || response != null){
+            var result = JSON.parse(response.body);
+            options = {
+                'method': 'GET',
+                'url': 'http://localhost:8888/get-item-all-new?accessToken=' + result.access_token + '&sessionId=' + result.session_id + '',
+                'headers': {
+                }
+            };
+            request(options, function (error, response) {
+                if (error) console.log(error);
+                // newItems = JSON.parse(response.body);
+                if(response != undefined){
+                    newItems = JSON.parse(response.body);
+                }
+                // console.log(newItems);
+            });
+        }
+    });
+}
+
 app.get('/get-lastest-token-and-session',  (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting token and session");
     var sql = `select access_token, session_id from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1;`;
@@ -462,9 +548,9 @@ app.get('/get-item', (req, res) => {
 
 var allItems = {};
 
-function retrieveItems(clientAccessToken, clientSessionId, addedCondition, pageRequested, itemName, itemList){
+function retrieveItems(addedCondition, pageRequested, itemName, itemList){
     setTimeout(() => {
-        console.log("accessing all items from Accurate");
+        console.log("accessing all items from Accurate ================================================ initated");
         var request = require('request');
         var options = {
             'method': 'GET',
@@ -486,65 +572,108 @@ function retrieveItems(clientAccessToken, clientSessionId, addedCondition, pageR
                 }
             };
             request(options, function (error, response) {
-                if (error) console.log(error);
+                if (error) throw new Error(error);
                 if(response != undefined || response != null){
                     var result = JSON.parse(response.body);
                     var i = 0;
                     var resultItemObject = {}; 
+                    console.log("getAllItemsImageCoverPerItem ================================================ entering loop");
                     for (i ; i < (result.d).length; i ++){
                         // console.log(result.d[i]);
                         // console.log(result.d[i].numericField2);
-                        resultItemObject = {
-                            itemId : result.d[i].id,
-                            name: result.d[i].name,
-                            shortName: result.d[i].shortName,
-                            category: result.d[i].itemCategoryId,
-                            no: result.d[i].no,
-                            unitPrice: result.d[i].unitPrice,
-                            defaultDiscount: result.d[i].defaultDiscount,
-                            unitNameWarehouse: result.d[i].unit1Name,
-                            totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                            availableToSell: result.d[i].availableToSell,
-                            // itemMainImage: "https://public.accurate.id" + result.d[i].detailItemImage[0].fileName,
-                            // itemImages: result.d[i].detailItemImage,
-                            groupBuyStatus: result.d[i].charField1,
-                            groupBuyAvaiableQuantity: result.d[i].numericField1,
-                            groupBuyDiscount: result.d[i].numericField2,
-                            promotedNew: result.d[i].charField2,
-                            notes: result.d[i].notes
-                        };
-                        if(itemName != undefined && resultItemObject.name != undefined){
-                            if(resultItemObject.name.includes(itemName.toUpperCase())){
-                                // console.log("here");
-                                if(result.d[i].charField6 == "yes"){
-                                    itemList.push(resultItemObject);
-                                }
-                            }else if (resultItemObject.name.includes(itemName.toLowerCase())){
-                                // console.log("here");
-                                if(result.d[i].charField6 == "yes"){
-                                    itemList.push(resultItemObject);
-                                }
-                            }else if (resultItemObject.name.includes(itemName)){
-                                // console.log("here");
-                                if(result.d[i].charField6 == "yes"){
-                                    itemList.push(resultItemObject);
-                                }
-                            }
-                        }else{
-                            if(result.d[i].charField6 == "yes"){
-                                itemList.push(resultItemObject);
-                            }
-                        }
+                        getAllItemsImageCoverPerItem(result, i, resultItemObject, itemName, itemList);
                     }
+                    console.log("getAllItemsImageCoverPerItem ================================================ loop ended");
                 }
             });
         });
     }, 1000*pageRequested);
 }
 
+function getAllItemsImageCoverPerItem(result, i, resultItemObject, itemName, itemList){
+    setTimeout(() => {
+        var options = {
+            'method': 'GET',
+            'url': 'http://147.139.168.202:8080/products.jsp?productNo=' + result.d[i].no,
+            'headers': {
+            }
+        };
+        request(options, function (error, response) {
+            if (error) throw new Error(error);
+            if(response != undefined || response != null){
+                var imageSearchResult = JSON.parse(response.body);
+                // console.log(imageSearchResult);
+                if(imageSearchResult.length != 0){
+                    resultItemObject = {
+                        itemId : result.d[i].id,
+                        name: result.d[i].name,
+                        shortName: result.d[i].shortName,
+                        category: result.d[i].itemCategoryId,
+                        no: result.d[i].no,
+                        unitPrice: result.d[i].unitPrice,
+                        defaultDiscount: result.d[i].defaultDiscount,
+                        unitNameWarehouse: result.d[i].unit1Name,
+                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        availableToSell: result.d[i].availableToSell,
+                        // itemMainImage: "https://public.accurate.id" + result.d[i].detailItemImage[0].fileName,
+                        // itemImages: result.d[i].detailItemImage,
+                        groupBuyStatus: result.d[i].charField1,
+                        groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        groupBuyDiscount: result.d[i].numericField2,
+                        promotedNew: result.d[i].charField2,
+                        notes: result.d[i].notes,
+                        productImageCover: imageSearchResult[0].default_pic
+                    };
+                }else{
+                    resultItemObject = {
+                        itemId : result.d[i].id,
+                        name: result.d[i].name,
+                        shortName: result.d[i].shortName,
+                        category: result.d[i].itemCategoryId,
+                        no: result.d[i].no,
+                        unitPrice: result.d[i].unitPrice,
+                        defaultDiscount: result.d[i].defaultDiscount,
+                        unitNameWarehouse: result.d[i].unit1Name,
+                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        availableToSell: result.d[i].availableToSell,
+                        // itemMainImage: "https://public.accurate.id" + result.d[i].detailItemImage[0].fileName,
+                        // itemImages: result.d[i].detailItemImage,
+                        groupBuyStatus: result.d[i].charField1,
+                        groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        groupBuyDiscount: result.d[i].numericField2,
+                        promotedNew: result.d[i].charField2,
+                        notes: result.d[i].notes
+                    };
+                }
+                if(itemName != undefined && resultItemObject.name != undefined){
+                    if(resultItemObject.name.includes(itemName.toUpperCase())){
+                        // console.log("here");
+                        if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                    }else if (resultItemObject.name.includes(itemName.toLowerCase())){
+                        // console.log("here");
+                        if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                    }else if (resultItemObject.name.includes(itemName)){
+                        // console.log("here");
+                        if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                    }
+                }else{
+                    if(result.d[i].charField6 == "yes"){
+                        itemList.push(resultItemObject);
+                    }
+                }
+            }
+        });
+    }, i*1000);
+}
+
 app.get('/get-item-all', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list all complete");
-    console.log("here");
     var itemName = req.query.itemName;
     if(Object.keys(allItems).length != 0){
         console.log("accessing saved content");
@@ -577,13 +706,12 @@ app.get('/get-item-all', (req, res) => {
             res.send(allItems);
         }
     }else{
+        console.log("accessing non saved content");
         var itemList = [];
         var clientAccessToken = req.query.accessToken;
         var clientSessionId = req.query.sessionId;
         var pageRequested = 1;
         var pageCount = 0;
-        console.log("clientAccessToken : " + clientAccessToken);
-        console.log("clientSessionId : " + clientSessionId);
         var request = require('request');
         var options = {
             'method': 'GET',
@@ -594,7 +722,7 @@ app.get('/get-item-all', (req, res) => {
             }
         };
         request(options, function (error, response) {
-            if (error) console.log(error);
+            if (error) throw new Error(error);
             if(response != undefined || response != null){
                 var result = JSON.parse(response.body);
                 if(result.sp != undefined || result.sp != null){
@@ -605,18 +733,22 @@ app.get('/get-item-all', (req, res) => {
                         addedCondition = addedCondition + req.query.sortBy + "|" + req.query.sortDirection;
                     }
                     while(status){
-                        console.log("addedCondition : " + addedCondition + " || itemName: " + itemName);
-                        console.log("pageRequested " + pageRequested);
-                        console.log("pageCount " + pageCount);
-                        retrieveItems(clientAccessToken, clientSessionId, addedCondition, pageRequested, itemName, itemList);
+                        // console.log("addedCondition : " + addedCondition + " || itemName: " + itemName);
+                        // console.log("pageRequested " + pageRequested);
+                        // console.log("pageCount " + pageCount);
+                        console.log("retrieveItems ================================================ loop");
+                        retrieveItems(addedCondition, pageRequested, itemName, itemList);
                         pageRequested++;
                         if(pageRequested > pageCount){
                             status = false;
                         }
                     }
+                    console.log("retrieveItems ================================================ loop ended");
                     setTimeout(function(){
+                        console.log("response initated ================================================ start to response");
+                        allItems = {itemList, page_count: pageCount};
                         res.send({itemList, page_count: pageCount}); 
-                    }, 1500*pageCount*2);
+                    }, 1000*pageCount*100);
                 }else{
                     console.log("token maybe invalid");
                 }
@@ -648,11 +780,12 @@ setInterval(() => {
                 if (error) console.log(error);
                 if(response != undefined){
                     allItems = JSON.parse(response.body);
+                    console.log(allItems);
                 }
             });
         }
     });
-}, 1234561);
+}, 1234561);//1234561
 
 var groupBuyItems = {};
 
@@ -685,33 +818,74 @@ function retrieveGroupBuyItems(clientAccessToken, clientSessionId, pageRequested
                     totalObjects = totalObjects + (result.d).length;
                     for (i ; i < (result.d).length; i ++){
                         var resultItemObject = {};
-                        resultItemObject = {
-                            itemId : result.d[i].id,
-                            name: result.d[i].name,
-                            shortName: result.d[i].shortName,
-                            category: result.d[i].itemCategoryId,
-                            no: result.d[i].no,
-                            unitPrice: result.d[i].unitPrice,
-                            defaultDiscount: result.d[i].defaultDiscount,
-                            unitNameWarehouse: result.d[i].unit1Name,
-                            totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                            availableToSell: result.d[i].availableToSell,
-                            groupBuyStatus: result.d[i].charField1,
-                            groupBuyAvaiableQuantity: result.d[i].numericField1,
-                            groupBuyDiscount: result.d[i].numericField2,
-                            promotedNew: result.d[i].charField2,
-                            notes: result.d[i].notes
-                        };
-                        if(resultItemObject.groupBuyStatus == "yes"){
-                            if(result.d[i].charField6 == "yes"){
-                                itemList.push(resultItemObject);
-                            }
-                        }
+                        getGroupBuyImageCoverPerItem(result, i, resultItemObject, itemList);
                     }
                 }
             });
         });
     }, 1000*pageRequested);
+}
+
+function getGroupBuyImageCoverPerItem(result, i, resultItemObject, itemList){
+    setTimeout(() => {
+        // console.log(result.d[i].no);
+        var options = {
+            'method': 'GET',
+            'url': 'http://147.139.168.202:8080/products.jsp?productNo=' + result.d[i].no,
+            'headers': {
+            }
+        };
+        request(options, function (error, response) {
+            if (error) console.log(error);
+            if(response != undefined || response != null){
+                var imageSearchResult = JSON.parse(response.body);
+                // console.log(imageSearchResult);
+                if(imageSearchResult.length != 0){
+                    resultItemObject = {
+                        itemId : result.d[i].id,
+                        name: result.d[i].name,
+                        shortName: result.d[i].shortName,
+                        category: result.d[i].itemCategoryId,
+                        no: result.d[i].no,
+                        unitPrice: result.d[i].unitPrice,
+                        defaultDiscount: result.d[i].defaultDiscount,
+                        unitNameWarehouse: result.d[i].unit1Name,
+                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        availableToSell: result.d[i].availableToSell,
+                        groupBuyStatus: result.d[i].charField1,
+                        groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        groupBuyDiscount: result.d[i].numericField2,
+                        promotedNew: result.d[i].charField2,
+                        notes: result.d[i].notes,
+                        productImageCover: imageSearchResult[0].default_pic
+                    };
+                }else{
+                    resultItemObject = {
+                        itemId : result.d[i].id,
+                        name: result.d[i].name,
+                        shortName: result.d[i].shortName,
+                        category: result.d[i].itemCategoryId,
+                        no: result.d[i].no,
+                        unitPrice: result.d[i].unitPrice,
+                        defaultDiscount: result.d[i].defaultDiscount,
+                        unitNameWarehouse: result.d[i].unit1Name,
+                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        availableToSell: result.d[i].availableToSell,
+                        groupBuyStatus: result.d[i].charField1,
+                        groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        groupBuyDiscount: result.d[i].numericField2,
+                        promotedNew: result.d[i].charField2,
+                        notes: result.d[i].notes
+                    };
+                }
+                if(resultItemObject.groupBuyStatus == "yes"){
+                    if(result.d[i].charField6 == "yes"){
+                        itemList.push(resultItemObject);
+                    }
+                }
+            }
+        });
+    }, i*1000);
 }
 
 app.get('/get-item-all-group-buy', (req, res) => {
@@ -720,6 +894,7 @@ app.get('/get-item-all-group-buy', (req, res) => {
         console.log("accessing saved content with timeout");
         res.send(groupBuyItems);
     }else{
+        console.log("accessing non saved content");
         var itemList = [];
         var totalObjects = 0;
         var clientAccessToken = req.query.accessToken;
@@ -753,7 +928,7 @@ app.get('/get-item-all-group-buy', (req, res) => {
                     console.log("token maybe invalid");
                 }
             }
-            setTimeout(function(){ res.send({itemList, page_count: pageCount, totalItems: totalObjects}); }, 1200*pageCount);
+            setTimeout(function(){ res.send({itemList, page_count: pageCount, totalItems: totalObjects}); }, 1000*pageCount*20);
         });
     }
 })
@@ -819,28 +994,7 @@ function retrieveNewItems(pageRequested, itemList, totalObjects){
                     var i = 0;
                     for (i ; i < (result.d).length; i ++){
                         var resultItemObject = {};
-                        resultItemObject = {
-                            itemId : result.d[i].id,
-                            name: result.d[i].name,
-                            shortName: result.d[i].shortName,
-                            category: result.d[i].itemCategoryId,
-                            no: result.d[i].no,
-                            unitPrice: result.d[i].unitPrice,
-                            defaultDiscount: result.d[i].defaultDiscount,
-                            unitNameWarehouse: result.d[i].unit1Name,
-                            totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                            availableToSell: result.d[i].availableToSell,
-                            groupBuyStatus: result.d[i].charField1,
-                            groupBuyAvaiableQuantity: result.d[i].numericField1,
-                            groupBuyDiscount: result.d[i].numericField2,
-                            promotedNew: result.d[i].charField2,
-                            notes: result.d[i].notes
-                        };
-                        if(resultItemObject.promotedNew == "yes"){
-                            if(result.d[i].charField6 == "yes"){
-                                    itemList.push(resultItemObject);
-                                }
-                        }
+                        getNewItemsImageCoverPerItem(result, i, resultItemObject, itemList)
                     }
                 }
             });
@@ -848,12 +1002,75 @@ function retrieveNewItems(pageRequested, itemList, totalObjects){
     }, 1000*pageRequested);
 }
 
+function getNewItemsImageCoverPerItem(result, i, resultItemObject, itemList){
+    setTimeout(() => {
+        // console.log(result.d[i].no);
+        var options = {
+            'method': 'GET',
+            'url': 'http://147.139.168.202:8080/products.jsp?productNo=' + result.d[i].no,
+            'headers': {
+            }
+        };
+        request(options, function (error, response) {
+            if (error) console.log(error);
+            if(response != undefined || response != null){
+                var imageSearchResult = JSON.parse(response.body);
+                // console.log(imageSearchResult);
+                if(imageSearchResult.length != 0){
+                    resultItemObject = {
+                        itemId : result.d[i].id,
+                        name: result.d[i].name,
+                        shortName: result.d[i].shortName,
+                        category: result.d[i].itemCategoryId,
+                        no: result.d[i].no,
+                        unitPrice: result.d[i].unitPrice,
+                        defaultDiscount: result.d[i].defaultDiscount,
+                        unitNameWarehouse: result.d[i].unit1Name,
+                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        availableToSell: result.d[i].availableToSell,
+                        groupBuyStatus: result.d[i].charField1,
+                        groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        groupBuyDiscount: result.d[i].numericField2,
+                        promotedNew: result.d[i].charField2,
+                        notes: result.d[i].notes,
+                        productImageCover: imageSearchResult[0].default_pic
+                    };
+                }else{
+                    resultItemObject = {
+                        itemId : result.d[i].id,
+                        name: result.d[i].name,
+                        shortName: result.d[i].shortName,
+                        category: result.d[i].itemCategoryId,
+                        no: result.d[i].no,
+                        unitPrice: result.d[i].unitPrice,
+                        defaultDiscount: result.d[i].defaultDiscount,
+                        unitNameWarehouse: result.d[i].unit1Name,
+                        totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        availableToSell: result.d[i].availableToSell,
+                        groupBuyStatus: result.d[i].charField1,
+                        groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        groupBuyDiscount: result.d[i].numericField2,
+                        promotedNew: result.d[i].charField2,
+                        notes: result.d[i].notes
+                    };
+                }
+                if(resultItemObject.promotedNew == "yes"){
+                    if(result.d[i].charField6 == "yes"){
+                            itemList.push(resultItemObject);
+                        }
+                }
+            }
+        });
+    }, i*1000);
+}
+
 app.get('/get-item-all-new', (req, res) => {
-    console.log("---------------------------------------------------------------------------- requesting list all complete");
+    console.log("---------------------------------------------------------------------------- requesting list all new complete");
     if(Object.keys(newItems).length !== 0){
         console.log("accessing saved content");
         res.send(newItems);
     }else{
+        console.log("accessing non saved content");
         var itemList = [];
         var totalObjects = 0;
         var clientAccessToken = req.query.accessToken;
@@ -884,7 +1101,7 @@ app.get('/get-item-all-new', (req, res) => {
                             status = false;
                         }
                     }
-                    setTimeout(function(){ res.send({itemList, page_count: pageCount, totalItems: totalObjects}); }, 1200*pageCount);   
+                    setTimeout(function(){ res.send({itemList, page_count: pageCount, totalItems: totalObjects}); }, 1000*pageCount*20);   
                 }else{
                     console.log("token maybe invalid");
                 }
@@ -1116,29 +1333,30 @@ app.get('/get-item-all-by-category-id', (req, res) => {
                     var i = 0;
                     var resultItemObject = {}; 
                     for(i; i < result.d.length; i++){
-                        resultItemObject = {
-                            itemId : result.d[i].id,
-                            name: result.d[i].name,
-                            shortName: result.d[i].shortName,
-                            category: result.d[i].itemCategoryId,
-                            no: result.d[i].no,
-                            unitPrice: result.d[i].unitPrice,
-                            defaultDiscount: result.d[i].defaultDiscount,
-                            unitNameWarehouse: result.d[i].unit1Name,
-                            totalUnitQuantity: result.d[i].totalUnit1Quantity,
-                            availableToSell: result.d[i].availableToSell,
-                            groupBuyStatus: result.d[i].charField1,
-                            groupBuyAvaiableQuantity: result.d[i].numericField1,
-                            promotedNew: result.d[i].charField2,
-                            notes: result.d[i].notes
-                        };
-                        if(result.d[i].charField6 == "yes"){
-                                        itemList.push(resultItemObject);
-                                    }
+                        getItemDetailsBasedOnCategoryId(result, i, resultItemObject, itemList)
+                        // resultItemObject = {
+                        //     itemId : result.d[i].id,
+                        //     name: result.d[i].name,
+                        //     shortName: result.d[i].shortName,
+                        //     category: result.d[i].itemCategoryId,
+                        //     no: result.d[i].no,
+                        //     unitPrice: result.d[i].unitPrice,
+                        //     defaultDiscount: result.d[i].defaultDiscount,
+                        //     unitNameWarehouse: result.d[i].unit1Name,
+                        //     totalUnitQuantity: result.d[i].totalUnit1Quantity,
+                        //     availableToSell: result.d[i].availableToSell,
+                        //     groupBuyStatus: result.d[i].charField1,
+                        //     groupBuyAvaiableQuantity: result.d[i].numericField1,
+                        //     promotedNew: result.d[i].charField2,
+                        //     notes: result.d[i].notes
+                        // };
+                        // if(result.d[i].charField6 == "yes"){
+                        //                 itemList.push(resultItemObject);
+                        //             }
                     }
                     setTimeout(function(){
                         res.send({itemList, page_count: pageCount}); 
-                    }, 1000*pageCount);
+                    }, 100*pageCount*result.d.length);
                 }else{
                     var i = 0;
                     var resultItemObject = {}; 
@@ -1147,7 +1365,7 @@ app.get('/get-item-all-by-category-id', (req, res) => {
                     }
                     setTimeout(function(){
                         res.send({itemList, page_count: pageCount}); 
-                    }, 1200*pageCount);
+                    }, 1000*pageCount*100);
                 }
             }else{
                 console.log("token maybe invalid");
@@ -1174,6 +1392,46 @@ function getItemBasedOnCategoryId(pageRequested, addedCondition, clientAccessTok
                 var x = 0;
                 var resultItemObject = {}; 
                 for(x; x < result.d.length; x++){
+                    getItemDetailsBasedOnCategoryId(result, x, resultItemObject, itemList);
+                }
+            }
+        });
+    }, 1000*time);
+}
+
+function getItemDetailsBasedOnCategoryId(result, x, resultItemObject, itemList){
+    setTimeout(() => {
+        // console.log(result.d[i].no);
+        var options = {
+            'method': 'GET',
+            'url': 'http://147.139.168.202:8080/products.jsp?productNo=' + result.d[x].no,
+            'headers': {
+            }
+        };
+        request(options, function (error, response) {
+            if (error) console.log(error);
+            if(response != undefined || response != null){
+                var imageSearchResult = JSON.parse(response.body);
+                // console.log(imageSearchResult);
+                if(imageSearchResult.length != 0){
+                    resultItemObject = {
+                        itemId : result.d[x].id,
+                        name: result.d[x].name,
+                        shortName: result.d[x].shortName,
+                        category: result.d[x].itemCategoryId,
+                        no: result.d[x].no,
+                        unitPrice: result.d[x].unitPrice,
+                        defaultDiscount: result.d[x].defaultDiscount,
+                        unitNameWarehouse: result.d[x].unit1Name,
+                        totalUnitQuantity: result.d[x].totalUnit1Quantity,
+                        availableToSell: result.d[x].availableToSell,
+                        groupBuyStatus: result.d[x].charField1,
+                        groupBuyAvaiableQuantity: result.d[x].numericField1,
+                        promotedNew: result.d[x].charField2,
+                        notes: result.d[x].notes,
+                        productImageCover: imageSearchResult[0].default_pic
+                    };
+                }else{
                     resultItemObject = {
                         itemId : result.d[x].id,
                         name: result.d[x].name,
@@ -1190,13 +1448,13 @@ function getItemBasedOnCategoryId(pageRequested, addedCondition, clientAccessTok
                         promotedNew: result.d[x].charField2,
                         notes: result.d[x].notes
                     };
-                    if(result.d[i].charField6 == "yes"){
-                            itemList.push(resultItemObject);
-                    }
+                }
+                if(result.d[x].charField6 == "yes"){
+                    itemList.push(resultItemObject);
                 }
             }
         });
-    }, 1000*time);
+    }, x*100);
 }
 
 app.get('/get-branch', (req, res) => {
@@ -1536,7 +1794,7 @@ setInterval(() => {
     });
 }, 4246824);
 
-testfunction();
+// testfunction();
 function testfunction(){
     var request = require('request');
     collectedSalesOrdersWithDetails = [];

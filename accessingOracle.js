@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = 8888;//8888
+const port = 3000;//3000
 app.use(cors(), express.json());
 var oracledb = require('oracledb'); 
 var mysql = require('mysql');
@@ -87,7 +87,7 @@ app.get('/get-accurate-token-and-session', async (req, res) => {
 app.get('/access-customer-data-from-accurate', async (req, res) => {
     var options = {
         'method': 'GET',
-        'url': 'http://localhost:8888/get-accurate-token-and-session',
+        'url': 'http://localhost:3000/get-accurate-token-and-session',
         'headers': {
         }
     };
@@ -139,7 +139,7 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
                             res.send(sorted_out_saved_customer_id_list_with_details);
                         }, saved_customer_id_list.length*3000);
                     // }, saved_customer_id_list.length);
-                }, saved_customer_id_list.length*2100*1.2);
+                }, saved_customer_id_list.length*1000*1.2);
             }, total_page_available*2500);
         });
     });
@@ -246,7 +246,7 @@ async function gettingCustomerListWithDetails(token, session, id, saved_customer
             console.log(id);
             saved_customer_id_list_with_details.push(JSON.parse(response.body).d);
         });
-    }, time*2000);   
+    }, time*1000);   
 }
 
 async function gettingCustomerList(token, session, page_requested, saved_customer_id_list){
@@ -278,7 +278,7 @@ async function gettingCustomerList(token, session, page_requested, saved_custome
 app.get('/access-sales-orders-from-accurate', async (req, res) => {
     var options = {
         'method': 'GET',
-        'url': 'http://localhost:8888/get-accurate-token-and-session',
+        'url': 'http://localhost:3000/get-accurate-token-and-session',
         'headers': {
         }
     };
