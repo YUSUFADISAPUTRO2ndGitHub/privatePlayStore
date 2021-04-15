@@ -122,30 +122,30 @@ app.get('/access-customer-data-from-accurate', async (req, res) => {
                     gettingCustomerListWithDetails(token, session, saved_customer_id_list[i].id, saved_customer_id_list_with_details, i);
                 }
                 setTimeout(function(){
-                    // console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details); 
-                    // setTimeout(() => {
                         console.log("===================== saved_customer_id_list_with_details has been collected =====================");
-                        // console.log("saved_customer_id_list_with_details " + saved_customer_id_list_with_details);
                         var sorted_out_saved_customer_id_list_with_details = [];
                         sortOutCustomerDetails(saved_customer_id_list_with_details, sorted_out_saved_customer_id_list_with_details);
-                        sendCustomerDataToMySQL(sorted_out_saved_customer_id_list_with_details);
-                        var responseTemp = {
-                            totalLength : saved_customer_id_list.length,
-                            totalLengthAfterDetails : saved_customer_id_list_with_details.length,
-                            totalLengthAfterDetailsSorted : sorted_out_saved_customer_id_list_with_details.length
-                        };
-                        console.log(responseTemp);
+                        
                         setTimeout(() => {
-                            res.send(sorted_out_saved_customer_id_list_with_details);
-                        }, saved_customer_id_list.length*3000);
-                    // }, saved_customer_id_list.length);
-                }, saved_customer_id_list.length*1000*1.2);
-            }, total_page_available*2500);
+                            var responseTemp = {
+                                totalLength : saved_customer_id_list.length,
+                                totalLengthAfterDetails : saved_customer_id_list_with_details.length,
+                                totalLengthAfterDetailsSorted : sorted_out_saved_customer_id_list_with_details.length
+                            };
+                            console.log(responseTemp);
+                            sendCustomerDataToMySQL(sorted_out_saved_customer_id_list_with_details);
+                            setTimeout(() => {
+                                res.send(sorted_out_saved_customer_id_list_with_details);
+                            }, saved_customer_id_list.length*300*2);
+                        }, saved_customer_id_list.length*100);
+                }, saved_customer_id_list.length*100);
+            }, total_page_available*1000);
         });
     });
 })
 
 async function sendCustomerDataToMySQL(sorted_out_saved_customer_id_list_with_details){
+    console.log("sendCustomerDataToMySQL requested ===========================================================");
     var i=0;
     for(i; i < sorted_out_saved_customer_id_list_with_details.length; i++){
         accessingMySQLWithCustomerData(sorted_out_saved_customer_id_list_with_details, i);
@@ -167,8 +167,12 @@ async function accessingMySQLWithCustomerData(sorted_out_saved_customer_id_list_
                 var day = thedate.getDate().toString();
                 var month = (thedate.getMonth() + 1).toString();
                 var year = thedate.getUTCFullYear().toString();
+                var theSubmittedDate = year + "-" + month + "-" + day;
+                if(theSubmittedDate == 'NaN-NaN-NaN'){
+                    theSubmittedDate = '1971-01-01';
+                }
                 var sql = `insert into vtportal.customer_list_accurate values 
-                ('${year + "-" + month + "-" + day}'
+                ('${theSubmittedDate}'
                 , '${sorted_out_saved_customer_id_list_with_details[i].name}'
                 , '${sorted_out_saved_customer_id_list_with_details[i].customer_no}'
                 , '${sorted_out_saved_customer_id_list_with_details[i].contact_name}'
@@ -189,8 +193,12 @@ async function accessingMySQLWithCustomerData(sorted_out_saved_customer_id_list_
                 var day = thedate.getDate().toString();
                 var month = (thedate.getMonth() + 1).toString();
                 var year = thedate.getUTCFullYear().toString();
+                var theSubmittedDate = year + "-" + month + "-" + day;
+                if(theSubmittedDate == 'NaN-NaN-NaN'){
+                    theSubmittedDate = '1971-01-01';
+                }
                 var sql = `UPDATE vtportal.customer_list_accurate SET 
-                create_date = '${year + "-" + month + "-" + day}'
+                create_date = '${theSubmittedDate}'
                 , name = '${sorted_out_saved_customer_id_list_with_details[i].name}'
                 , contact_name = '${sorted_out_saved_customer_id_list_with_details[i].contact_name}'
                 , work_phone = '${sorted_out_saved_customer_id_list_with_details[i].work_phone}'
@@ -211,15 +219,16 @@ async function accessingMySQLWithCustomerData(sorted_out_saved_customer_id_list_
 }
 
 async function sortOutCustomerDetails(saved_customer_id_list_with_details, sorted_out_saved_customer_id_list_with_details){
+    console.log("sorting requested ===========================================================");
     var i=0;
     for(i; i < saved_customer_id_list_with_details.length; i++){
         var sorted = {
             create_date: saved_customer_id_list_with_details[i].createDate,
             name: saved_customer_id_list_with_details[i].wpName,
             customer_no: saved_customer_id_list_with_details[i].customerNo,
-            contact_name: saved_customer_id_list_with_details[i].detailContact.name,
-            work_phone: saved_customer_id_list_with_details[i].detailContact.workPhone,
-            salesman: saved_customer_id_list_with_details[i].salesman,
+            contact_name: saved_customer_id_list_with_details[i].detailContact[0].name,
+            work_phone: saved_customer_id_list_with_details[i].detailContact[0].workPhone,
+            salesman: saved_customer_id_list_with_details[i].salesman.name,
             bill_city: saved_customer_id_list_with_details[i].billCity,
             bill_province: saved_customer_id_list_with_details[i].billProvince,
             bill_street: saved_customer_id_list_with_details[i].billStreet,
@@ -233,6 +242,7 @@ async function sortOutCustomerDetails(saved_customer_id_list_with_details, sorte
 
 async function gettingCustomerListWithDetails(token, session, id, saved_customer_id_list_with_details, time){
     setTimeout(function(){ 
+        console.log(id);
         var options = {
             'method': 'GET',
             'url': 'https://public.accurate.id/accurate/api/customer/detail.do?id=' + id,
@@ -242,11 +252,15 @@ async function gettingCustomerListWithDetails(token, session, id, saved_customer
             }
         };
         request(options, function (error, response) {
-            if (error) throw new Error(error);
-            console.log(id);
-            saved_customer_id_list_with_details.push(JSON.parse(response.body).d);
+            if (error) console.log(error);//throw new Error(error);
+            // console.log(response);
+            if(response != undefined){
+                saved_customer_id_list_with_details.push(JSON.parse(response.body).d);
+            }else{
+                console.log("id does not give any information "  + id);
+            }
         });
-    }, time*1000);   
+    }, time*100);   
 }
 
 async function gettingCustomerList(token, session, page_requested, saved_customer_id_list){
@@ -261,13 +275,13 @@ async function gettingCustomerList(token, session, page_requested, saved_custome
             }
         };
         await request(options, async function (error, response) {
-            if (error) throw new Error(error);
+            if (error) console.log(error);
             var i = 0;
             for(i; i < JSON.parse(response.body).d.length; i ++){
                 await saved_customer_id_list.push(JSON.parse(response.body).d[i]);
             }
         });
-    }, 2000*page_requested);
+    }, 1000*page_requested);
 }
 
 /* 
