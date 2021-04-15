@@ -2423,7 +2423,6 @@ app.get('/confirm-temp-order-paid', (req, res) => {
                 };
                 request(options, function (error, response) {
                     if (error) console.log(error);
-                    console.log(response.body);
                 });
             });
             setTimeout(() => {
