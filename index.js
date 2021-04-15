@@ -116,7 +116,7 @@ function getSessionId(accessToken){
 
 }
 
-engineJumpStart();
+// engineJumpStart();
 function engineJumpStart(){
     allItems = {};
     var request = require('request');
@@ -2330,6 +2330,108 @@ app.get('/get-faq', (req, res) => {
             });
         }
         res.send(allFAQ);
+    });
+})
+
+app.post('/save-temp-order-details-from-customer', (req, res) => {
+    var customerNo = req.query.customerNo;
+    var transDate = req.query.transDate;
+    var address = req.query.address;
+    var paymentTermName = req.query.paymentTermName;
+    var items = req.body.item;
+    console.log(items);
+    var thedate = new Date();
+    var uniqueCode = 
+        (
+        (Math.floor((Math.random() * 10) + 1)*2) +
+        (Math.floor((Math.random() * 20) + 11)*3) +
+        (Math.floor((Math.random() * 30) + 21)*4) +
+        (Math.floor((Math.random() * 40) + 31)*5) +
+        (Math.floor((Math.random() * 50) + 41)*6) +
+        (Math.floor((Math.random() * 60) + 51)*7) +
+        (Math.floor((Math.random() * 70) + 61)*8) +
+        (Math.floor((Math.random() * 80) + 71)*9) +
+        (Math.floor((Math.random() * 90) + 81)*10) +
+        (Math.floor((Math.random() * 100) + 91)*11) +
+        (Math.floor((Math.random() * 110) + 101)*12) +
+        (Math.floor((Math.random() * 210) + 201)*13) +
+        (Math.floor((Math.random() * 310) + 301)*14) +
+        (Math.floor((Math.random() * 410) + 401)*15) +
+        (Math.floor((Math.random() * 510) + 501)*16) +
+        (Math.floor((Math.random() * 610) + 601)*17) +
+        (Math.floor((Math.random() * 710) + 701)*18) +
+        (Math.floor((Math.random() * 810) + 801)*19) +
+        (Math.floor((Math.random() * 910) + 901)*20) +
+        (Math.floor((Math.random() * 1010) + 1001)*21) +
+        (Math.floor((Math.random() * 1110) + 1101)*22) +
+        (Math.floor((Math.random() * 1210) + 1201)*23) +
+        (Math.floor((Math.random() * 1310) + 1301)*24)
+        ) * (Math.floor((Math.random() * 10) + 1)*2) * (Math.floor((Math.random() * 7) + 1)*7) + thedate.getMilliseconds()
+    ;
+    var i = 0;
+    for(i ; i < items.length ; i++){
+        var sql = `insert into vtportal.temporary_order_request_in_store 
+        values 
+        ('${customerNo}', '${paymentTermName}', '${transDate}', '${address}', '${items[i].no}', '${items[i].requestQuantity}', '${items[i].unitPrice}', '${uniqueCode}')`;
+        insertIntoTempOrderDetails(i, sql);
+    }
+    setTimeout(() => {
+        res.send(uniqueCode.toString());
+    }, items.length * 550);
+})
+
+function insertIntoTempOrderDetails(i, sql){
+    setTimeout(() => {
+        con.query(sql, function (err, result, fields) {
+            if (err) console.log(err);
+        });
+    }, i*500);
+}
+
+app.get('/confirm-temp-order-paid', (req, res) => {
+    var uniqueCode = req.query.uniqueCode;
+    var sql = `select * from vtportal.temporary_order_request_in_store where confirmation_code = '${uniqueCode}';`;
+    con.query(sql, function (err, result, fields) {
+        if (err) console.log(err);
+        if(result.length != 0){
+            var request = require('request');
+            var options = {
+                'method': 'GET',
+                'url': 'http://147.139.168.202:8888/get-lastest-token-and-session',
+                'headers': {
+                }
+            };
+            var item = [];
+            var i = 0;
+            for(i; i < result.length; i++){
+                item.push({
+                    no: result[i].product_code,
+                    unitPrice: result[i].unitPrice,
+                    requestQuantity: result[i].request_quantity
+                });
+            }
+            request(options, function (error, response) {
+                if (error) console.log(error);
+                var access = JSON.parse(response.body);
+                options = {
+                    'method': 'POST',
+                    'url': 'http://localhost:8888/make-sales-order-normal?accessToken=' + access.access_token + '&sessionId=' + access.session_id + '&customerNo=' + result[0].customer_no + '&transDate=' + result[0].trans_date + '&address=' + result[0].address + '&paymentTermName=' + result[0].payment_term_name + '',
+                    'headers': {
+                            'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({item})
+                };
+                request(options, function (error, response) {
+                    if (error) console.log(error);
+                    console.log(response.body);
+                });
+            });
+            setTimeout(() => {
+                res.send(true);
+            }, result.length * 1000);
+        }else{
+            res.send(false);
+        }
     });
 })
 
