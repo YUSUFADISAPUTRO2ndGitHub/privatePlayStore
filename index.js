@@ -116,7 +116,7 @@ function getSessionId(accessToken){
 
 }
 
-// engineJumpStart();
+engineJumpStart();
 function engineJumpStart(){
     allItems = {};
     var request = require('request');
@@ -140,7 +140,8 @@ function engineJumpStart(){
                 if (error) console.log(error);
                 if(response != undefined){
                     allItems = JSON.parse(response.body);
-                    console.log(allItems);
+                    // console.log(allItems);
+                    console.log("all items saved to MEM =============================================== ");
                 }
             });
         }
@@ -168,6 +169,7 @@ function engineJumpStart(){
                 // groupBuyItems = JSON.parse(response.body);
                 if(response != undefined){
                     groupBuyItems = JSON.parse(response.body);
+                    console.log("group items saved to MEM =============================================== ");
                 }
             });
         }
@@ -195,6 +197,7 @@ function engineJumpStart(){
                 // newItems = JSON.parse(response.body);
                 if(response != undefined){
                     newItems = JSON.parse(response.body);
+                    console.log("new items saved to MEM =============================================== ");
                 }
                 // console.log(newItems);
             });
@@ -745,7 +748,7 @@ app.get('/get-item-all', (req, res) => {
                     }
                     console.log("retrieveItems ================================================ loop ended");
                     setTimeout(function(){
-                        console.log("response initated ================================================ start to response");
+                        console.log("response initated all ================================================ start to response");
                         allItems = {itemList, page_count: pageCount};
                         res.send({itemList, page_count: pageCount}); 
                     }, 1000*pageCount*100);
@@ -928,7 +931,11 @@ app.get('/get-item-all-group-buy', (req, res) => {
                     console.log("token maybe invalid");
                 }
             }
-            setTimeout(function(){ res.send({itemList, page_count: pageCount, totalItems: totalObjects}); }, 1000*pageCount*20);
+            setTimeout(function(){ 
+                console.log("response initated group ================================================ start to response");
+                groupBuyItems = {itemList, page_count: pageCount, totalItems: totalObjects};
+                res.send({itemList, page_count: pageCount, totalItems: totalObjects}); 
+            }, 1000*pageCount*20);
         });
     }
 })
@@ -1101,7 +1108,11 @@ app.get('/get-item-all-new', (req, res) => {
                             status = false;
                         }
                     }
-                    setTimeout(function(){ res.send({itemList, page_count: pageCount, totalItems: totalObjects}); }, 1000*pageCount*20);   
+                    setTimeout(function(){ 
+                        console.log("response initated new ================================================ start to response");
+                        newItems = {itemList, page_count: pageCount, totalItems: totalObjects};
+                        res.send({itemList, page_count: pageCount, totalItems: totalObjects}); 
+                    }, 1000*pageCount*20);   
                 }else{
                     console.log("token maybe invalid");
                 }
@@ -1171,42 +1182,63 @@ app.get('/get-item-details-by-name', (req, res) => {
 
 app.get('/get-item-details', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list details complete");
-    var resultItemObject = {};
-    var clientAccessToken = req.query.accessToken;
-    var clientSessionId = req.query.sessionId;
     var itemNo = req.query.itemNo;
-    var pageRequested = 1;
-    var pageCount = 0;
-    // var time = 1;
-    var request = require('request');
-    var options = {
-        'method': 'GET',
-        'url': 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.page=' + pageRequested,
-        'headers': {
-            'Authorization': 'Bearer ' + clientAccessToken,
-            'X-Session-ID': clientSessionId
-        }
-    };
-    request(options, function (error, response) {
-        if (error) console.log(error);
-        if(response != undefined || response != null){
-            var result = JSON.parse(response.body);
-            if(result.sp != undefined){
-                pageCount = result.sp.pageCount;
-                var status = true;
-                while(status){
-                    getItemDetailsByItemNo(pageRequested, clientAccessToken, clientSessionId, itemNo, resultItemObject, res);
-                    pageRequested++;
-                    if(pageRequested > pageCount){
-                        status = false;
-                    }
+    if(Object.keys(allItems).length != 0){
+        console.log("search within MEM ================================ search within MEM");
+        var i = 0;
+        var itemList = allItems.itemList;
+        if(itemNo != undefined){
+            console.log("search within MEM ================================ " + itemNo);
+            for(i ; i < itemList.length; i++){
+                if(itemList[i].no == itemNo){
+                    console.log("found within MEM ================================ found within MEM");
+                    res.send(itemList[i]);
                 }
-                // setTimeout(function(){ res.send(resultItemObject); }, 3000*pageCount*3);
-            }else{
-                console.log("token maybe invalid");
             }
+            if(i >= itemList.length){
+                console.log("not found within MEM ================================ not found within MEM");
+                res.send(false);
+            }
+        }else{
+            res.send(false);
         }
-    });
+    }else{
+        var resultItemObject = {};
+        var clientAccessToken = req.query.accessToken;
+        var clientSessionId = req.query.sessionId;
+        var pageRequested = 1;
+        var pageCount = 0;
+        // var time = 1;
+        var request = require('request');
+        var options = {
+            'method': 'GET',
+            'url': 'https://public.accurate.id/accurate/api/item/list.do' + '?sp.page=' + pageRequested,
+            'headers': {
+                'Authorization': 'Bearer ' + clientAccessToken,
+                'X-Session-ID': clientSessionId
+            }
+        };
+        request(options, function (error, response) {
+            if (error) console.log(error);
+            if(response != undefined || response != null){
+                var result = JSON.parse(response.body);
+                if(result.sp != undefined){
+                    pageCount = result.sp.pageCount;
+                    var status = true;
+                    while(status){
+                        getItemDetailsByItemNo(pageRequested, clientAccessToken, clientSessionId, itemNo, resultItemObject, res);
+                        pageRequested++;
+                        if(pageRequested > pageCount){
+                            status = false;
+                        }
+                    }
+                    // setTimeout(function(){ res.send(resultItemObject); }, 3000*pageCount*3);
+                }else{
+                    console.log("token maybe invalid");
+                }
+            }
+        });
+    }
     // setTimeout(function(){setTimeout(function(){ res.send(resultItemObject); }, 1000*pageCount);}, 400);
 })
 
@@ -2372,7 +2404,7 @@ app.post('/save-temp-order-details-from-customer', (req, res) => {
     for(i ; i < items.length ; i++){
         var sql = `insert into vtportal.temporary_order_request_in_store 
         values 
-        ('${customerNo}', '${paymentTermName}', '${transDate}', '${address}', '${items[i].no}', '${items[i].requestQuantity}', '${items[i].unitPrice}', '${uniqueCode}')`;
+        ('${customerNo}', '${paymentTermName}', '${transDate}', '${address}', '${items[i].no}', '${items[i].requestQuantity}', '${items[i].unitPrice}', '${uniqueCode}', 0)`;
         insertIntoTempOrderDetails(i, sql);
     }
     setTimeout(() => {
@@ -2390,7 +2422,7 @@ function insertIntoTempOrderDetails(i, sql){
 
 app.get('/confirm-temp-order-paid', (req, res) => {
     var uniqueCode = req.query.uniqueCode;
-    var sql = `select * from vtportal.temporary_order_request_in_store where confirmation_code = '${uniqueCode}';`;
+    var sql = `select * from vtportal.temporary_order_request_in_store where confirmation_code = '${uniqueCode}' and addedToAccurate = 0;`;
     con.query(sql, function (err, result, fields) {
         if (err) console.log(err);
         if(result.length != 0){
@@ -2423,6 +2455,13 @@ app.get('/confirm-temp-order-paid', (req, res) => {
                 };
                 request(options, function (error, response) {
                     if (error) console.log(error);
+                    sql = `UPDATE vtportal.temporary_order_request_in_store
+                    SET addedToAccurate = 1
+                    where confirmation_code = '${result[0].confirmation_code}';`;
+                    con.query(sql, function (err, result, fields) {
+                        if (err) console.log(err);
+                        console.log("data has been assigned to 1 ======================== ");
+                    });
                 });
             });
             setTimeout(() => {
@@ -2431,6 +2470,36 @@ app.get('/confirm-temp-order-paid', (req, res) => {
         }else{
             res.send(false);
         }
+    });
+})
+
+app.get('/get-va-orders-from-order-number', (req, res) => {
+    var orderNumber = req.query.orderNumber;
+    var name = req.query.name;
+    var customerNo = req.customerNo.name;
+    var sql = '';
+    if(orderNumber != undefined){
+        sql = `select * from vtportal.enquiry e where e.agency_id = '${orderNumber}'`;
+    }
+    if(name != undefined){
+        sql = `select * from vtportal.enquiry e where e.creator like '%${name}%';`;
+    }
+    if(customerNo != undefined){
+        sql = `select * from vtportal.enquiry e where e.company_name like '%${customerNo}%';`;
+    }
+    con.query(sql, function (err, result, fields) {
+        if (err) console.log(err);
+        var returnResponse = [];
+        var i =0;
+        for(i; i < result.length; i++){
+            returnResponse.push({
+                enquiry_id : result[i].enquiry_id,
+                orderNumber : result[i].agency_id,
+                paymentStatus : result[i].status,
+                totalAmount : result[i].position
+            });
+        }
+        res.send(returnResponse);
     });
 })
 
