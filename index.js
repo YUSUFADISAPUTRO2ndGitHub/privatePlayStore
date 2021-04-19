@@ -203,6 +203,8 @@ function engineJumpStart(){
             });
         }
     });
+    console.log("collectingSalesOrders to MEM =============================================== ");
+    collectingSalesOrders();
 }
 
 app.get('/get-lastest-token-and-session',  (req, res) => {
@@ -1693,7 +1695,6 @@ app.post('/make-new-customer', (req, res) => {
 
 })
 
-
 app.get('/delete-customer', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting delete customer");
     var clientAccessToken = req.query.accessToken;
@@ -1782,7 +1783,7 @@ app.get('/get-sales-order-by-customer-id', (req, res) => {
 
 var collectedSalesOrdersWithDetails = [];
 
-setInterval(() => {
+function collectingSalesOrders(){
     var request = require('request');
     collectedSalesOrdersWithDetails = [];
     var pageFlipper = 1;
@@ -1814,6 +1815,7 @@ setInterval(() => {
                         for(pageFlipper; pageFlipper <= pageCount; pageFlipper++){
                             gettingSalesOrderListPerPageToBeStoredInMEM(pageFlipper, collectedSalesOrdersWithDetails, pageCount);
                         }
+                        console.log("saving sales order loop has finished, but data has not been saved yet ====================== saving sales order attempt");
                         // setTimeout(function(){ res.send(salesOrders); }, (totalObjectsInPage*1000*1.5));   
                     }else{
                         console.log("Bad pagecount");
@@ -1824,6 +1826,10 @@ setInterval(() => {
             }
         });
     });
+}
+
+setInterval(() => {
+    collectingSalesOrders();
 }, 4246824);
 
 function gettingSalesOrderListPerPageToBeStoredInMEM(pageFlipper, collectedSalesOrdersWithDetails, pageCount){
@@ -2476,7 +2482,7 @@ app.get('/confirm-temp-order-paid', (req, res) => {
 app.get('/get-va-orders-from-order-number', (req, res) => {
     var orderNumber = req.query.orderNumber;
     var name = req.query.name;
-    var customerNo = req.customerNo.name;
+    var customerNo = req.query.customerNo;
     var sql = '';
     if(orderNumber != undefined){
         sql = `select * from vtportal.enquiry e where e.agency_id = '${orderNumber}'`;
@@ -2497,6 +2503,96 @@ app.get('/get-va-orders-from-order-number', (req, res) => {
                 orderNumber : result[i].agency_id,
                 paymentStatus : result[i].status,
                 totalAmount : result[i].position
+            });
+        }
+        res.send(returnResponse);
+    });
+})
+
+app.get('/check-group-buy-quantity-so-far', (req, res) => {
+    var product_code = req.query.product_code;
+    var sql = '';
+    if(product_code != undefined){
+        sql = `select sum(quantity) as quantity from (select * from vtportal.enquiry e) enq inner join (select * from vtportal.enquiry_detail) enqD on enq.enquiry_id = enqD.enquiry_id where goods_id = '${product_code}' and status != 'waitpay'`;
+    }
+    con.query(sql, function (err, result, fields) {
+        if (err) console.log(err);
+        var returnResponse = {
+            status : true,
+            quantitySoFar : result[0].quantity
+        };
+        if(result != undefined || result != null){
+            if(result[0].quantity != null || result[0].quantity != undefined){
+                returnResponse = {
+                    status : true,
+                    quantitySoFar : result[0].quantity
+                };
+            }else{
+                returnResponse = {
+                    status : false,
+                    quantitySoFar : result[0].quantity
+                };
+            }
+        }else{
+            returnResponse = {
+                status : false
+            };
+        }
+        res.send(returnResponse);
+    });
+})
+
+app.get('/check-group-buy-quantity-so-far-gross', (req, res) => {
+    var product_code = req.query.product_code;
+    var sql = '';
+    if(product_code != undefined){
+        sql = `select sum(quantity) as quantity from (select * from vtportal.enquiry e) enq inner join (select * from vtportal.enquiry_detail) enqD on enq.enquiry_id = enqD.enquiry_id where goods_id = '${product_code}' and status = 'payment'`;
+    }
+    con.query(sql, function (err, result, fields) {
+        if (err) console.log(err);
+        var returnResponse = {
+            status : true,
+            quantitySoFar : result[0].quantity
+        };
+        if(result != undefined || result != null){
+            if(result[0].quantity != null || result[0].quantity != undefined){
+                returnResponse = {
+                    status : true,
+                    quantitySoFar : result[0].quantity
+                };
+            }else{
+                returnResponse = {
+                    status : false,
+                    quantitySoFar : result[0].quantity
+                };
+            }
+        }else{
+            returnResponse = {
+                status : false
+            };
+        }
+        res.send(returnResponse);
+    });
+})
+
+app.get('/unpaid-in-store-orders', (req, res) => {
+    var customer_no = req.query.customer_no;
+    var sql = '';
+    if(customer_no != undefined){
+        sql = `select * from vtportal.temporary_order_request_in_store where customer_no = '${customer_no}' and addedToAccurate != 1`;
+    }
+    con.query(sql, function (err, result, fields) {
+        if (err) console.log(err);
+        var returnResponse = [];
+        var i =0;
+        for(i; i < result.length; i++){
+            returnResponse.push({
+                payment_method_selected : result[i].payment_term_name,
+                trans_date : result[i].trans_date,
+                product_code : result[i].product_code,
+                requested_quantity : result[i].request_quantity,
+                unit_price : result[i].unitPrice,
+                confirmation_code: result[i].confirmation_code
             });
         }
         res.send(returnResponse);
