@@ -328,24 +328,32 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
                     gettingSalesOrderListWithDetails(token, session, saved_sales_order_id_list[i].id, saved_sales_order_id_list_with_details, i);
                 }
                 setTimeout(function(){ 
+                    console.log("===================== sortOutSalesOrderDetails =====================");
                     var sorted_out_saved_sales_order_id_list_with_details = [];
                     sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details);
-                    sendDataToMySQL(sorted_out_saved_sales_order_id_list_with_details);
-                    var responseTemp = {
-                        totalLength : saved_sales_order_id_list.length,
-                        totalLengthAfterDetails : saved_sales_order_id_list_with_details.length,
-                        totalLengthAfterDetailsSorted : sorted_out_saved_sales_order_id_list_with_details.length
-                    };
-                    console.log(responseTemp);
+                    execution(saved_sales_order_id_list, saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details);
                     setTimeout(() => {
                         res.send(sorted_out_saved_sales_order_id_list_with_details);
-                    }, sorted_out_saved_sales_order_id_list_with_details * 3000);
-                }, saved_sales_order_id_list.length*3600*1.2);
+                    }, saved_sales_order_id_list.length*700*1.2);
+                }, saved_sales_order_id_list.length*650*1.25);
                 // res.send(saved_sales_order_id_list);
             }, total_page_available*1000);
         });
     });
 })
+
+function execution(saved_sales_order_id_list, saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details){
+    setTimeout(() => {
+        console.log("===================== responseTemp =====================");
+        var responseTemp = {
+            totalLength : saved_sales_order_id_list.length,
+            totalLengthAfterDetails : saved_sales_order_id_list_with_details.length,
+            totalLengthAfterDetailsSorted : sorted_out_saved_sales_order_id_list_with_details.length
+        };
+        sendDataToMySQL(sorted_out_saved_sales_order_id_list_with_details);
+        console.log(responseTemp);
+    }, saved_sales_order_id_list.length*250);
+}
 
 async function sendDataToMySQL(sorted_out_saved_sales_order_id_list_with_details){
     var i=0;
@@ -435,6 +443,12 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
                 });
                 var x = 0;
                 for(x ; x < sorted_out_saved_sales_order_id_list_with_details[i].order_details.length; x++){
+                    if(sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number == "SO.2021.04.00167"){
+                        console.log({
+                            product_code : sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].product_code,
+                            price_per_unit : sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].price_per_unit
+                        });   
+                    }
                     updateOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x);
                 }
             }
@@ -444,46 +458,17 @@ async function accessingMySQL(sorted_out_saved_sales_order_id_list_with_details,
 
 async function updateOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x){
     setTimeout(() => {
-        var thedate = new Date();
-        var uniqueCode = 
-            (
-            (Math.floor((Math.random() * 10) + 1)*2) +
-            (Math.floor((Math.random() * 20) + 11)*3) +
-            (Math.floor((Math.random() * 30) + 21)*4) +
-            (Math.floor((Math.random() * 40) + 31)*5) +
-            (Math.floor((Math.random() * 50) + 41)*6) +
-            (Math.floor((Math.random() * 60) + 51)*7) +
-            (Math.floor((Math.random() * 70) + 61)*8) +
-            (Math.floor((Math.random() * 80) + 71)*9) +
-            (Math.floor((Math.random() * 90) + 81)*10) +
-            (Math.floor((Math.random() * 100) + 91)*11) +
-            (Math.floor((Math.random() * 110) + 101)*12) +
-            (Math.floor((Math.random() * 210) + 201)*13) +
-            (Math.floor((Math.random() * 310) + 301)*14) +
-            (Math.floor((Math.random() * 410) + 401)*15) +
-            (Math.floor((Math.random() * 510) + 501)*16) +
-            (Math.floor((Math.random() * 610) + 601)*17) +
-            (Math.floor((Math.random() * 710) + 701)*18) +
-            (Math.floor((Math.random() * 810) + 801)*19) +
-            (Math.floor((Math.random() * 910) + 901)*20) +
-            (Math.floor((Math.random() * 1010) + 1001)*21) +
-            (Math.floor((Math.random() * 1110) + 1101)*22) +
-            (Math.floor((Math.random() * 1210) + 1201)*23) +
-            (Math.floor((Math.random() * 1310) + 1301)*24)
-            ) * (Math.floor((Math.random() * 10) + 1)*2) * (Math.floor((Math.random() * 7) + 1)*7) + thedate.getMilliseconds()
-        ;
         var sql = `UPDATE vtportal.sales_order_details_accurate SET 
         name = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].name}'
-        , product_code = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].product_code}'
         , quantity_bought = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].quantity_bought}'
         , price_per_unit = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].price_per_unit}'
         , total_price = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].total_price_based_on_quantity}'
-        , oid = '${uniqueCode}'
-        WHERE so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}';`;
+        WHERE so_number = '${sorted_out_saved_sales_order_id_list_with_details[i].sales_order_number}'
+        and product_code = '${sorted_out_saved_sales_order_id_list_with_details[i].order_details[x].product_code}';`;
         con.query(sql, function (err, result) {
             if (err) console.log(err);
         });
-    }, 1000);
+    }, 100);
 }
 
 async function insertOrderDetails(sorted_out_saved_sales_order_id_list_with_details, i , x){
@@ -528,7 +513,7 @@ async function insertOrderDetails(sorted_out_saved_sales_order_id_list_with_deta
         con.query(sql, function (err, result) {
             if (err) console.log(err);
         });
-    }, 1000);
+    }, 100);
 }
 
 async function sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details){
@@ -537,40 +522,42 @@ async function sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, 
         var x=0;
         var totalQuantities = 0;
         var orderDetailsArray = [];
-        for(x; x < (saved_sales_order_id_list_with_details[i].detailItem).length; x++){
-            totalQuantities = totalQuantities + saved_sales_order_id_list_with_details[i].detailItem[x].quantityDefault;
-            orderDetailsArray.push({
-                name : saved_sales_order_id_list_with_details[i].detailItem[x].item.name,
-                product_code : saved_sales_order_id_list_with_details[i].detailItem[x].item.no,
-                quantity_bought : saved_sales_order_id_list_with_details[i].detailItem[x].quantityDefault,
-                price_per_unit : saved_sales_order_id_list_with_details[i].detailItem[x].availableUnitPrice,
-                total_price_based_on_quantity : saved_sales_order_id_list_with_details[i].detailItem[x].totalPrice
-            });
-        }
-
-        var sorted = {
-            sales_order_number: saved_sales_order_id_list_with_details[i].number,
-            order_date: saved_sales_order_id_list_with_details[i].transDateView,
-            period_date: saved_sales_order_id_list_with_details[i].paymentTerm.netDays,
-            payment_method: saved_sales_order_id_list_with_details[i].paymentTerm.name,
-            customer_name: saved_sales_order_id_list_with_details[i].customer.name,
-            customer_code: saved_sales_order_id_list_with_details[i].customer.customerNo,
-            contact_number: saved_sales_order_id_list_with_details[i].customer.contactInfo.mobilePhone,
-            salesman: saved_sales_order_id_list_with_details[i].detailItem[0].salesmanName,
-            delivery_address: saved_sales_order_id_list_with_details[i].toAddress,
-            // delivery_address_details: saved_sales_order_id_list_with_details[i].customer.shipAddress,
-            total_quantities: totalQuantities,
-            total_amount: saved_sales_order_id_list_with_details[i].totalAmount,
-            order_details: orderDetailsArray
-        }
-        // console.log(saved_sales_order_id_list_with_details[i].approvalStatus);
-        // console.log(saved_sales_order_id_list_with_details[i].percentShipped == 100.000000);
-        // console.log(saved_sales_order_id_list_with_details[i].approvalStatus == "APPROVED" && saved_sales_order_id_list_with_details[i].percentShipped == 100.000000);
-        if(saved_sales_order_id_list_with_details[i].approvalStatus == "APPROVED" && saved_sales_order_id_list_with_details[i].percentShipped == 100.000000){
+        if(saved_sales_order_id_list_with_details[i].detailItem != undefined){
+            for(x; x < (saved_sales_order_id_list_with_details[i].detailItem).length; x++){
+                totalQuantities = totalQuantities + saved_sales_order_id_list_with_details[i].detailItem[x].quantityDefault;
+                orderDetailsArray.push({
+                    name : saved_sales_order_id_list_with_details[i].detailItem[x].item.name,
+                    product_code : saved_sales_order_id_list_with_details[i].detailItem[x].item.no,
+                    quantity_bought : saved_sales_order_id_list_with_details[i].detailItem[x].quantityDefault,
+                    price_per_unit : saved_sales_order_id_list_with_details[i].detailItem[x].availableUnitPrice,
+                    total_price_based_on_quantity : saved_sales_order_id_list_with_details[i].detailItem[x].totalPrice
+                });
+            }
+    
+            var sorted = {
+                sales_order_number: saved_sales_order_id_list_with_details[i].number,
+                order_date: saved_sales_order_id_list_with_details[i].transDateView,
+                period_date: saved_sales_order_id_list_with_details[i].paymentTerm.netDays,
+                payment_method: saved_sales_order_id_list_with_details[i].paymentTerm.name,
+                customer_name: saved_sales_order_id_list_with_details[i].customer.name,
+                customer_code: saved_sales_order_id_list_with_details[i].customer.customerNo,
+                contact_number: saved_sales_order_id_list_with_details[i].customer.contactInfo.mobilePhone,
+                salesman: saved_sales_order_id_list_with_details[i].detailItem[0].salesmanName,
+                delivery_address: saved_sales_order_id_list_with_details[i].toAddress,
+                // delivery_address_details: saved_sales_order_id_list_with_details[i].customer.shipAddress,
+                total_quantities: totalQuantities,
+                total_amount: saved_sales_order_id_list_with_details[i].totalAmount,
+                order_details: orderDetailsArray
+            }
             // console.log(saved_sales_order_id_list_with_details[i].approvalStatus);
-            sorted_out_saved_sales_order_id_list_with_details.push(sorted);
+            // console.log(saved_sales_order_id_list_with_details[i].percentShipped == 100.000000);
+            // console.log(saved_sales_order_id_list_with_details[i].approvalStatus == "APPROVED" && saved_sales_order_id_list_with_details[i].percentShipped == 100.000000);
+            if(saved_sales_order_id_list_with_details[i].approvalStatus == "APPROVED" && saved_sales_order_id_list_with_details[i].percentShipped == 100.000000){
+                // console.log(saved_sales_order_id_list_with_details[i].approvalStatus);
+                sorted_out_saved_sales_order_id_list_with_details.push(sorted);
+            }
+            // sorted_out_saved_sales_order_id_list_with_details.push(sorted);
         }
-        // sorted_out_saved_sales_order_id_list_with_details.push(sorted);
     }
 }
 
@@ -585,11 +572,13 @@ async function gettingSalesOrderListWithDetails(token, session, id, saved_sales_
             }
         };
         request(options, function (error, response) {
-            if (error) throw new Error(error);
+            if (error) console.log(error);
             console.log(id);
-            saved_sales_order_id_list_with_details.push(JSON.parse(response.body).d);
+            if(response != undefined){
+                saved_sales_order_id_list_with_details.push(JSON.parse(response.body).d);   
+            }
         });
-    }, time*3500);   
+    }, time*500);   
 }
 
 async function gettingSalesOrderList(token, session, page_requested, saved_sales_order_id_list){
