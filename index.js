@@ -19,7 +19,7 @@ con.connect(function(err) {
     if (err) console.log(err);
     console.log("Connected! to MySQL");
 });
-var latestVersion = '1.0.6';
+var latestVersion = '1.0.7';
 app.get('/check-app-latest-version', (req, res) => {
     var userAppVersion = req.query.version;
     console.log(userAppVersion);
@@ -89,7 +89,7 @@ function getRefreshedToken() {
         });
     });
 }
-setInterval(getRefreshedToken, 179050709);//179050709
+setInterval(getRefreshedToken, 513997357);//513997357
 
 function getSessionId(accessToken){
     var request = require('request');
@@ -790,7 +790,7 @@ setInterval(() => {
             });
         }
     });
-}, 123456789);
+}, 92660400);
 
 var groupBuyItems = {};
 
@@ -970,7 +970,7 @@ setInterval(() => {
             });
         }
     });
-}, 123456789);
+}, 92660400);
 
 var newItems = {};
 
@@ -1152,7 +1152,7 @@ setInterval(() => {
             });
         }
     });
-}, 123456789);
+}, 92660400);
 
 app.get('/get-item-details-by-name', (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting list details complete");
@@ -1830,7 +1830,7 @@ function collectingSalesOrders(){
 
 setInterval(() => {
     collectingSalesOrders();
-}, 4246824);
+}, 4932000);
 
 function gettingSalesOrderListPerPageToBeStoredInMEM(pageFlipper, collectedSalesOrdersWithDetails, pageCount){
     setTimeout(() => {
