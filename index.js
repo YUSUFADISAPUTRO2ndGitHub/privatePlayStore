@@ -51,8 +51,8 @@ app.get('/', (req, res) => {
 })
 
 // this is just a token at the beginning, token will be dynamic and refreshed based on time interval
-var refresh_token = 'a8b43413-d00d-4251-8c78-69732827c75a';
-var access_token = 'e2631b4c-025c-4e2a-bc88-5745ab815515';
+var refresh_token = 'c253ec12-5bba-4343-a4d1-04c9b7fb958f';
+var access_token = '6674cbb0-c250-40df-a3c4-ec07dd1a087b';
 var session_id_for_accurate_db = '';
 var request = require('request');
 function getRefreshedToken() {
@@ -2762,6 +2762,74 @@ app.get('/unpaid-in-store-orders', (req, res) => {
             });
         }
         res.send(returnResponse);
+    });
+})
+
+app.get('/forget-password-request', (req, res) => {
+    console.log("forget-password-request ========================================================== started");
+    var customer_primary_contact = req.query.customer_primary_contact;
+    var customer_primary_email = req.query.customer_primary_email;
+    var customer_name = req.query.customer_name;
+    // var customer_register_time = req.query.customer_register_time;
+    console.log("customer_primary_contact " + customer_primary_contact);
+    console.log("customer_primary_email " + customer_primary_email);
+    console.log("customer_name " + customer_name);
+    var sql = `select cust_id from vtportal.customer where cust_email like '%${customer_primary_email}%'`;
+    con.query(sql, function (err, result, fields) {
+        if (err) console.log(err);
+        console.log("result.length 1 " + result.length);
+        if(result.length != 0 && result.length == 1){
+            var sql = `select cust_id from vtportal.customer where cust_mobile like '%${customer_primary_contact}%' and cust_id like '%${result[0].cust_id}%'`;
+            con.query(sql, function (err, result, fields) {
+                if (err) console.log(err);
+                console.log("result.length 2 " + result.length);
+                if(result.length != 0){
+                    var sql = `select cust_id from vtportal.customer where cust_name like '%${customer_name}%' and cust_id like '%${result[0].cust_id}%'`;
+                    con.query(sql, function (err, result, fields) {
+                        if (err) console.log(err);
+                        console.log("result.length 3 " + result.length);
+                        if(result.length != 0){
+                            // reset password approved
+                            res.send(
+                                {
+                                    customerNo: result[0].cust_id
+                                }
+                            );
+                        }else{
+                            // reset password fail in name
+                            res.send(false);
+                        }
+                    });
+                }else{
+                    // reset password fail in contact number
+                    res.send(false);
+                }
+            });
+        }else{
+            // reset password fail in email
+            res.send(false);
+        }
+    });
+})
+
+app.get('/alter-password-with-approve-request', (req, res) => {
+    var customer_no = req.query.customer_no;
+    var password = req.query.password;
+    var request = require('request');
+    var options = {
+        'method': 'GET',
+        'url': 'http://147.139.168.202:8080/resetPasswordWithCustomerNo.jsp?customerNo=' + customer_no + '&password=' + password + '',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) throw new Error(error);
+        console.log(response.body);
+        if(JSON.parse(response.body)){
+            res.send(response.body);
+        }else{
+            res.send(false);
+        }
     });
 })
 
