@@ -237,7 +237,7 @@ function engineJumpStart(){
 app.get('/get-lastest-token-and-session',  (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting token and session");
     var sql = `select access_token, session_id from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1;`;
-     con.query(sql, function (err, result) {
+    con.query(sql, function (err, result) {
         if (err) console.log(err);
         console.log("accessing latest token and session request");
         console.log("result[0].access_token : " + result[0].access_token);
@@ -2053,6 +2053,7 @@ function collectingSalesOrders(){
         request(options, function (error, response) {
             if (error) console.log(error);
             if(response != undefined || response != null){
+                console.log(response.body);
                 var result = JSON.parse(response.body);
                 if(result != undefined && result.sp != undefined){
                     pageCount = result.sp.pageCount;
