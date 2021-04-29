@@ -317,6 +317,7 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
             if (error) throw new Error(error);
             total_page_available = JSON.parse(response.body).sp.pageCount;
             var temp ;
+            console.log("started");
             while(page_requested <= total_page_available){
                 gettingSalesOrderList(token, session, page_requested, saved_sales_order_id_list);
                 page_requested++;
@@ -519,6 +520,7 @@ async function insertOrderDetails(sorted_out_saved_sales_order_id_list_with_deta
 async function sortOutSalesOrderDetails(saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details){
     var i=0;
     for(i; i < saved_sales_order_id_list_with_details.length; i++){
+        console.log("sort sales order number " + saved_sales_order_id_list_with_details[i].number);
         var x=0;
         var totalQuantities = 0;
         var orderDetailsArray = [];
@@ -573,7 +575,7 @@ async function gettingSalesOrderListWithDetails(token, session, id, saved_sales_
         };
         request(options, function (error, response) {
             if (error) console.log(error);
-            console.log(id);
+            console.log("id " + id);
             if(response != undefined){
                 saved_sales_order_id_list_with_details.push(JSON.parse(response.body).d);   
             }
@@ -583,6 +585,7 @@ async function gettingSalesOrderListWithDetails(token, session, id, saved_sales_
 
 async function gettingSalesOrderList(token, session, page_requested, saved_sales_order_id_list){
     setTimeout(async () => {
+        console.log("page_requested " + page_requested);
         options = {
             'method': 'GET',
             'url': 'https://public.accurate.id/accurate/api/sales-order/list.do?' + 'sp.page=' + page_requested + '&fields=id,number,percentShipped',

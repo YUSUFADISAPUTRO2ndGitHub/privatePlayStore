@@ -2631,8 +2631,10 @@ app.get('/confirm-temp-order-paid', (req, res) => {
                     sql = `UPDATE vtportal.temporary_order_request_in_store
                     SET addedToAccurate = 1
                     where confirmation_code = '${result[0].confirmation_code}';`;
+                    console.log(sql);
                     con.query(sql, function (err, result, fields) {
                         if (err) console.log(err);
+                        console.log(result);
                         console.log("data has been assigned to 1 ======================== ");
                     });
                 });

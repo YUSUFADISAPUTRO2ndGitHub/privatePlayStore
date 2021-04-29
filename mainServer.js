@@ -24,7 +24,10 @@ const get_latest_recorded_token = async () => {
     var sql = `select access_token, session_id from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
+            if (err) {
+                console.log(err);
+                resolve(await get_latest_recorded_token());
+            };
             access_token = await result[0].access_token;
             session_id_for_accurate_db = await result[0].session_id;
             resolve({
@@ -43,7 +46,7 @@ app.get('/get-lastest-token-and-session',  async (req, res) => {
     );
 })
 
-app.get('/get-all-sales-order-details',  async (req, res) => {
+app.get('/get-all-sales-order-and-save-copy-to-MySQL',  async (req, res) => {
     var  collected_sales_order_ids = [];
     var total_page = await collecting_all_sales_orders_from_accurate().then(async value => {
         return await value;
@@ -78,7 +81,7 @@ app.get('/get-all-sales-order-details',  async (req, res) => {
     );
 })
 
-const save_sales_order_in_json_to_mysql = async (collected_sales_order_details) => {
+async function saving_all_sales_orders_to_MySQL(collected_sales_order_details){
     var i = 0;
     return new Promise(async resolve => {
         for(i ; i < collected_sales_order_details.length ; i++){
@@ -87,8 +90,8 @@ const save_sales_order_in_json_to_mysql = async (collected_sales_order_details) 
             ('${collected_sales_order_details[i].status}'
             , '${collected_sales_order_details[i].salesOrderId}'
             , '${collected_sales_order_details[i].salesOrderNumber}'
-            , '${collected_sales_order_details[i].customerId}'
             , '${collected_sales_order_details[i].customerNo}'
+            , '${collected_sales_order_details[i].customerId}'
             , '${collected_sales_order_details[i].transDate}'
             , '${collected_sales_order_details[i].toAddress}'
             , '${collected_sales_order_details[i].subTotal}'
@@ -97,9 +100,37 @@ const save_sales_order_in_json_to_mysql = async (collected_sales_order_details) 
             , '${JSON.stringify(collected_sales_order_details[i].detailItem)}')`;
             await con.query(sql, async function (err, result) {
                 if (err) await console.log(err);
+                console.log("======= added to sales_orders_temporary_container =======");
             });
         }
-        resolve(true);
+        resolve(true); 
+    });
+}
+
+async function clear_table_sales_orders_temporary_container(){
+    var sql = `delete from vtportal.sales_orders_temporary_container;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            console.log("======= sales_orders_temporary_container has been cleared 1 =======");
+            resolve(true);
+        });
+    });
+}
+
+const save_sales_order_in_json_to_mysql = async (collected_sales_order_details) => {
+    return new Promise(async resolve => {
+        if(await clear_table_sales_orders_temporary_container().then(async value => {
+            return await value;
+        })){
+            console.log("======= sales_orders_temporary_container has been cleared 2 =======");
+            if(await saving_all_sales_orders_to_MySQL(collected_sales_order_details).then(async value => {
+                return await value;
+            })){
+                console.log("======= sales_orders_temporary_container has been filled =======");
+                resolve(true); 
+            }
+        }
     });
 }
 
@@ -247,6 +278,26 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id){
     });
 }
 
+app.get('/get-copy-of-sales-order',  async (req, res) => {
+    var collected_item_details = await get_sales_orders_from_mysql().then(async value => {
+        return await value;
+    });
+
+    res.send(
+        collected_item_details
+    );
+})
+
+const get_sales_orders_from_mysql = async () => {
+    var sql = `select * from vtportal.sales_orders_temporary_container;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(result);
+        });
+    })
+}
+
 app.get('/get-sales-order-by-customer-id', async (req, res) => {
     var filteredSalesOrderBasedOnCustomerNo = [];
     var customerNo = req.query.customerNo;
@@ -265,7 +316,7 @@ async function get_sales_orders_based_customer_no (customerNo){
     var filteredSalesOrderBasedOnCustomerNo = [];
     var options = {
         'method': 'GET',
-        'url': 'http://localhost:3003/get-all-sales-order-details',
+        'url': 'http://localhost:3003/get-copy-of-sales-order',
     };
     return new Promise(async resolve => {
         await request(options, async function (error, response) {
@@ -319,12 +370,61 @@ app.get('/get-item-all',  async (req, res) => {
 })
 
 const save_item_in_json_to_mysql = async (collected_item_details) => {
-    var sql = `INSERT into vtportal.temporary_container (item_list_from_accurate, recorded_time) values ('${JSON.stringify(collected_item_details)}', CURRENT_TIMESTAMP());`;
+    var i = 0;
+    return new Promise(async resolve => {
+        if(await clear_table_item_details_temporary_container().then(async value => {
+            return await value;
+        })){
+            console.log("======= item_details_temporary_container has been cleared 2 =======");
+            if(await saving_all_items_to_MySQL(collected_item_details).then(async value => {
+                return await value;
+            })){
+                console.log("======= item_details_temporary_container has been filled =======");
+                resolve(true); 
+            }
+        }
+    });
+}
+
+async function clear_table_item_details_temporary_container(){
+    var sql = `delete from vtportal.items_temporary_container;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
+            console.log("======= item_details_temporary_container has been cleared 1 =======");
             resolve(true);
         });
+    });
+}
+
+async function saving_all_items_to_MySQL(collected_item_details){
+    var i = 0;
+    return new Promise(async resolve => {
+        for(i ; i < collected_item_details.length ; i++){
+            var sql = `INSERT into vtportal.items_temporary_container values 
+            (
+                '${collected_item_details[i].itemId}',
+                '${collected_item_details[i].name}',
+                '${collected_item_details[i].shortName}',
+                '${collected_item_details[i].category}',
+                '${collected_item_details[i].no}',
+                '${collected_item_details[i].unitPrice}',
+                '${collected_item_details[i].unitNameWarehouse}',
+                '${collected_item_details[i].totalUnitQuantity}',
+                '${collected_item_details[i].availableToSell}',
+                '${collected_item_details[i].groupBuyStatus}',
+                '${collected_item_details[i].groupBuyAvaiableQuantity}',
+                '${collected_item_details[i].groupBuyDiscount}',
+                '${collected_item_details[i].promotedNew}',
+                '${collected_item_details[i].notes}',
+                '${collected_item_details[i].productImageCover}'
+            );`;
+            await con.query(sql, async function (err, result) {
+                if (err) await console.log(err);
+                console.log("======= added to item_details_temporary_container =======");
+            });
+        }
+        resolve(true);
     })
 }
 
@@ -502,8 +602,8 @@ async function get_image_of_an_item(result){
     });
 }
 
-app.get('/test',  async (req, res) => {
-    var collected_item_details = await get_item_in_json_to_mysql().then(async value => {
+app.get('/get-copy-of-items-with-details',  async (req, res) => {
+    var collected_item_details = await get_item_details_from_mysql().then(async value => {
         return await value;
     });
 
@@ -511,12 +611,74 @@ app.get('/test',  async (req, res) => {
         collected_item_details
     );
 })
-const get_item_in_json_to_mysql = async () => {
-    var sql = `select sales_orders_from_accurate, max(recorded_time) from vtportal.temporary_container group by item_list_from_accurate;`;
+
+const get_item_details_from_mysql = async () => {
+    var sql = `select * from vtportal.items_temporary_container;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
-            resolve(result[0].sales_orders_from_accurate);
+            resolve(result);
+        });
+    })
+}
+
+app.get('/get-item-details',  async (req, res) => {
+    var itemNo = req.query.itemNo;
+    var collected_item_details = await get_item_details_based_on_product_no_from_mysql(itemNo).then(async value => {
+        return await value;
+    });
+
+    res.send(
+        collected_item_details
+    );
+})
+
+const get_item_details_based_on_product_no_from_mysql = async (itemNo) => {
+    var sql = `select * from vtportal.items_temporary_container where no = '${itemNo}';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(result);
+        });
+    })
+}
+
+app.get('/get-item-all-group-buy',  async (req, res) => {
+    var collected_item_details = await get_item_details_available_for_group_buy_from_mysql().then(async value => {
+        return await value;
+    });
+
+    res.send(
+        collected_item_details
+    );
+})
+
+const get_item_details_available_for_group_buy_from_mysql = async () => {
+    var sql = `select * from vtportal.items_temporary_container where groupBuyStatus = 'yes';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(result);
+        });
+    })
+}
+
+app.get('/get-item-all-new',  async (req, res) => {
+    var collected_item_details = await get_item_details_available_new_from_mysql().then(async value => {
+        return await value;
+    });
+
+    res.send(
+        collected_item_details
+    );
+})
+
+const get_item_details_available_new_from_mysql = async () => {
+    var sql = `select * from vtportal.items_temporary_container where promotedNew = 'yes';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(result);
         });
     })
 }
