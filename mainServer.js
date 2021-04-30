@@ -334,7 +334,7 @@ async function get_sales_orders_based_customer_no (customerNo){
     });
 }
 
-app.get('/get-item-all',  async (req, res) => {
+app.get('/get-all-items-and-save-copy-to-MySQL',  async (req, res) => {
     var  collected_item_ids = [];
     var total_page = await getting_total_page().then(async value => {
         return await value;
@@ -681,6 +681,70 @@ const get_item_details_available_new_from_mysql = async () => {
             resolve(result);
         });
     })
+}
+
+app.get('/get-item-all',  async (req, res) => {
+    var collected_item_details = await get_item_details_copy_from_mysql().then(async value => {
+        return await value;
+    });
+
+    res.send(
+        collected_item_details
+    );
+})
+
+const get_item_details_copy_from_mysql = async () => {
+    var sql = `select * from vtportal.items_temporary_container;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(result);
+        });
+    })
+}
+
+startTime();
+
+function startTime() {
+    var today = new Date();
+    var h = today.getHours();
+    var m = today.getMinutes();
+    var s = today.getSeconds();
+    m = checkTime(m);
+    s = checkTime(s);
+    var timeRecorded = h + ":" + m + ":" + s;
+    if(timeRecorded == '23:55:00'){
+        triggerEngineStart();
+    }
+    var t = setTimeout(startTime, 1000);
+}
+
+function checkTime(i) {
+    if (i < 10) {i = "0" + i}; 
+    return i;
+}
+
+function triggerEngineStart(){
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:3003/get-all-sales-order-and-save-copy-to-MySQL',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) throw new Error(error);
+        console.log(response.body);
+    });
+    options = {
+        'method': 'GET',
+        'url': 'http://localhost:3003/get-all-items-and-save-copy-to-MySQL',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) throw new Error(error);
+        console.log(response.body);
+    });
 }
 
 app.listen(port, () => {
