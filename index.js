@@ -19,7 +19,7 @@ con.connect(function(err) {
     if (err) console.log(err);
     console.log("Connected! to MySQL");
 });
-var latestVersion = '1.0.7';
+var latestVersion = '1.0.8';
 app.get('/check-app-latest-version', (req, res) => {
     var userAppVersion = req.query.version;
     console.log(userAppVersion);
@@ -1028,7 +1028,7 @@ setInterval(() => {
             request(options, function (error, response) {
                 if (error) console.log(error);
                 if(response != undefined){
-                    allItems = {};
+                    // allItems = {};
                     allItems = JSON.parse(response.body);
                     console.log(allItems);
                 }
@@ -1209,7 +1209,7 @@ setInterval(() => {
                 if (error) console.log(error);
                 // groupBuyItems = JSON.parse(response.body);
                 if(response != undefined){
-                    groupBuyItems = {};
+                    // groupBuyItems = {};
                     groupBuyItems = JSON.parse(response.body);
                 }
             });
@@ -1390,7 +1390,7 @@ setInterval(() => {
                 if (error) console.log(error);
                 // newItems = JSON.parse(response.body);
                 if(response != undefined){
-                    newItems = {};
+                    // newItems = {};
                     newItems = JSON.parse(response.body);
                 }
                 // console.log(newItems);

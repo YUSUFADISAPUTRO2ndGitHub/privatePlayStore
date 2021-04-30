@@ -29,8 +29,8 @@ async function getRefreshedToken() {
     var sql = `select access_token, refresh_token from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1`;
     await con.query(sql, async function (err, result, fields) {
         if (err) console.log(err);
-        // access_token = result[0].access_token;
-        // refresh_token = result[0].refresh_token;
+        access_token = result[0].access_token;
+        refresh_token = result[0].refresh_token;
         console.log("=============== MYSQL TOKEN GATHERED ===============");
         console.log("last updated access token : " + access_token);
         console.log("last updated refresh token : " + refresh_token);
@@ -55,7 +55,7 @@ async function getRefreshedToken() {
                     console.log("RENEWED refresh_token > " + refresh_token);
                     console.log("RENEWED access_token > " + access_token);
                     
-                    await getSessionId(access_token).then(async value => {
+                    await get_session_id(access_token).then(async value => {
                         return await value;
                     })
                 }
@@ -76,7 +76,7 @@ async function save_new_token_to_accurate(result){
     });
 }
 
-async function getSessionId(accessToken){
+async function get_session_id(accessToken){
     var options = {
         'method': 'GET',
         'url': 'https://account.accurate.id/api/open-db.do?id=300600',
@@ -110,31 +110,6 @@ async function update_session_id_to_MYSQL(result, accessToken){
             resolve(true);
         });
     });
-}
-
-startTime();
-
-function startTime() {
-    var today = new Date();
-    var h = today.getHours();
-    var m = today.getMinutes();
-    var s = today.getSeconds();
-    m = checkTime(m);
-    s = checkTime(s);
-    var timeRecorded = h + ":" + m + ":" + s;
-    if(timeRecorded == '23:55:00'){
-        triggerEngineStart();
-    }
-    var t = setTimeout(startTime, 1000);
-}
-
-function checkTime(i) {
-    if (i < 10) {i = "0" + i}; 
-    return i;
-}
-
-function triggerEngineStart(){
-
 }
 
 app.listen(port, () => {
