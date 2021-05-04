@@ -111,7 +111,71 @@ async function get_sales_order_based_on_order_number(Order_Number){
     });
 } 
 
-//update-sales-order-payment-status
+//update-sales-order-payment-status-to-unpaid
+app.post('/update-sales-order-payment-status-to-unpaid',  async (req, res) => {
+    var Order_Number = req.query.Order_Number;
+    if(Order_Number != undefined){
+        res.send(
+            (await update_Sales_Order_Payment_status_to_unpaid(Order_Number).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function update_Sales_Order_Payment_status_to_unpaid(Order_Number){
+    var sql = `
+        UPDATE vtportal.sales_order_management
+        SET 
+        Payment_Status = 'unpaid'
+        WHERE Order_Number = '${Order_Number}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+} 
+
+//update-sales-order-payment-status-to-cancelled
+app.post('/update-sales-order-payment-status-to-cancelled',  async (req, res) => {
+    var Order_Number = req.query.Order_Number;
+    if(Order_Number != undefined){
+        res.send(
+            (await update_Sales_Order_Payment_status_to_cancelled(Order_Number).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function update_Sales_Order_Payment_status_to_cancelled(Order_Number){
+    var sql = `
+        UPDATE vtportal.sales_order_management
+        SET 
+        Payment_Status = 'cancelled'
+        WHERE Order_Number = '${Order_Number}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+} 
+
+//update-sales-order-payment-status-to-paid
 app.post('/update-sales-order-payment-status-to-paid',  async (req, res) => {
     var Order_Number = req.query.Order_Number;
     if(Order_Number != undefined){
@@ -486,6 +550,50 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             'active'
         );
     `;
+    if(Sales_Order_Data.Payment_Method.toUpperCase() == 'BCA VA TRANSFER' || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
+        var today = new Date();
+        var d = today.getDate();
+        var mth = today.getMonth() + 1;
+        var y = today.getFullYear();
+        var h = today.getHours();
+        var m = today.getMinutes();
+        var s = today.getSeconds();
+        var final_va = y + '' + mth + '' + d + '' + h + '' + m + '' + s + '';
+        var sql = `
+            INSERT INTO vtportal.sales_order_management 
+            (
+                Order_Number,
+                Customer_Code,
+                Total_Price,
+                Total_Quantity,
+                Unit,
+                Shipping_Address,
+                Shipping_Contact_Number,
+                Payment_Method,
+                Shipping_Fee,
+                Primary_Recipient_Name,
+                Created_Date,
+                Status,
+                VA_Number
+            )
+            VALUES 
+            (
+                '${Order_Number}',
+                '${Sales_Order_Data.Customer_Code}',
+                '${Sales_Order_Data.Total_Price}',
+                '${Sales_Order_Data.Total_Quantity}',
+                '${Sales_Order_Data.Unit}',
+                '${Sales_Order_Data.Shipping_Address}',
+                '${Sales_Order_Data.Shipping_Contact_Number}',
+                '${Sales_Order_Data.Payment_Method}',
+                '${Sales_Order_Data.Shipping_Fee}',
+                '${Sales_Order_Data.Primary_Recipient_Name}',
+                CURDATE(),
+                'active',
+                '${final_va}'
+            );
+        `;
+    }
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
