@@ -1,6 +1,7 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const express = require('express');
 const cors = require('cors');
+var crypto = require('crypto');
 var request = require('request');
 var mysql = require('mysql');
 const app = express();
@@ -36,6 +37,142 @@ const get_latest_recorded_token = async () => {
             });
         });
     })
+}
+
+//customer forgot password
+app.post('/customer-forgot-password-request',  async (req, res) => {
+    var Email = req.query.Email;
+    var Birthday = req.query.Birthday;
+    var PrimaryContactNumber = req.query.PrimaryContactNumber;
+    var requestedNewPassword = req.query.requestedNewPassword;
+    if(PrimaryContactNumber != undefined && Birthday != undefined && Email != undefined){
+        var user_data_found = await check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, Birthday, Email).then(async value => {
+            return await value;
+        });
+        if(user_data_found.status == true && user_data_found.data.Email.toUpperCase() == Email.toUpperCase()){
+            var encrypted_password = await encrypt_password(requestedNewPassword).then(async value => {
+                return await value;
+            });
+            res.send(
+                await update_user_password(Email, PrimaryContactNumber, encrypted_password).then(async value => {
+                    return await value;
+                })
+            );
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+async function update_user_password(Email, PrimaryContactNumber, encrypted_password){
+    var sql = `
+        UPDATE vtportal.customer_management
+        User_Password = '${encrypted_password}'
+        WHERE Email = '${Email}' and Contact_Number_1 = '${PrimaryContactNumber}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, Birthday, Email){
+    var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(Birthday) like '%${Birthday.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Status != 'deleted' limit 1;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined && result[0] != undefined){
+                resolve({
+                    data: result[0],
+                    status: true
+                });
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+//customer login request
+app.post('/customer-login-request',  async (req, res) => {
+    var email = req.query.Email;
+    var password = req.query.Password;
+    if(password != undefined && email != undefined){
+        var encrypted_password = await encrypt_password(password).then(async value => {
+            return await value;
+        });
+        var login_data = await get_user_credentials(email, encrypted_password).then(async value => {
+            return await value;
+        });
+        if(login_data.status == true){
+            await update_last_login(email, encrypted_password).then(async value => {
+                return await value;
+            });
+            res.send(login_data.data.Customer_Code);
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+function get_user_credentials(email, encrypted_password){
+    var sql = `select * from vtportal.customer_management where Email = '${email}' and User_Password = '${encrypted_password}' and Status != 'deleted' limit 1;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined && result[0] != undefined){
+                resolve({
+                    data: result[0],
+                    status: true
+                });
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+function update_last_login(email, encrypted_password){
+    var sql = `
+        UPDATE vtportal.customer_management
+        SET Last_Login = CURDATE()
+        WHERE Email = '${email}' and User_Password = '${encrypted_password}' and Status != 'deleted';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+//generate password
+app.get('/password-generator',  async (req, res) => {
+    var password = req.query.Password;
+    if(password != undefined){
+        res.send(
+            await encrypt_password(password).then(async value => {
+                return await value;
+            })
+        );
+    }else{
+        res.send(false);
+    }
+})
+
+async function encrypt_password(password){
+    return new Promise(async resolve => {
+        var mykey = crypto.createCipher('aes-128-cbc', password);
+        var mystr = mykey.update('yusufadisaputro', 'utf8', 'hex');
+        mystr += mykey.final('hex');
+        resolve(mystr);
+    });
 }
 
 //get customer information
@@ -214,7 +351,7 @@ async function check_existing_customer_code(customer_data){
 
 async function check_existing_customer_email(customer_data){
     sql = `
-        select * from vtportal.customer_management where upper(Email) like '%${customer_data.Email}%' 
+        select * from vtportal.customer_management where upper(Email) like '%${customer_data.Email.toUpperCase()}%' 
     ;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -241,8 +378,8 @@ async function create_new_customer(customer_data){
     '${customer_data.Last_Name}',
     '${customer_data.User_Password}',
     '${customer_data.Birthday}',
-    'CURDATE()',
-    '${customer_data.Last_Login}',
+    CURDATE(),
+    CURDATE(),
     '${customer_data.Email}',
     '${customer_data.Contact_Number_1}',
     '${customer_data.Contact_Number_2}',
