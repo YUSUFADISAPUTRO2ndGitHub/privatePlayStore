@@ -203,9 +203,25 @@ app.get('/get-customer-information',  async (req, res) => {
             return await value;
         }));
     }else{
-        res.send(false);
+        res.send(await get_all_customer_details().then(async value => {
+            return await value;
+        }));
     }
 })
+
+async function get_all_customer_details(){
+    var sql = `select * from vtportal.customer_management where Status != 'deleted' limit 1;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined && result[0] != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
 
 async function get_customer_details_based_on_customer_code(Customer_Code){
     var sql = `select * from vtportal.customer_management where Customer_Code = '${Customer_Code}' and Status != 'deleted' limit 1;`;

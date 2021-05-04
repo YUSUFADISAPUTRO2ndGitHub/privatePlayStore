@@ -348,15 +348,30 @@ app.post('/delete-sales-order',  async (req, res) => {
             return await value;
         }));
         if(existance_data.status){
-            if(
-                (await update_sales_order_status_to_deleted(Order_Number).then(async value => {
-                    return await value;
-                }))
-            ){
+            var existance_data_in_delivery_order = (await check_if_sales_order_has_delivery_order(Order_Number).then(async value => {
+                return await value;
+            }));
+            if(existance_data_in_delivery_order.status == true){
                 res.send({
-                    status: true,
-                    reason: Order_Number
+                    status: false,
+                    reason: "data cannot be deleted because it has gone to delivery order"
                 });
+            }else{
+                if(
+                    (await update_sales_order_status_to_deleted(Order_Number).then(async value => {
+                        return await value;
+                    }))
+                ){
+                    res.send({
+                        status: true,
+                        reason: Order_Number
+                    });
+                }else{
+                    res.send({
+                        status: false,
+                        reason: "data cannot be deleted"
+                    });
+                }
             }
         }else{
             res.send({
@@ -382,6 +397,30 @@ async function update_sales_order_status_to_deleted(Order_Number){
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
             resolve(true);
+        });
+    });
+} 
+
+async function check_if_sales_order_has_delivery_order(Order_Number){
+    var sql = `
+        select * from vtportal.delivery_order_management where Order_Number = '${Order_Number}' limit 1;
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(
+                        {
+                            status: true,
+                            data: result[0]
+                        });
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
         });
     });
 } 
