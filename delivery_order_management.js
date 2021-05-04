@@ -4,7 +4,7 @@ const cors = require('cors');
 var request = require('request');
 var mysql = require('mysql');
 const app = express();
-const port = 3003;
+const port = 3004;
 app.use(cors(), express.json())
 
 var con = mysql.createConnection({
@@ -146,7 +146,7 @@ app.post('/create-new-delivery-order',  async (req, res) => {
         }else{
             res.send({
                 status: false,
-                reason: "this sales order does not exist"
+                reason: "this sales order does not exist, you cannot create delivery order from non existing sales order"
             });
         }
     }
