@@ -38,6 +38,149 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-delivery-order
+app.post('/get-delivery-order',  async (req, res) => {
+    var Delivery_Order_Number = req.query.Delivery_Order_Number;
+    if(Delivery_Order_Number != undefined){
+        if(
+            (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
+                return await value;
+            }))
+        ){
+            if(
+                (await get_delivery_order_based_on_delivery_order_number(Delivery_Order_Number).then(async value => {
+                    return await value;
+                })).status
+            ){
+                res.send(
+                    (await get_delivery_order_based_on_delivery_order_number(Delivery_Order_Number).then(async value => {
+                        return await value;
+                    })).data
+                );
+            }else{
+                res.send({
+                    status: false,
+                    reason: "fail"
+                });
+            }
+        }else{
+            res.send({
+                status: false,
+                reason: "this Delivery_Order_Number does not exist"
+            });
+        }
+    }else{
+        res.send(
+            (await get_delivery_order().then(async value => {
+                return await value;
+            })).data
+        );
+    }
+    
+})
+
+async function get_delivery_order(){
+    var sql = `
+        select * from vtportal.delivery_order_management
+        WHERE status != 'deleted';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve({
+                        status: true,
+                        data: result
+                    });
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function get_delivery_order_based_on_delivery_order_number(Delivery_Order_Number){
+    var sql = `
+        select * from vtportal.delivery_order_management
+        WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
+        and status != 'deleted';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve({
+                        status: true,
+                        data: result[0]
+                    });
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+//delete-delivery-order
+app.post('/delete-delivery-order',  async (req, res) => {
+    var Delivery_Order_Number = req.query.Delivery_Order_Number;
+    if(Delivery_Order_Number != undefined){
+        if(
+            (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
+                return await value;
+            }))
+        ){
+            if(
+                (await delete_delivery_order(Delivery_Order_Number).then(async value => {
+                    return await value;
+                }))
+            ){
+                res.send({
+                    status: true,
+                    reason: "success"
+                });
+            }else{
+                res.send({
+                    status: false,
+                    reason: "fail"
+                });
+            }
+        }else{
+            res.send({
+                status: false,
+                reason: "this Delivery_Order_Number does not exist"
+            });
+        }
+    }else{
+        res.send({
+            status: false,
+            reason: "this Delivery_Order_Number does not exist"
+        });
+    }
+    
+})
+
+async function delete_delivery_order(Delivery_Order_Number){
+    var sql = `
+        UPDATE vtportal.delivery_order_management
+        SET Status = 'deleted'
+        WHERE Delivery_Order_Number = '${Delivery_Order_Number}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
 //update-delivery-order-status
 app.post('/update-delivery-order-status',  async (req, res) => {
     var Delivery_Order_Number = req.query.Delivery_Order_Number;

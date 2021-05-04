@@ -403,7 +403,7 @@ async function update_sales_order_status_to_deleted(Order_Number){
 
 async function check_if_sales_order_has_delivery_order(Order_Number){
     var sql = `
-        select * from vtportal.delivery_order_management where Order_Number = '${Order_Number}' limit 1;
+        select * from vtportal.delivery_order_management where Order_Number = '${Order_Number}' and Status != 'deleted' limit 1;
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -597,7 +597,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
         var h = today.getHours();
         var m = today.getMinutes();
         var s = today.getSeconds();
-        var final_va = y + '' + mth + '' + d + '' + h + '' + m + '' + s + '';
+        var final_va = '12943' + y + '' + mth + '' + d + '' + h + '' + m + '' + s + '';
         var sql = `
             INSERT INTO vtportal.sales_order_management 
             (
