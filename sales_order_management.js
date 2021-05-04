@@ -111,12 +111,12 @@ async function get_sales_order_based_on_order_number(Order_Number){
     });
 } 
 
-//update-sales-order-payment-status-to-unpaid
-app.post('/update-sales-order-payment-status-to-unpaid',  async (req, res) => {
+//update-sales-order-payment-status-to-waitpay
+app.post('/update-sales-order-payment-status-to-waitpay',  async (req, res) => {
     var Order_Number = req.query.Order_Number;
     if(Order_Number != undefined){
         res.send(
-            (await update_Sales_Order_Payment_status_to_unpaid(Order_Number).then(async value => {
+            (await update_Sales_Order_Payment_status_to_waitpay(Order_Number).then(async value => {
                 return await value;
             }))  
         );
@@ -128,11 +128,11 @@ app.post('/update-sales-order-payment-status-to-unpaid',  async (req, res) => {
     }
 })
 
-async function update_Sales_Order_Payment_status_to_unpaid(Order_Number){
+async function update_Sales_Order_Payment_status_to_waitpay(Order_Number){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
-        Payment_Status = 'unpaid'
+        Payment_Status = 'waitpay'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -175,12 +175,12 @@ async function update_Sales_Order_Payment_status_to_cancelled(Order_Number){
     });
 } 
 
-//update-sales-order-payment-status-to-paid
-app.post('/update-sales-order-payment-status-to-paid',  async (req, res) => {
+//update-sales-order-payment-status-to-payment
+app.post('/update-sales-order-payment-status-to-payment',  async (req, res) => {
     var Order_Number = req.query.Order_Number;
     if(Order_Number != undefined){
         res.send(
-            (await update_Sales_Order_Payment_status_to_paid(Order_Number).then(async value => {
+            (await update_Sales_Order_Payment_status_to_payment(Order_Number).then(async value => {
                 return await value;
             }))  
         );
@@ -192,11 +192,11 @@ app.post('/update-sales-order-payment-status-to-paid',  async (req, res) => {
     }
 })
 
-async function update_Sales_Order_Payment_status_to_paid(Order_Number){
+async function update_Sales_Order_Payment_status_to_payment(Order_Number){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
-        Payment_Status = 'paid'
+        Payment_Status = 'payment'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -574,7 +574,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 Primary_Recipient_Name,
                 Created_Date,
                 Status,
-                VA_Number
+                VA_Number,
+                Payment_Status
             )
             VALUES 
             (
@@ -590,7 +591,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 '${Sales_Order_Data.Primary_Recipient_Name}',
                 CURDATE(),
                 'active',
-                '${final_va}'
+                '${final_va}',
+                'waitpay'
             );
         `;
     }
