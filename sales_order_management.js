@@ -38,6 +38,111 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-sales-order-data-per-customer
+app.get('/get-sales-order-data-per-customer',  async (req, res) => {
+    var Customer_Code = req.query.Customer_Code;
+    if(Customer_Code != undefined){
+        res.send(
+            (await get_sales_order_based_on_customer_code(Customer_Code).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function get_sales_order_based_on_customer_code(Customer_Code){
+    var sql = `
+        select * from 
+        vtportal.sales_order_management so
+        where so.Customer_Code = '${Customer_Code}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
+
+//get-sales-order-data-and-detail
+app.get('/get-sales-order-data-and-detail',  async (req, res) => {
+    var Order_Number = req.query.Order_Number;
+    if(Order_Number != undefined){
+        res.send(
+            (await get_sales_order_based_on_order_number(Order_Number).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function get_sales_order_based_on_order_number(Order_Number){
+    var sql = `
+        select * from 
+        vtportal.sales_order_management so
+        inner join 
+        vtportal.sales_order_detail_management sod
+        on so.Order_Number = sod.Order_Number
+        where so.Order_Number = '${Order_Number}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
+
+//update-sales-order-payment-status
+app.post('/update-sales-order-payment-status-to-paid',  async (req, res) => {
+    var Order_Number = req.query.Order_Number;
+    if(Order_Number != undefined){
+        res.send(
+            (await update_Sales_Order_Payment_status_to_paid(Order_Number).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function update_Sales_Order_Payment_status_to_paid(Order_Number){
+    var sql = `
+        UPDATE vtportal.sales_order_management
+        SET 
+        Payment_Status = 'paid'
+        WHERE Order_Number = '${Order_Number}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+} 
+
 //update-sales-order-detail
 app.post('/update-sales-order-detail',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
