@@ -4,7 +4,7 @@ const cors = require('cors');
 var request = require('request');
 var mysql = require('mysql');
 const app = express();
-const port = 3004;
+const port = 3005;
 app.use(cors(), express.json())
 
 var con = mysql.createConnection({
@@ -48,7 +48,7 @@ app.get('/get-all-payment-method',  async (req, res) => {
 })
 
 async function get_all_payment_methode(){
-    var sql = `delete from vtportal.payment_method_management;`;
+    var sql = `select * from vtportal.payment_method_management;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err){
