@@ -217,8 +217,9 @@ function add_or_edit_product_details(){
                 await add_or_edit_product_details().then(async value => {
                     resolve(true);
                 })
-            };
-            resolve(true);
+            }else{
+                resolve(true);
+            }
         });
     });
 }
@@ -227,7 +228,9 @@ function add_or_edit_product_details(){
 app.get('/add-or-edit-product-details',  async (req, res) => {
     res.send(
         await read_excel().then(async value => {
-            await send_to_mysql(value);
+            await send_to_mysql(value).then(async value => {
+                return await value;
+            });
             return await value;
         })
     );
@@ -238,14 +241,30 @@ async function send_to_mysql(product_datas){
     var i = 0;
     return new Promise(async resolve => {
         for(i; i < product_datas.length; i ++){
+            console.log(
+                await check_existing_product_code(product_datas[i].Product_Code).then(async value => {
+                    return await value;
+                })
+            );
+            console.log(
+                product_datas[i].Product_Code
+            );
             if(await check_existing_product_code(product_datas[i].Product_Code).then(async value => {
                 return await value;
             })){
                 console.log("update_existing_product_code");
-                resolve(await update_existing_product_code(product_datas[i]));
+                resolve(
+                        await update_existing_product_code(product_datas[i]).then(async value => {
+                            return await value;
+                        })
+                    );
             }else{
                 console.log("insert_existing_product_code");
-                resolve(await insert_existing_product_code(product_datas[i]));
+                resolve(
+                        await insert_existing_product_code(product_datas[i]).then(async value => {
+                            return await value;
+                        })
+                    );
             }
         }
     });
