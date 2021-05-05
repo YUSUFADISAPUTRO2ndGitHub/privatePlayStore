@@ -6,6 +6,7 @@ const cors = require('cors');
 const xlsx = require('node-xlsx');
 var request = require('request');
 var mysql = require('mysql');
+const e = require('express');
 const app = express();
 const port = 3001;
 app.use(cors(), express.json(), busboy())
@@ -49,6 +50,42 @@ app.get('/get-lastest-token-and-session',  async (req, res) => {
     );
 })
 
+//set-product-as-new
+app.post('/set-product-as-new',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    if(Product_Code != undefined){
+        res.send(
+            (await update_Product_Code_to_Be_New(Product_Code).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Product_Code is incomplete"
+        });
+    }
+})
+
+async function update_Product_Code_to_Be_New(Product_Code){
+    var sql = `
+        UPDATE vtportal.product_management
+        SET 
+        Categorize_NEW = 'true'
+        WHERE Product_Code = '${Product_Code}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
 //delete product based on product
 app.get('/delete-product',  async (req, res) => {
     var product_code = req.query.product_code;
@@ -78,6 +115,7 @@ app.get('/get-product-details',  async (req, res) => {
     var product_name = req.query.product_name;
     var category = req.query.category;
     var subcategory = req.query.subcategory;
+    var GroupBuy_Purchase = req.query.GroupBuy_Purchase;
     if(product_code != undefined || product_code != null){
         res.send(await get_product_details_based_on_product_code(product_code).then(async value => {
             return await value;
@@ -94,12 +132,62 @@ app.get('/get-product-details',  async (req, res) => {
         res.send(await get_product_details_based_on_subcategory(subcategory).then(async value => {
             return await value;
         }));
+    }else if(GroupBuy_Purchase != undefined || GroupBuy_Purchase != null){
+        if(GroupBuy_Purchase == 'true'){
+            res.send(await get_product_details_based_on_groupbuy_purchase().then(async value => {
+                return await value;
+            }));
+        }else{
+            res.send(await get_product_details_not_groupbuy_purchase().then(async value => {
+                return await value;
+            }));
+        }
     }else{
         res.send(await get_all_products().then(async value => {
             return await value;
         }));
     }
 })
+
+async function get_product_details_not_groupbuy_purchase(){
+    var sql = `
+        select * from vtportal.product_management where GroupBuy_Purchase = 'false' and GroupBuy_Purchase = 'undefined';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function get_product_details_based_on_groupbuy_purchase(){
+    var sql = `
+        select * from vtportal.product_management where GroupBuy_Purchase != 'false' and GroupBuy_Purchase != 'undefined';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
 
 async function get_product_details_based_on_product_code(product_code){
     console.log(product_code);
