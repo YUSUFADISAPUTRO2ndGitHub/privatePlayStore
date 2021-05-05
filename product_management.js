@@ -241,14 +241,6 @@ async function send_to_mysql(product_datas){
     var i = 0;
     return new Promise(async resolve => {
         for(i; i < product_datas.length; i ++){
-            console.log(
-                await check_existing_product_code(product_datas[i].Product_Code).then(async value => {
-                    return await value;
-                })
-            );
-            console.log(
-                product_datas[i].Product_Code
-            );
             if(await check_existing_product_code(product_datas[i].Product_Code).then(async value => {
                 return await value;
             })){
@@ -259,7 +251,7 @@ async function send_to_mysql(product_datas){
                         })
                     );
             }else{
-                console.log("insert_existing_product_code");
+                console.log("insert_product_code");
                 resolve(
                         await insert_existing_product_code(product_datas[i]).then(async value => {
                             return await value;
@@ -293,80 +285,88 @@ async function check_existing_product_code(product_code){
 }
 
 async function update_existing_product_code(product_details){
-    var sql = `update vtportal.product_management 
-        set Name = '${product_details.Name}',
-        Specification = '${product_details.Specification}',
-        Description = '${product_details.Description}',
-        Stock_Quantity = '${product_details.Stock_Quantity}',
-        Sell_Price = '${product_details.Sell_Price}',
-        Unit = '${product_details.Unit}',
-        Category = '${product_details.Category}',
-        Subcategory = '${product_details.Subcategory}',
-        Color = '${product_details.Color}',
-        Brand = '${product_details.Brand}',
-        Picture_1 = '${product_details.Picture_1}',
-        Picture_2 = '${product_details.Picture_2}',
-        Picture_3 = '${product_details.Picture_3}',
-        GroupBuy_Purchase = '${product_details.GroupBuy_Purchase}',
-        GroupBuy_SellPrice = '${product_details.GroupBuy_SellPrice}',
-        In_Store_Price = '${product_details.In_Store_Price}'
-        where Product_Code = '${product_details.Product_Code}'
-        ;`;
-    return new Promise(async resolve => {
-        await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
-        });
-    });
+    if(product_details.Product_Code != undefined){
+        if(product_details.Product_Code != 'NULL'){
+            var sql = `update vtportal.product_management 
+                set Name = '${product_details.Name}',
+                Specification = '${product_details.Specification}',
+                Description = '${product_details.Description}',
+                Stock_Quantity = '${product_details.Stock_Quantity}',
+                Sell_Price = '${product_details.Sell_Price}',
+                Unit = '${product_details.Unit}',
+                Category = '${product_details.Category}',
+                Subcategory = '${product_details.Subcategory}',
+                Color = '${product_details.Color}',
+                Brand = '${product_details.Brand}',
+                Picture_1 = '${product_details.Picture_1}',
+                Picture_2 = '${product_details.Picture_2}',
+                Picture_3 = '${product_details.Picture_3}',
+                GroupBuy_Purchase = '${product_details.GroupBuy_Purchase}',
+                GroupBuy_SellPrice = '${product_details.GroupBuy_SellPrice}',
+                In_Store_Price = '${product_details.In_Store_Price}'
+                where Product_Code = '${product_details.Product_Code}'
+                ;`;
+            return new Promise(async resolve => {
+                await con.query(sql, async function (err, result) {
+                    if (err) await console.log(err);
+                    resolve(true);
+                });
+            });
+        }
+    }
 }
 
 async function insert_existing_product_code(product_details){
-    var sql = `INSERT INTO vtportal.product_management 
-        (
-            Product_Code,
-            Name,
-            Specification,
-            Description,
-            Stock_Quantity,
-            Sell_Price,
-            Unit,
-            Category,
-            Subcategory,
-            Color,
-            Brand,
-            Picture_1,
-            Picture_2,
-            Picture_3,
-            GroupBuy_Purchase,
-            GroupBuy_SellPrice,
-            In_Store_Price
-        ) 
-        VALUES 
-        (
-            '${product_details.Product_Code}',
-            '${product_details.Name}',
-            '${product_details.Specification}',
-            '${product_details.Description}',
-            '${product_details.Stock_Quantity}',
-            '${product_details.Sell_Price}',
-            '${product_details.Unit}',
-            '${product_details.Category}',
-            '${product_details.Subcategory}',
-            '${product_details.Color}',
-            '${product_details.Brand}',
-            '${product_details.Picture_1}',
-            '${product_details.Picture_2}',
-            '${product_details.Picture_3}',
-            '${product_details.GroupBuy_Purchase}',
-            '${product_details.GroupBuy_SellPrice}',
-            '${product_details.In_Store_Price}'
-        );`;
-    return new Promise(async resolve => {
-        await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
-        });
-    });
+    if(product_details.Product_Code != undefined){
+        if(product_details.Product_Code != 'NULL'){
+            var sql = `INSERT INTO vtportal.product_management 
+                (
+                    Product_Code,
+                    Name,
+                    Specification,
+                    Description,
+                    Stock_Quantity,
+                    Sell_Price,
+                    Unit,
+                    Category,
+                    Subcategory,
+                    Color,
+                    Brand,
+                    Picture_1,
+                    Picture_2,
+                    Picture_3,
+                    GroupBuy_Purchase,
+                    GroupBuy_SellPrice,
+                    In_Store_Price
+                ) 
+                VALUES 
+                (
+                    '${product_details.Product_Code}',
+                    '${product_details.Name}',
+                    '${product_details.Specification}',
+                    '${product_details.Description}',
+                    '${product_details.Stock_Quantity}',
+                    '${product_details.Sell_Price}',
+                    '${product_details.Unit}',
+                    '${product_details.Category}',
+                    '${product_details.Subcategory}',
+                    '${product_details.Color}',
+                    '${product_details.Brand}',
+                    '${product_details.Picture_1}',
+                    '${product_details.Picture_2}',
+                    '${product_details.Picture_3}',
+                    '${product_details.GroupBuy_Purchase}',
+                    '${product_details.GroupBuy_SellPrice}',
+                    '${product_details.In_Store_Price}'
+                );`;
+            return new Promise(async resolve => {
+                await con.query(sql, async function (err, result) {
+                    if (err) await console.log(err);
+                    resolve(true);
+                });
+            });
+        }
+    }
 }
 
 // read product from excel form
