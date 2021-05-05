@@ -181,6 +181,160 @@ async function delete_delivery_order(Delivery_Order_Number){
     });
 }
 
+//update-delivery-order-item-dimension
+app.post('/update-delivery-order-item-dimension',  async (req, res) => {
+    var Delivery_Order_Number = req.query.Delivery_Order_Number;
+    var Total_Dimension_Packing_CM_Cubic = req.query.Total_Dimension_Packing_CM_Cubic;
+    var Total_Weight_KG = req.query.Total_Weight_KG;
+    if(Delivery_Order_Number != undefined 
+        && Total_Dimension_Packing_CM_Cubic !=undefined
+        && Total_Weight_KG !=undefined
+        ){
+        if(
+            (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
+                return await value;
+            }))
+        ){
+            if(
+                (await update_delivery_order_item_dimension_locally_MYSQL(
+                    Delivery_Order_Number
+                    , Total_Dimension_Packing_CM_Cubic
+                    , Total_Weight_KG).then(async value => {
+                    return await value;
+                }))
+            ){
+                res.send({
+                    status: true,
+                    reason: "successful update dimension locally, please make an API call to 3rd party API"
+                });
+            }else{
+                res.send({
+                    status: false,
+                    reason: "fail"
+                });
+            }
+        }else{
+            res.send({
+                status: false,
+                reason: "this Delivery_Order_Number does not exist"
+            });
+        }
+    }else{
+        res.send({
+            status: false,
+            reason: "You are not providing enough parameters"
+        });
+    }
+    
+})
+
+async function update_delivery_order_item_dimension_locally_MYSQL(
+    Delivery_Order_Number
+    , Total_Dimension_Packing_CM_Cubic
+    , Total_Weight_KG){
+    var sql = `
+        UPDATE vtportal.delivery_order_management
+        SET Shipping_Address = '${Total_Dimension_Packing_CM_Cubic}'
+        , Shipping_Contact_Number = '${Total_Weight_KG}'
+        WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
+        and Status != 'deleted';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+} 
+
+//update-delivery-order-shipping-info
+app.post('/update-delivery-order-shipping-info',  async (req, res) => {
+    var Delivery_Order_Number = req.query.Delivery_Order_Number;
+    var Shipping_Address = req.query.Shipping_Address;
+    var Shipping_Contact_Number = req.query.Shipping_Contact_Number;
+    var Shipping_Fee = req.query.Shipping_Fee;
+    var Shipping_Number = req.query.Shipping_Number;
+    var Courier = req.query.Courier;
+    if(Delivery_Order_Number != undefined 
+        && Shipping_Address !=undefined
+        && Shipping_Contact_Number !=undefined
+        && Shipping_Fee !=undefined
+        && Shipping_Number !=undefined
+        && Courier !=undefined
+        ){
+        if(
+            (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
+                return await value;
+            }))
+        ){
+            if(
+                (await update_delivery_order_shipping_information_local_MYSQL(Delivery_Order_Number
+                    , Shipping_Address
+                    , Shipping_Contact_Number
+                    , Shipping_Fee
+                    , Shipping_Number
+                    , Courier).then(async value => {
+                    return await value;
+                }))
+            ){
+                res.send({
+                    status: true,
+                    reason: "successful update shipping information locally, please make an API call to 3rd party API"
+                });
+            }else{
+                res.send({
+                    status: false,
+                    reason: "fail"
+                });
+            }
+        }else{
+            res.send({
+                status: false,
+                reason: "this Delivery_Order_Number does not exist"
+            });
+        }
+    }else{
+        res.send({
+            status: false,
+            reason: "You are not providing enough parameters"
+        });
+    }
+    
+})
+
+async function update_delivery_order_shipping_information_local_MYSQL(
+    Delivery_Order_Number
+    , Shipping_Address
+    , Shipping_Contact_Number
+    , Shipping_Fee
+    , Shipping_Number
+    , Courier){
+    var sql = `
+        UPDATE vtportal.delivery_order_management
+        SET Shipping_Address = '${Shipping_Address}'
+        , Shipping_Contact_Number = '${Shipping_Contact_Number}'
+        , Shipping_Fee = '${Shipping_Fee}'
+        , Shipping_Number = '${Shipping_Number}'
+        , Courier = '${Courier}'
+        WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
+        and Status != 'deleted';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+} 
+
 //update-delivery-order-status
 app.post('/update-delivery-order-status',  async (req, res) => {
     var Delivery_Order_Number = req.query.Delivery_Order_Number;
@@ -225,7 +379,8 @@ async function update_delivery_order_status(Delivery_Order_Number, update_status
     var sql = `
         UPDATE vtportal.delivery_order_management
         SET Delivery_Status = '${update_status}'
-        WHERE Delivery_Order_Number = '${Delivery_Order_Number}';
+        WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
+        and Status != 'deleted';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
