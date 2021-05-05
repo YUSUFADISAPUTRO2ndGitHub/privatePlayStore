@@ -38,6 +38,29 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-all-payment-method
+app.get('/get-all-payment-method',  async (req, res) => {
+    res.send(
+        (await get_all_payment_methode().then(async value => {
+            return await value;
+        }))
+    );
+})
+
+async function get_all_payment_methode(){
+    var sql = `delete from vtportal.payment_method_management;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err){
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //delete-delivery-order
 app.post('/delete-payment-method',  async (req, res) => {
     var Payment_Method_Name = req.query.Payment_Method_Name;
