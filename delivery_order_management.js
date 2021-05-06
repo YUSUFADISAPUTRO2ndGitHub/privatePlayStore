@@ -120,7 +120,7 @@ app.post('/get-delivery-order',  async (req, res) => {
 async function get_delivery_order(){
     var sql = `
         select * from vtportal.delivery_order_management
-        WHERE status != 'deleted';
+        WHERE Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -145,7 +145,7 @@ async function get_delivery_order_based_on_delivery_order_number(Delivery_Order_
     var sql = `
         select * from vtportal.delivery_order_management
         WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
-        and status != 'deleted';
+        and Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -169,14 +169,15 @@ async function get_delivery_order_based_on_delivery_order_number(Delivery_Order_
 //delete-delivery-order
 app.post('/delete-delivery-order',  async (req, res) => {
     var Delivery_Order_Number = req.query.Delivery_Order_Number;
-    if(Delivery_Order_Number != undefined){
+    var Deleter = req.query.Deleter;
+    if(Delivery_Order_Number != undefined && Deleter != undefined){
         if(
             (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
                 return await value;
             }))
         ){
             if(
-                (await delete_delivery_order(Delivery_Order_Number).then(async value => {
+                (await delete_delivery_order(Delivery_Order_Number, Deleter).then(async value => {
                     return await value;
                 }))
             ){
@@ -199,16 +200,19 @@ app.post('/delete-delivery-order',  async (req, res) => {
     }else{
         res.send({
             status: false,
-            reason: "this Delivery_Order_Number does not exist"
+            reason: "param incomplete"
         });
     }
     
 })
 
-async function delete_delivery_order(Delivery_Order_Number){
+async function delete_delivery_order(Delivery_Order_Number, Deleter){
     var sql = `
         UPDATE vtportal.delivery_order_management
-        SET Status = 'deleted'
+        SET Status = 'delayed'
+        , Deleter = '${Deleter}'
+        , Delete_Date = CURRENT_TIMESTAMP()
+        , Delete_Mark = '1'
         WHERE Delivery_Order_Number = '${Delivery_Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -219,14 +223,84 @@ async function delete_delivery_order(Delivery_Order_Number){
     });
 }
 
+//update-delivery-order-pending-status-to-approving
+app.post('/update-delivery-order-pending-status-to-approving',  async (req, res) => {
+    var Delivery_Order_Number = req.query.Delivery_Order_Number;
+    var Auditor_Id = req.query.Auditor_Id;
+    if(Delivery_Order_Number != undefined 
+        && Auditor_Id !=undefined
+        ){
+        if(
+            (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
+                return await value;
+            }))
+        ){
+            if(
+                (await update_delivery_order_pending_status_to_approving_locally_MYSQL(
+                    Delivery_Order_Number
+                    , Auditor_Id).then(async value => {
+                    return await value;
+                }))
+            ){
+                res.send({
+                    status: true,
+                    reason: "successful update dimension locally, please make an API call to 3rd party API"
+                });
+            }else{
+                res.send({
+                    status: false,
+                    reason: "fail"
+                });
+            }
+        }else{
+            res.send({
+                status: false,
+                reason: "this Delivery_Order_Number does not exist"
+            });
+        }
+    }else{
+        res.send({
+            status: false,
+            reason: "You are not providing enough parameters"
+        });
+    }
+    
+})
+
+async function update_delivery_order_pending_status_to_approving_locally_MYSQL(
+    Delivery_Order_Number
+    , Auditor_Id){
+    var sql = `
+        UPDATE vtportal.delivery_order_management
+        SET Auditor_Id = '${Auditor_Id}'
+        , Audited_Date = CURRENT_TIMESTAMP()
+        , Update_date = CURRENT_TIMESTAMP()
+        , Status = 'approving'
+        WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
+        and Delete_Mark != '1';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+} 
+
 //update-delivery-order-item-dimension
 app.post('/update-delivery-order-item-dimension',  async (req, res) => {
     var Delivery_Order_Number = req.query.Delivery_Order_Number;
     var Total_Dimension_Packing_CM_Cubic = req.query.Total_Dimension_Packing_CM_Cubic;
     var Total_Weight_KG = req.query.Total_Weight_KG;
+    var Modifier = req.query.Modifier;
     if(Delivery_Order_Number != undefined 
         && Total_Dimension_Packing_CM_Cubic !=undefined
         && Total_Weight_KG !=undefined
+        && Modifier !=undefined
         ){
         if(
             (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
@@ -237,7 +311,8 @@ app.post('/update-delivery-order-item-dimension',  async (req, res) => {
                 (await update_delivery_order_item_dimension_locally_MYSQL(
                     Delivery_Order_Number
                     , Total_Dimension_Packing_CM_Cubic
-                    , Total_Weight_KG).then(async value => {
+                    , Total_Weight_KG
+                    , Modifier).then(async value => {
                     return await value;
                 }))
             ){
@@ -269,13 +344,17 @@ app.post('/update-delivery-order-item-dimension',  async (req, res) => {
 async function update_delivery_order_item_dimension_locally_MYSQL(
     Delivery_Order_Number
     , Total_Dimension_Packing_CM_Cubic
-    , Total_Weight_KG){
+    , Total_Weight_KG
+    , Modifier){
     var sql = `
         UPDATE vtportal.delivery_order_management
         SET Shipping_Address = '${Total_Dimension_Packing_CM_Cubic}'
         , Shipping_Contact_Number = '${Total_Weight_KG}'
+        , Modifier = '${Modifier}'
+        , Update_date = CURRENT_TIMESTAMP()
+        , Status = 'pending'
         WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
-        and Status != 'deleted';
+        and Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -296,6 +375,7 @@ app.post('/update-delivery-order-shipping-info',  async (req, res) => {
     var Shipping_Contact_Number = req.query.Shipping_Contact_Number;
     var Shipping_Fee = req.query.Shipping_Fee;
     var Shipping_Number = req.query.Shipping_Number;
+    var Modifier = req.query.Modifier;
     var Courier = req.query.Courier;
     if(Delivery_Order_Number != undefined 
         && Shipping_Address !=undefined
@@ -303,6 +383,7 @@ app.post('/update-delivery-order-shipping-info',  async (req, res) => {
         && Shipping_Fee !=undefined
         && Shipping_Number !=undefined
         && Courier !=undefined
+        && Modifier !=undefined
         ){
         if(
             (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
@@ -315,7 +396,8 @@ app.post('/update-delivery-order-shipping-info',  async (req, res) => {
                     , Shipping_Contact_Number
                     , Shipping_Fee
                     , Shipping_Number
-                    , Courier).then(async value => {
+                    , Courier
+                    ,Modifier).then(async value => {
                     return await value;
                 }))
             ){
@@ -350,7 +432,8 @@ async function update_delivery_order_shipping_information_local_MYSQL(
     , Shipping_Contact_Number
     , Shipping_Fee
     , Shipping_Number
-    , Courier){
+    , Courier
+    , Modifier){
     var sql = `
         UPDATE vtportal.delivery_order_management
         SET Shipping_Address = '${Shipping_Address}'
@@ -358,8 +441,11 @@ async function update_delivery_order_shipping_information_local_MYSQL(
         , Shipping_Fee = '${Shipping_Fee}'
         , Shipping_Number = '${Shipping_Number}'
         , Courier = '${Courier}'
+        , Modifier = '${Modifier}'
+        , Update_date = CURRENT_TIMESTAMP()
+        , Status = 'pending'
         WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
-        and Status != 'deleted';
+        and Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -377,14 +463,15 @@ async function update_delivery_order_shipping_information_local_MYSQL(
 app.post('/update-delivery-order-status',  async (req, res) => {
     var Delivery_Order_Number = req.query.Delivery_Order_Number;
     var update_status = req.query.Update_Status;
-    if(Delivery_Order_Number != undefined){
+    var Modifier = req.query.Modifier;
+    if(Delivery_Order_Number != undefined && update_status != undefined && Modifier != undefined){
         if(
             (await check_Delivery_Order_Number_existance(Delivery_Order_Number).then(async value => {
                 return await value;
             }))
         ){
             if(
-                (await update_delivery_order_status(Delivery_Order_Number, update_status).then(async value => {
+                (await update_delivery_order_status(Delivery_Order_Number, update_status, Modifier).then(async value => {
                     return await value;
                 }))
             ){
@@ -407,18 +494,21 @@ app.post('/update-delivery-order-status',  async (req, res) => {
     }else{
         res.send({
             status: false,
-            reason: "this Delivery_Order_Number does not exist"
+            reason: "param incomplete"
         });
     }
     
 })
 
-async function update_delivery_order_status(Delivery_Order_Number, update_status){
+async function update_delivery_order_status(Delivery_Order_Number, update_status, Modifier){
     var sql = `
         UPDATE vtportal.delivery_order_management
-        SET Delivery_Status = '${update_status}'
+        SET Delivery_Status = '${update_status}',
+        Modifier = '${Modifier}',
+        Update_date = CURRENT_TIMESTAMP()
+        , Status = 'pending'
         WHERE Delivery_Order_Number = '${Delivery_Order_Number}'
-        and Status != 'deleted';
+        and Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -429,7 +519,7 @@ async function update_delivery_order_status(Delivery_Order_Number, update_status
 } 
 
 async function check_Delivery_Order_Number_existance(Delivery_Order_Number){
-    var sql = `select * from vtportal.delivery_order_management where upper(Delivery_Order_Number) = '${Delivery_Order_Number.toUpperCase()}' and Status != 'deleted' limit 1;`;
+    var sql = `select * from vtportal.delivery_order_management where upper(Delivery_Order_Number) = '${Delivery_Order_Number.toUpperCase()}' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -447,7 +537,8 @@ app.post('/create-new-delivery-order',  async (req, res) => {
     var Order_Number = req.query.Order_Number;
     var Delivery_Order_Data = req.body.Delivery_Order_Data;
     var Delivery_Order_Detail_data = req.body.Delivery_Order_Detail_data;
-    if(Order_Number != undefined && Delivery_Order_Data != undefined && Delivery_Order_Detail_data != undefined){
+    var Creator = req.query.Creator;
+    if(Order_Number != undefined && Creator != undefined && Delivery_Order_Data != undefined && Delivery_Order_Detail_data != undefined){
         if(
             (await check_Order_Number_existance(Order_Number).then(async value => {
                 return await value;
@@ -463,7 +554,7 @@ app.post('/create-new-delivery-order',  async (req, res) => {
                 });
 
                 if(
-                    await create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Detail_data, Delivery_Order_Number).then(async value => {
+                    await create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Detail_data, Delivery_Order_Number, Creator).then(async value => {
                         return await value;
                     })
                 ){
@@ -489,11 +580,11 @@ app.post('/create-new-delivery-order',  async (req, res) => {
     
 })
 
-async function create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Detail_data, Delivery_Order_Number){
+async function create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Detail_data, Delivery_Order_Number, Creator){
     return new Promise(async resolve => {
         if(
             (
-                await insert_into_delivery_order_management(Delivery_Order_Data, Delivery_Order_Number).then(async value => {
+                await insert_into_delivery_order_management(Delivery_Order_Data, Delivery_Order_Number, Creator).then(async value => {
                     return await value;
                 })
             )
@@ -544,7 +635,7 @@ async function insert_into_delivery_order_detail_management(Delivery_Order_Detai
     });
 } 
 
-async function insert_into_delivery_order_management(Delivery_Order_Data, Delivery_Order_Number){
+async function insert_into_delivery_order_management(Delivery_Order_Data, Delivery_Order_Number, Creator){
     var sql = `
         INSERT INTO vtportal.delivery_order_management 
         (
@@ -561,7 +652,13 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
             Courier,
             Total_Dimension_Packing_CM_Cubic,
             Total_Weight_KG,
-            Delivery_Status
+            Delivery_Status,
+            Start_Date,
+            Creator,
+            Create_Date,
+            Modifier,
+            Update_date,
+            Delete_Mark
         )
         VALUES 
         (
@@ -573,12 +670,18 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
             '${Delivery_Order_Data.Shipping_Contact_Number}',
             '${Delivery_Order_Data.Shipping_Fee}',
             '${Delivery_Order_Data.Primary_Recipient_Name}',
-            'active',
+            'pending',
             CURDATE(),
             '${Delivery_Order_Data.Courier}',
             '${Delivery_Order_Data.Total_Dimension_Packing_CM_Cubic}',
             '${Delivery_Order_Data.Total_Weight_KG}',
-            'not assigned'
+            'not assigned',
+            CURRENT_TIMESTAMP(),
+            '${Creator}',
+            CURRENT_TIMESTAMP(),
+            '${Creator}',
+            CURRENT_TIMESTAMP(),
+            '0'
         );
     `;
 
@@ -601,7 +704,13 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
                 Total_Dimension_Packing_CM_Cubic,
                 Total_Weight_KG,
                 Delivery_Status,
-                Shipping_Number
+                Shipping_Number,
+                Start_Date,
+                Creator,
+                Create_Date,
+                Modifier,
+                Update_date,
+                Delete_Mark
             )
             VALUES 
             (
@@ -613,13 +722,19 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
                 '${Delivery_Order_Data.Shipping_Contact_Number}',
                 '${Delivery_Order_Data.Shipping_Fee}',
                 '${Delivery_Order_Data.Primary_Recipient_Name}',
-                'active',
+                'pending',
                 CURDATE(),
                 '${Delivery_Order_Data.Courier}',
                 '${Delivery_Order_Data.Total_Dimension_Packing_CM_Cubic}',
                 '${Delivery_Order_Data.Total_Weight_KG}',
                 '${Delivery_Order_Data.Delivery_Status}',
-                '${Delivery_Order_Data.Shipping_Number}'
+                '${Delivery_Order_Data.Shipping_Number}',
+                CURRENT_TIMESTAMP(),
+                '${Creator}',
+                CURRENT_TIMESTAMP(),
+                '${Creator}',
+                CURRENT_TIMESTAMP(),
+                '0'
             );
         `;
     }
@@ -661,7 +776,7 @@ async function validation_check(Delivery_Order_Data, Order_Number){
 }   
 
 async function check_Order_Number_existance(Order_Number){
-    var sql = `select * from vtportal.sales_order_management where upper(Order_Number) = '${Order_Number.toUpperCase()}' and Status != 'deleted' limit 1;`;
+    var sql = `select * from vtportal.sales_order_management where upper(Order_Number) = '${Order_Number.toUpperCase()}' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);

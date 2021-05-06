@@ -170,7 +170,8 @@ async function update_Sales_Order_Payment_status_to_waitpay(Order_Number){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
-        Payment_Status = 'waitpay'
+        Payment_Status = 'waitpay',
+        Update_date = CURRENT_TIMESTAMP()
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -202,7 +203,8 @@ async function update_Sales_Order_Payment_status_to_cancelled(Order_Number){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
-        Payment_Status = 'cancelled'
+        Payment_Status = 'cancelled',
+        Update_date = CURRENT_TIMESTAMP()
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -245,8 +247,8 @@ async function update_Sales_Order_Payment_status_to_payment(Order_Number){
     });
 } 
 
-//update-sales-order-detail
-app.post('/update-sales-order-detail',  async (req, res) => {
+//update-sales-order-detail-by-customer
+app.post('/update-sales-order-detail-by-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
     var Order_Number = req.query.Order_Number;
     var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
@@ -261,7 +263,7 @@ app.post('/update-sales-order-detail',  async (req, res) => {
                 }))
             ){
                 if(
-                    (await iterate_through_sales_order_detail_update(Order_Number, Sales_Order_Detail_data).then(async value => {
+                    (await iterate_through_sales_order_detail_update(Order_Number, Sales_Order_Detail_data, Customer_Code).then(async value => {
                         return await value;
                     }))
                 ){
@@ -294,7 +296,7 @@ app.post('/update-sales-order-detail',  async (req, res) => {
     }
 })
 
-async function iterate_through_sales_order_detail_update(Order_Number, Sales_Order_Detail_data){
+async function iterate_through_sales_order_detail_update(Order_Number, Sales_Order_Detail_data, Customer_Code){
     return new Promise(async resolve => {
         if(
             (await delete_all_Sales_Order_Detail_data(Order_Number).then(async value => {
@@ -318,7 +320,7 @@ async function iterate_through_sales_order_detail_update(Order_Number, Sales_Ord
                 }
             }
             if(
-                (await update_total_quantity_and_total_price(Order_Number, Total_Quantity_Requested, Total_Price_Based_On_Total_Quantity).then(async value => {
+                (await update_total_quantity_and_total_price(Order_Number, Total_Quantity_Requested, Total_Price_Based_On_Total_Quantity, Customer_Code).then(async value => {
                     return await value;
                 }))
             ){
@@ -332,11 +334,14 @@ async function iterate_through_sales_order_detail_update(Order_Number, Sales_Ord
     });
 }
 
-async function update_total_quantity_and_total_price(Order_Number, Total_Quantity_Requested, Total_Price_Based_On_Total_Quantity){
+async function update_total_quantity_and_total_price(Order_Number, Total_Quantity_Requested, Total_Price_Based_On_Total_Quantity, Customer_Code){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET Total_Price = '${Total_Price_Based_On_Total_Quantity}',
-        Total_Quantity = '${Total_Quantity_Requested}'
+        Total_Quantity = '${Total_Quantity_Requested}',
+        Modifier = '${Customer_Code}',
+        Update_date = CURRENT_TIMESTAMP(),
+        Status = 'pending'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -378,8 +383,8 @@ async function delete_all_Sales_Order_Detail_data(Order_Number){
     });
 } 
 
-//update-sales-order
-app.post('/update-sales-order',  async (req, res) => {
+//update-sales-order-by-customer
+app.post('/update-sales-order-by-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
     var Order_Number = req.query.Order_Number;
     var Sales_Order_Data = req.body.Sales_Order_Data;
@@ -394,7 +399,7 @@ app.post('/update-sales-order',  async (req, res) => {
                 }))
             ){
                 if(
-                    (await update_sales_order_data(Order_Number, Sales_Order_Data).then(async value => {
+                    (await update_sales_order_data_requested_by_customer(Order_Number, Sales_Order_Data).then(async value => {
                         return await value;
                     }))
                 ){
@@ -428,7 +433,7 @@ app.post('/update-sales-order',  async (req, res) => {
     }
 })
 
-async function update_sales_order_data(Order_Number, Sales_Order_Data){
+async function update_sales_order_data_requested_by_customer(Order_Number, Sales_Order_Data){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET Status = 'active',
@@ -438,7 +443,10 @@ async function update_sales_order_data(Order_Number, Sales_Order_Data){
         Shipping_Contact_Number = '${Sales_Order_Data.Shipping_Contact_Number}',
         Payment_Method = '${Sales_Order_Data.Payment_Method}',
         Shipping_Fee = '${Sales_Order_Data.Shipping_Fee}',
-        Primary_Recipient_Name = '${Sales_Order_Data.Primary_Recipient_Name}'
+        Primary_Recipient_Name = '${Sales_Order_Data.Primary_Recipient_Name}',
+        Modifier = '${Sales_Order_Data.Customer_Code}',
+        Update_date = CURRENT_TIMESTAMP(),
+        Status = 'pending'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -452,7 +460,7 @@ async function update_sales_order_data(Order_Number, Sales_Order_Data){
 async function check_delivery_order_data_regarding_sales_order_number(Order_Number){
     var sql = `
         select * from vtportal.delivery_order_management
-        WHERE Order_Number = '${Order_Number}' and Status != 'deleted';
+        WHERE Order_Number = '${Order_Number}' and Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -481,8 +489,9 @@ async function check_delivery_order_data_regarding_sales_order_number(Order_Numb
 //delete-sales-order
 app.post('/delete-sales-order',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
+    var Deleter = req.query.Deleter;
     var Order_Number = req.query.Order_Number;
-    if(Customer_Code != undefined && Order_Number != undefined){
+    if(Customer_Code != undefined && Order_Number != undefined && Deleter != undefined){
         var existance_data = (await check_if_sales_order_exist_with_customer_code(Customer_Code, Order_Number).then(async value => {
             return await value;
         }));
@@ -497,7 +506,7 @@ app.post('/delete-sales-order',  async (req, res) => {
                 });
             }else{
                 if(
-                    (await update_sales_order_status_to_deleted(Order_Number).then(async value => {
+                    (await update_sales_order_status_to_deleted(Order_Number, Deleter).then(async value => {
                         return await value;
                     }))
                 ){
@@ -526,10 +535,13 @@ app.post('/delete-sales-order',  async (req, res) => {
     }
 })
 
-async function update_sales_order_status_to_deleted(Order_Number){
+async function update_sales_order_status_to_deleted(Order_Number, Deleter){
     var sql = `
         UPDATE vtportal.sales_order_management
-        SET Status = 'deleted'
+        SET Status = 'delaying',
+        Delete_Mark = '1',
+        Delete_Date = CURRENT_TIMESTAMP(),
+        Deleter = '${Deleter}'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -542,7 +554,7 @@ async function update_sales_order_status_to_deleted(Order_Number){
 
 async function check_if_sales_order_has_delivery_order(Order_Number){
     var sql = `
-        select * from vtportal.delivery_order_management where Order_Number = '${Order_Number}' and Status != 'deleted' limit 1;
+        select * from vtportal.delivery_order_management where Order_Number = '${Order_Number}' and Delete_Mark != '1' limit 1;
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -710,7 +722,12 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             Shipping_Fee,
             Primary_Recipient_Name,
             Created_Date,
-            Status
+            Status,
+            Start_Date,
+            Creator,
+            Create_Date,
+            Update_date,
+            Delete_Mark
         )
         VALUES 
         (
@@ -725,7 +742,12 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             '${Sales_Order_Data.Shipping_Fee}',
             '${Sales_Order_Data.Primary_Recipient_Name}',
             CURDATE(),
-            'active'
+            'pending',
+            CURRENT_TIMESTAMP(),
+            'customer',
+            CURRENT_TIMESTAMP(),
+            CURRENT_TIMESTAMP(),
+            '0'
         );
     `;
     if(Sales_Order_Data.Payment_Method.toUpperCase() == 'BCA VA TRANSFER' || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
@@ -751,9 +773,14 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 Shipping_Fee,
                 Primary_Recipient_Name,
                 Created_Date,
-                Status,
                 VA_Number,
-                Payment_Status
+                Payment_Status,
+                Status,
+                Start_Date,
+                Creator,
+                Create_Date,
+                Update_date,
+                Delete_Mark
             )
             VALUES 
             (
@@ -768,9 +795,14 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 '${Sales_Order_Data.Shipping_Fee}',
                 '${Sales_Order_Data.Primary_Recipient_Name}',
                 CURDATE(),
-                'active',
                 '${final_va}',
-                'waitpay'
+                'waitpay',
+                'pending',
+                CURRENT_TIMESTAMP(),
+                'customer',
+                CURRENT_TIMESTAMP(),
+                CURRENT_TIMESTAMP(),
+                '0'
             );
         `;
     }

@@ -119,7 +119,7 @@ async function update_user_password(Email, PrimaryContactNumber, encrypted_passw
 }
 
 async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, Birthday, Email){
-    var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(Birthday) like '%${Birthday.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Status != 'deleted' limit 1;`;
+    var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(Birthday) like '%${Birthday.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -160,7 +160,7 @@ app.post('/customer-login-request',  async (req, res) => {
 })
 
 function get_user_credentials(email, encrypted_password){
-    var sql = `select * from vtportal.customer_management where Email = '${email}' and User_Password = '${encrypted_password}' and Status != 'deleted' limit 1;`;
+    var sql = `select * from vtportal.customer_management where Email = '${email}' and User_Password = '${encrypted_password}' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -180,7 +180,7 @@ function update_last_login(email, encrypted_password){
     var sql = `
         UPDATE vtportal.customer_management
         SET Last_Login = CURDATE()
-        WHERE Email = '${email}' and User_Password = '${encrypted_password}' and Status != 'deleted';
+        WHERE Email = '${email}' and User_Password = '${encrypted_password}' and Delete_Mark != '1';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -248,7 +248,7 @@ app.get('/get-customer-information',  async (req, res) => {
 })
 
 async function get_all_customer_details(){
-    var sql = `select * from vtportal.customer_management where Status != 'deleted' limit 1;`;
+    var sql = `select * from vtportal.customer_management where Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -262,7 +262,7 @@ async function get_all_customer_details(){
 }
 
 async function get_customer_details_based_on_customer_code(Customer_Code){
-    var sql = `select * from vtportal.customer_management where Customer_Code = '${Customer_Code}' and Status != 'deleted' limit 1;`;
+    var sql = `select * from vtportal.customer_management where Customer_Code = '${Customer_Code}' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -285,7 +285,7 @@ async function get_customer_details_based_on_customer_code(Customer_Code){
 }
 
 async function get_customer_details_based_on_customer_first_name(First_Name){
-    var sql = `select * from vtportal.customer_management where upper(First_Name) and Status != 'deleted' like '%${First_Name.toUpperCase()}%';`;
+    var sql = `select * from vtportal.customer_management where upper(First_Name) and Delete_Mark != '1' like '%${First_Name.toUpperCase()}%';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -299,7 +299,7 @@ async function get_customer_details_based_on_customer_first_name(First_Name){
 }
 
 async function get_customer_details_based_on_customer_last_name(Last_Name){
-    var sql = `select * from vtportal.customer_management where upper(Last_Name) and Status != 'deleted' like '%${Last_Name.toUpperCase()}%';`;
+    var sql = `select * from vtportal.customer_management where upper(Last_Name) and Delete_Mark != '1' like '%${Last_Name.toUpperCase()}%';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -313,7 +313,7 @@ async function get_customer_details_based_on_customer_last_name(Last_Name){
 }
 
 async function get_customer_details_based_on_customer_email(Email){
-    var sql = `select * from vtportal.customer_management where upper(Email) and Status != 'deleted' like '%${Email.toUpperCase()}%';`;
+    var sql = `select * from vtportal.customer_management where upper(Email) and Delete_Mark != '1' like '%${Email.toUpperCase()}%';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
