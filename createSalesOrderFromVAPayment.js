@@ -15,9 +15,47 @@ var con = mysql.createConnection({
 });
 
 con.connect(function(err) {
-    if (err) console.log(err);
-    console.log("Connected! to MySQL");
+    if (err) {
+        console.log(err);
+        handle_disconnect();
+    }else{
+        console.log("Connected! to MySQL");
+    }
 });
+
+con.on('error', function(err) {
+    console.log('MySQL error | ', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        handle_disconnect();
+    } else {
+        throw err;
+    }
+});
+
+function handle_disconnect() {
+    con = mysql.createConnection({
+        host: "172.31.207.222",
+        port: 3306,
+        database: "vtportal",
+        user: "root",
+        password: "Root@123"
+    });
+
+    con.connect(function(err) {
+        if (err) {
+            console.log('error when connecting to db:', err);
+            setTimeout(handleDisconnect, 2000);
+        }
+    });
+    con.on('error', function(err) {
+        console.log('db error', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            handleDisconnect();
+        } else {
+            throw err;
+        }
+    });
+}
 
 app.get('/get-lastest-token-and-session',  (req, res) => {
     console.log("---------------------------------------------------------------------------- requesting token and session");

@@ -20,9 +20,47 @@ var con = mysql.createConnection({
 });
 
 con.connect(function(err) {
-    if (err) console.log(err);
-    console.log("Connected! to MySQL");
+    if (err) {
+        console.log(err);
+        handle_disconnect();
+    }else{
+        console.log("Connected! to MySQL");
+    }
 });
+
+con.on('error', function(err) {
+    console.log('MySQL error | ', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        handle_disconnect();
+    } else {
+        throw err;
+    }
+});
+
+function handle_disconnect() {
+    con = mysql.createConnection({
+        host: "172.31.207.222",
+        port: 3306,
+        database: "vtportal",
+        user: "root",
+        password: "Root@123"
+    });
+
+    con.connect(function(err) {
+        if (err) {
+            console.log('error when connecting to db:', err);
+            setTimeout(handleDisconnect, 2000);
+        }
+    });
+    con.on('error', function(err) {
+        console.log('db error', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            handleDisconnect();
+        } else {
+            throw err;
+        }
+    });
+}
 
 const get_latest_recorded_token = async () => {
     var sql = `select access_token, session_id from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1;`;
@@ -50,12 +88,13 @@ app.get('/get-lastest-token-and-session',  async (req, res) => {
     );
 })
 
-//set-product-as-new
-app.post('/set-product-as-new',  async (req, res) => {
+//set-product-as-pending
+app.post('/set-product-as-pending',  async (req, res) => {
     var Product_Code = req.query.Product_Code;
-    if(Product_Code != undefined){
+    var Rejector_Id = req.query.Rejector_Id;
+    if(Product_Code != undefined && Rejector_Id != undefined){
         res.send(
-            (await update_Product_Code_to_Be_New(Product_Code).then(async value => {
+            (await update_Product_Code_to_Be_pending(Product_Code, Rejector_Id).then(async value => {
                 return await value;
             }))  
         );
@@ -67,12 +106,144 @@ app.post('/set-product-as-new',  async (req, res) => {
     }
 })
 
-async function update_Product_Code_to_Be_New(Product_Code){
+async function update_Product_Code_to_Be_pending(Product_Code, Rejector_Id){
     var sql = `
         UPDATE vtportal.product_management
         SET 
-        Categorize_NEW = 'true'
-        WHERE Product_Code = '${Product_Code}';
+        Categorize_NEW = 'false',
+        Last_Updated = CURRENT_TIMESTAMP(),
+        Status = 'pending',
+        Update_date = CURRENT_TIMESTAMP(),
+        Rejector_Id = '${Rejector_Id}'
+        WHERE Product_Code = '${Product_Code}'
+        and Delete_Mark = '0';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+//set-product-as-approved
+app.post('/set-product-as-approved',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    var Auditor_Id = req.query.Auditor_Id;
+    if(Product_Code != undefined && Auditor_Id != undefined){
+        res.send(
+            (await update_Product_Code_to_Be_Approved(Product_Code, Auditor_Id).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Product_Code is incomplete"
+        });
+    }
+})
+
+async function update_Product_Code_to_Be_Approved(Product_Code, Auditor_Id){
+    var sql = `
+        UPDATE vtportal.product_management
+        SET 
+        Categorize_NEW = 'false',
+        Last_Updated = CURRENT_TIMESTAMP(),
+        Status = 'approving',
+        Update_date = CURRENT_TIMESTAMP(),
+        Auditor_Id = '${Auditor_Id}',
+        Rejector_Id = null
+        WHERE Product_Code = '${Product_Code}'
+        and Delete_Mark = '0';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+//set-product-as-not-new
+app.post('/set-product-as-not-new',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    var Creator = req.query.Creator;
+    if(Product_Code != undefined && Creator != undefined){
+        res.send(
+            (await update_Product_Code_to_Be_Not_New(Product_Code, Creator).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Product_Code is incomplete"
+        });
+    }
+})
+
+async function update_Product_Code_to_Be_Not_New(Product_Code, Creator){
+    var sql = `
+        UPDATE vtportal.product_management
+        SET 
+        Categorize_NEW = 'false',
+        Last_Updated = CURRENT_TIMESTAMP(),
+        Status = 'pending',
+        Update_date = CURRENT_TIMESTAMP(),
+        Creator = '${Creator}'
+        WHERE Product_Code = '${Product_Code}'
+        and Delete_Mark = '0';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+//set-product-as-new
+app.post('/set-product-as-new',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    var Creator = req.query.Creator;
+    if(Product_Code != undefined && Creator != undefined){
+        res.send(
+            (await update_Product_Code_to_Be_New(Product_Code, Creator).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Product_Code is incomplete"
+        });
+    }
+})
+
+async function update_Product_Code_to_Be_New(Product_Code, Creator){
+    var sql = `
+        UPDATE vtportal.product_management
+        SET 
+        Categorize_NEW = 'true',
+        Last_Updated = CURRENT_TIMESTAMP(),
+        Status = 'pending',
+        Update_date = CURRENT_TIMESTAMP(),
+        Creator = '${Creator}'
+        WHERE Product_Code = '${Product_Code}'
+        and Delete_Mark = '0';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -87,10 +258,11 @@ async function update_Product_Code_to_Be_New(Product_Code){
 }
 
 //delete product based on product
-app.get('/delete-product',  async (req, res) => {
-    var product_code = req.query.product_code;
-    if(product_code != undefined || product_code != null){
-        res.send(await delete_product_based_on_product_code(product_code).then(async value => {
+app.post('/delete-product',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    var Deleter = req.query.Deleter;
+    if(Product_Code != undefined || Deleter != undefined){
+        res.send(await delete_product_based_on_product_code(Product_Code, Deleter).then(async value => {
             return await value;
         }));
     }else{
@@ -98,13 +270,21 @@ app.get('/delete-product',  async (req, res) => {
     }
 })
 
-async function delete_product_based_on_product_code(product_code){
-    console.log(product_code);
-    var sql = `delete from vtportal.product_management where Product_Code = '${product_code}' limit 1;`;
+async function delete_product_based_on_product_code(Product_Code, Deleter){
+    console.log(Product_Code);
+    var sql = `UPDATE vtportal.product_management 
+    SET Delete_Mark = '1',
+    Deleter = '${Deleter}',
+    Delete_Date = CURRENT_TIMESTAMP()
+    WHERE Product_Code = '${Product_Code}';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
         });
     });
 }
@@ -333,20 +513,17 @@ async function send_to_mysql(product_datas){
                 return await value;
             })){
                 console.log("update_existing_product_code");
-                resolve(
-                        await update_existing_product_code(product_datas[i]).then(async value => {
-                            return await value;
-                        })
-                    );
+                console.log(await update_existing_product_code(product_datas[i]).then(async value => {
+                    return await value;
+                }));
             }else{
                 console.log("insert_product_code");
-                resolve(
-                        await insert_existing_product_code(product_datas[i]).then(async value => {
-                            return await value;
-                        })
-                    );
+                console.log(await insert_existing_product_code(product_datas[i]).then(async value => {
+                    return await value;
+                }));
             }
         }
+        resolve(true);
     });
 }
 
@@ -379,7 +556,6 @@ async function update_existing_product_code(product_details){
                 set Name = '${product_details.Name}',
                 Specification = '${product_details.Specification}',
                 Description = '${product_details.Description}',
-                Stock_Quantity = '${product_details.Stock_Quantity}',
                 Sell_Price = '${product_details.Sell_Price}',
                 Unit = '${product_details.Unit}',
                 Category = '${product_details.Category}',
@@ -391,7 +567,19 @@ async function update_existing_product_code(product_details){
                 Picture_3 = '${product_details.Picture_3}',
                 GroupBuy_Purchase = '${product_details.GroupBuy_Purchase}',
                 GroupBuy_SellPrice = '${product_details.GroupBuy_SellPrice}',
-                In_Store_Price = '${product_details.In_Store_Price}'
+                In_Store_Price = '${product_details.In_Store_Price}',
+                Last_Updated = CURRENT_TIMESTAMP(),
+                Start_Date = CURRENT_TIMESTAMP(),
+                Remark = 'newly updated',
+                Status = 'pending',
+                Creator = '${product_details.Creator}',
+                Create_Date = CURRENT_TIMESTAMP(),
+                Modifier = '${product_details.Modifier}',
+                Update_date = CURRENT_TIMESTAMP(),
+                Delete_Mark = '0',
+                Weight_KG = '${product_details.Weight_KG}',
+                Dimension_CM_CUBIC = '${product_details.Dimension_CM_CUBIC}',
+                Tax = '${product_details.Tax}'
                 where Product_Code = '${product_details.Product_Code}'
                 ;`;
             return new Promise(async resolve => {
@@ -413,7 +601,6 @@ async function insert_existing_product_code(product_details){
                     Name,
                     Specification,
                     Description,
-                    Stock_Quantity,
                     Sell_Price,
                     Unit,
                     Category,
@@ -425,7 +612,19 @@ async function insert_existing_product_code(product_details){
                     Picture_3,
                     GroupBuy_Purchase,
                     GroupBuy_SellPrice,
-                    In_Store_Price
+                    In_Store_Price,
+                    Last_Updated,
+                    Start_Date,
+                    Remark,
+                    Status,
+                    Creator,
+                    Create_Date,
+                    Modifier,
+                    Update_date,
+                    Delete_Mark,
+                    Weight_KG,
+                    Dimension_CM_CUBIC,
+                    Tax
                 ) 
                 VALUES 
                 (
@@ -433,7 +632,6 @@ async function insert_existing_product_code(product_details){
                     '${product_details.Name}',
                     '${product_details.Specification}',
                     '${product_details.Description}',
-                    '${product_details.Stock_Quantity}',
                     '${product_details.Sell_Price}',
                     '${product_details.Unit}',
                     '${product_details.Category}',
@@ -445,7 +643,19 @@ async function insert_existing_product_code(product_details){
                     '${product_details.Picture_3}',
                     '${product_details.GroupBuy_Purchase}',
                     '${product_details.GroupBuy_SellPrice}',
-                    '${product_details.In_Store_Price}'
+                    '${product_details.In_Store_Price}',
+                    CURRENT_TIMESTAMP(),
+                    CURRENT_TIMESTAMP(),
+                    'newly inserted',
+                    'pending',
+                    '${product_details.Creator}',
+                    CURRENT_TIMESTAMP(),
+                    '${product_details.Modifier}',
+                    CURRENT_TIMESTAMP(),
+                    '0',
+                    '${product_details.Weight_KG}',
+                    '${product_details.Dimension_CM_CUBIC}',
+                    '${product_details.Tax}'
                 );`;
             return new Promise(async resolve => {
                 await con.query(sql, async function (err, result) {
@@ -482,7 +692,13 @@ async function read_excel(){
                 Picture_3: excelDatas[i][13],
                 GroupBuy_Purchase: excelDatas[i][14],
                 GroupBuy_SellPrice: excelDatas[i][15],
-                In_Store_Price: excelDatas[i][16]
+                In_Store_Price: excelDatas[i][16],
+                //new 
+                Creator: excelDatas[i][17],
+                Modifier: excelDatas[i][18],
+                Weight_KG: excelDatas[i][19],
+                Dimension_CM_CUBIC: excelDatas[i][20],
+                Tax: excelDatas[i][21]
             }
         );
     }

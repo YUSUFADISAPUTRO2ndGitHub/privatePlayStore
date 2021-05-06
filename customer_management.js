@@ -17,9 +17,47 @@ var con = mysql.createConnection({
 });
 
 con.connect(function(err) {
-    if (err) console.log(err);
-    console.log("Connected! to MySQL");
+    if (err) {
+        console.log(err);
+        handle_disconnect();
+    }else{
+        console.log("Connected! to MySQL");
+    }
 });
+
+con.on('error', function(err) {
+    console.log('MySQL error | ', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        handle_disconnect();
+    } else {
+        throw err;
+    }
+});
+
+function handle_disconnect() {
+    con = mysql.createConnection({
+        host: "172.31.207.222",
+        port: 3306,
+        database: "vtportal",
+        user: "root",
+        password: "Root@123"
+    });
+
+    con.connect(function(err) {
+        if (err) {
+            console.log('error when connecting to db:', err);
+            setTimeout(handleDisconnect, 2000);
+        }
+    });
+    con.on('error', function(err) {
+        console.log('db error', err);
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+            handleDisconnect();
+        } else {
+            throw err;
+        }
+    });
+}
 
 const get_latest_recorded_token = async () => {
     var sql = `select access_token, session_id from vtportal.accurateCredentials as acc order by acc.last_updated desc limit 1;`;
@@ -302,41 +340,92 @@ async function get_customer_details_based_on_customer_status(Status){
     });
 }
 
-//create new customer
-app.post('/create-new-customer',  async (req, res) => {
+//create new customer-by-admin
+app.post('/create-new-customer-by-admin',  async (req, res) => {
     var customer_data = req.body.customer_data;
     if(customer_data != undefined || customer_data != null){
-        if(
-            (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
-            && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
-            && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
-            && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
-            && (customer_data.Email != undefined || customer_data.Email.length != 0)
-            && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
-            && (
-                customer_data.Email.toLowerCase().includes('@gmail.com') 
-                || customer_data.Email.toLowerCase().includes('@outlook.com') 
-                || customer_data.Email.toLowerCase().includes('@hotmail.com') 
-                || customer_data.Email.toLowerCase().includes('@yahoo.com') 
-                || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
-                || customer_data.Email.toLowerCase().includes('@aol.com')
-            )
-            ){
+        if(customer_data.Email != undefined){
+            if(customer_data.Email.length > 0){
                 if(
-                    await check_existing_customer_code(customer_data).then(async value => {
-                        return await value;
-                    })
-                    && 
-                    await check_existing_customer_email(customer_data).then(async value => {
-                        return await value;
-                    })
-                ){
-                    res.send(false);
+                    (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
+                    && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
+                    && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
+                    && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
+                    && (customer_data.Email != undefined || customer_data.Email.length != 0)
+                    && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
+                    && (
+                        customer_data.Email.toLowerCase().includes('@gmail.com') 
+                        || customer_data.Email.toLowerCase().includes('@outlook.com') 
+                        || customer_data.Email.toLowerCase().includes('@hotmail.com') 
+                        || customer_data.Email.toLowerCase().includes('@yahoo.com') 
+                        || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
+                        || customer_data.Email.toLowerCase().includes('@aol.com')
+                    )
+                    ){
+                        if(
+                            (await check_existing_customer_code(customer_data).then(async value => {
+                                return await value;
+                            }))
+                        ){
+                            res.send(false);
+                        }else{
+                            res.send(await create_new_customer_by_admin(customer_data).then(async value => {
+                                return await value;
+                            }));
+                        }
                 }else{
-                    res.send(await create_new_customer(customer_data).then(async value => {
-                        return await value;
-                    }));
+                    res.send(false);
                 }
+            }else{
+                res.send(false);
+            }
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+//create new customer-direct-from-user
+app.post('/create-new-customer-direct-from-user',  async (req, res) => {
+    var customer_data = req.body.customer_data;
+    if(customer_data != undefined || customer_data != null){
+        if(customer_data.Email != undefined){
+            if(customer_data.Email.length > 0){
+                if(
+                    (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
+                    && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
+                    && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
+                    && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
+                    && (customer_data.Email != undefined || customer_data.Email.length != 0)
+                    && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
+                    && (
+                        customer_data.Email.toLowerCase().includes('@gmail.com') 
+                        || customer_data.Email.toLowerCase().includes('@outlook.com') 
+                        || customer_data.Email.toLowerCase().includes('@hotmail.com') 
+                        || customer_data.Email.toLowerCase().includes('@yahoo.com') 
+                        || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
+                        || customer_data.Email.toLowerCase().includes('@aol.com')
+                    )
+                    ){
+                        if(
+                            (await check_existing_customer_code(customer_data).then(async value => {
+                                return await value;
+                            }))
+                        ){
+                            res.send(false);
+                        }else{
+                            res.send(await create_new_customer_direct_from_customer(customer_data).then(async value => {
+                                return await value;
+                            }));
+                        }
+                }else{
+                    res.send(false);
+                }
+            }else{
+                res.send(false);
+            }
         }else{
             res.send(false);
         }
@@ -347,7 +436,7 @@ app.post('/create-new-customer',  async (req, res) => {
 
 async function check_existing_customer_code(customer_data){
     var sql = `
-        select * from vtportal.customer_management where Customer_Code = '${customer_data.Customer_Code}' 
+        select * from vtportal.customer_management where Customer_Code = '${customer_data.Customer_Code}' and upper(Email) like '%${customer_data.Email.toUpperCase()}%' 
     ;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -365,47 +454,274 @@ async function check_existing_customer_code(customer_data){
     });
 }
 
-async function check_existing_customer_email(customer_data){
-    sql = `
-        select * from vtportal.customer_management where upper(Email) like '%${customer_data.Email.toUpperCase()}%' 
-    ;`;
+async function create_new_customer_direct_from_customer(customer_data){
+    var sql = `INSERT into vtportal.customer_management 
+    (
+        Customer_Code,
+        First_Name,
+        Last_Name,
+        User_Password,
+        Birthday,
+        Created_Date,
+        Last_Login,
+        Email,
+        Contact_Number_1,
+        Contact_Number_2,
+        Address_1,
+        Address_2,
+        Address_3,
+        Address_4,
+        Address_5,
+        Status,
+        User_Type,
+        Start_Date,
+        Remark,
+        Creator,
+        Create_Date,
+        Update_date,
+        Delete_Mark
+        )
+        values
+        ('${customer_data.Customer_Code}',
+        '${customer_data.First_Name}',
+        '${customer_data.Last_Name}',
+        '${customer_data.User_Password}',
+        '${customer_data.Birthday}',
+        CURDATE(),
+        CURDATE(),
+        '${customer_data.Email}',
+        '${customer_data.Contact_Number_1}',
+        '${customer_data.Contact_Number_2}',
+        '${customer_data.Address_1}',
+        '${customer_data.Address_2}',
+        '${customer_data.Address_3}',
+        '${customer_data.Address_4}',
+        '${customer_data.Address_5}',
+        'approving',
+        '${customer_data.User_Type}',
+        CURRENT_TIMESTAMP(),
+        'created by user',
+        '${customer_data.Customer_Code}',
+        CURRENT_TIMESTAMP(),
+        CURRENT_TIMESTAMP(),
+        '0'
+        );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
-            if(result[0] != undefined){
-                if(result[0].Email == customer_data.Email){
-                    resolve(true);
-                }else{
-                    resolve(false);
-                }
-            }else{
-                resolve(false);
-            }
+            resolve(true);
         });
     });
 }
 
-async function create_new_customer(customer_data){
+async function create_new_customer_by_admin(customer_data){
     var sql = `INSERT into vtportal.customer_management 
-    (Customer_Code,First_Name,Last_Name,User_Password,Birthday,Created_Date,Last_Login,Email,Contact_Number_1,Contact_Number_2,Address_1,Address_2,Address_3,Address_4,Address_5,Status,User_Type)
-    values
-    ('${customer_data.Customer_Code}',
-    '${customer_data.First_Name}',
-    '${customer_data.Last_Name}',
-    '${customer_data.User_Password}',
-    '${customer_data.Birthday}',
-    CURDATE(),
-    CURDATE(),
-    '${customer_data.Email}',
-    '${customer_data.Contact_Number_1}',
-    '${customer_data.Contact_Number_2}',
-    '${customer_data.Address_1}',
-    '${customer_data.Address_2}',
-    '${customer_data.Address_3}',
-    '${customer_data.Address_4}',
-    '${customer_data.Address_5}',
-    '${customer_data.Status}',
-    '${customer_data.User_Type}');`;
+    (
+        Customer_Code,
+        First_Name,
+        Last_Name,
+        User_Password,
+        Birthday,
+        Created_Date,
+        Last_Login,
+        Email,
+        Contact_Number_1,
+        Contact_Number_2,
+        Address_1,
+        Address_2,
+        Address_3,
+        Address_4,
+        Address_5,
+        Status,
+        User_Type,
+        Start_Date,
+        Remark,
+        Creator,
+        Create_Date,
+        Update_date,
+        Delete_Mark
+        )
+        values
+        ('${customer_data.Customer_Code}',
+        '${customer_data.First_Name}',
+        '${customer_data.Last_Name}',
+        '${customer_data.User_Password}',
+        '${customer_data.Birthday}',
+        CURDATE(),
+        CURDATE(),
+        '${customer_data.Email}',
+        '${customer_data.Contact_Number_1}',
+        '${customer_data.Contact_Number_2}',
+        '${customer_data.Address_1}',
+        '${customer_data.Address_2}',
+        '${customer_data.Address_3}',
+        '${customer_data.Address_4}',
+        '${customer_data.Address_5}',
+        'pending',
+        '${customer_data.User_Type}',
+        CURRENT_TIMESTAMP(),
+        'created by admin',
+        '${customer_data.Creator}',
+        CURRENT_TIMESTAMP(),
+        CURRENT_TIMESTAMP(),
+        '0'
+        );`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+//update-customer-data-by-admin
+app.post('/update-customer-data-by-admin',  async (req, res) => {
+    var Customer_Data = req.body.customer_data;
+    if(Customer_Data != undefined){
+        if(
+            await check_existing_customer_code(Customer_Data).then(async value => {
+                return await value;
+            })
+        ){
+            res.send(
+                await update_customer_by_admin(Customer_Data).then(async value => {
+                    return await value;
+                })
+            );
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+async function update_customer_by_admin(customer_data){
+    var sql = `UPDATE vtportal.customer_management 
+    SET Customer_Code = '${customer_data.Customer_Code}',
+        First_Name = '${customer_data.First_Name}',
+        Last_Name = '${customer_data.Last_Name}',
+        User_Password = '${customer_data.User_Password}',
+        Birthday = '${customer_data.Birthday}',
+        Last_Login = CURRENT_TIMESTAMP(),
+        Email = '${customer_data.Email}',
+        Contact_Number_1 = '${customer_data.Contact_Number_1}',
+        Contact_Number_2 = '${customer_data.Contact_Number_2}',
+        Address_1 = '${customer_data.Address_1}',
+        Address_2 = '${customer_data.Address_2}',
+        Address_3 = '${customer_data.Address_3}',
+        Address_4 = '${customer_data.Address_4}',
+        Address_5 = '${customer_data.Address_5}',
+        Status = 'pending',
+        User_Type = '${customer_data.User_Type}',
+        Update_date = CURRENT_TIMESTAMP(),
+        Auditor_Id = '${customer_data.Auditor_Id}',
+        Audited_Date = CURRENT_TIMESTAMP()
+        WHERE Customer_Code = '${customer_data.Customer_Code}';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+//update-customer-data-by-user-themselves
+app.post('/update-customer-data-by-user-themselves',  async (req, res) => {
+    var Customer_Data = req.body.customer_data;
+    if(Customer_Data != undefined){
+        if(
+            await check_existing_customer_code(Customer_Data).then(async value => {
+                return await value;
+            })
+        ){
+            res.send(
+                await update_customer_direct_from_customer(Customer_Data).then(async value => {
+                    return await value;
+                })
+            );
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+async function update_customer_direct_from_customer(customer_data){
+    var sql = `UPDATE vtportal.customer_management 
+    SET Customer_Code = '${customer_data.Customer_Code}',
+        First_Name = '${customer_data.First_Name}',
+        Last_Name = '${customer_data.Last_Name}',
+        User_Password = '${customer_data.User_Password}',
+        Birthday = '${customer_data.Birthday}',
+        Last_Login = CURRENT_TIMESTAMP(),
+        Email = '${customer_data.Email}',
+        Contact_Number_1 = '${customer_data.Contact_Number_1}',
+        Contact_Number_2 = '${customer_data.Contact_Number_2}',
+        Address_1 = '${customer_data.Address_1}',
+        Address_2 = '${customer_data.Address_2}',
+        Address_3 = '${customer_data.Address_3}',
+        Address_4 = '${customer_data.Address_4}',
+        Address_5 = '${customer_data.Address_5}',
+        Status = 'approving',
+        User_Type = '${customer_data.User_Type}',
+        Update_date = CURRENT_TIMESTAMP()
+        WHERE Customer_Code = '${customer_data.Customer_Code}';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+//update-customer-status-approving
+app.post('/update-customer-status-approving',  async (req, res) => {
+    var customer_code = req.query.Customer_Code;
+    var Auditor_Id = req.query.Auditor_Id;
+    if(customer_code != undefined || Auditor_Id != undefined){
+        res.send(await update_customer_status_to_approving(customer_code, Auditor_Id).then(async value => {
+            return await value;
+        }));
+    }else{
+        res.send(false);
+    }
+})
+
+async function update_customer_status_to_approving(customer_code, Auditor_Id){
+    var sql = `update vtportal.customer_management 
+    set Status='approving',
+    Auditor_Id='${Auditor_Id}',
+    Update_date=CURRENT_TIMESTAMP(),
+    Audited_Date=CURRENT_TIMESTAMP()
+    where Customer_Code = '${customer_code}'
+    and Delete_Mark = '0';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+//update-customer-status-pending
+app.post('/update-customer-status-pending',  async (req, res) => {
+    var customer_code = req.query.Customer_Code;
+    var Rejector_Id = req.query.Rejector_Id;
+    if(customer_code != undefined || Rejector_Id != undefined){
+        res.send(await update_customer_status_to_pending(customer_code, Rejector_Id).then(async value => {
+            return await value;
+        }));
+    }else{
+        res.send(false);
+    }
+})
+
+async function update_customer_status_to_pending(customer_code, Rejector_Id){
+    var sql = `update vtportal.customer_management 
+    set Status='pending',
+    Rejector_Id='${Rejector_Id}',
+    Update_date=CURRENT_TIMESTAMP(),
+    Rejector_Date=CURRENT_TIMESTAMP()
+    where Customer_Code = '${customer_code}'
+    and Delete_Mark = '0';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -417,8 +733,9 @@ async function create_new_customer(customer_data){
 //delete customer
 app.post('/delete-customer',  async (req, res) => {
     var customer_code = req.query.Customer_Code;
-    if(customer_code != undefined || customer_code != null){
-        res.send(await delete_customer(customer_code).then(async value => {
+    var Deleter = req.query.Deleter;
+    if(customer_code != undefined || Deleter != undefined){
+        res.send(await delete_customer(customer_code, Deleter).then(async value => {
             return await value;
         }));
     }else{
@@ -426,15 +743,36 @@ app.post('/delete-customer',  async (req, res) => {
     }
 })
 
-async function delete_customer(customer_code){
+async function delete_customer(customer_code, Deleter){
     var sql = `update vtportal.customer_management 
-    set Status='deleted'
+    set Status='deleted',
+    Deleter='${Deleter}',
+    Delete_Date=CURRENT_TIMESTAMP(),
+    Delete_Mark='1'
     where Customer_Code = '${customer_code}';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
             resolve(true);
         });
+    });
+}
+
+//get-customer-code
+app.post('/get-customer-code',  async (req, res) => {
+    res.send(await customer_code_generator().then(async value => {
+        return await value;
+    }));
+})
+
+async function customer_code_generator(){
+    var today = new Date();
+    var h = today.getHours();
+    var m = today.getMinutes();
+    var s = today.getSeconds();
+    var customer_code = Date.now() + "SU" + h + "YU" + m + "YU" + s + "AD" + Math.floor((Math.random() * 999) + 9999);;
+    return new Promise(async resolve => {
+        resolve(customer_code);
     });
 }
 
