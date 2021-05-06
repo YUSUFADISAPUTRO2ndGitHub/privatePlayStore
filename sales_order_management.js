@@ -45,13 +45,13 @@ function handle_disconnect() {
     con.connect(function(err) {
         if (err) {
             console.log('error when connecting to db:', err);
-            setTimeout(handleDisconnect, 2000);
+            setTimeout(handle_disconnect, 2000);
         }
     });
     con.on('error', function(err) {
         console.log('db error', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            handleDisconnect();
+            handle_disconnect();
         } else {
             throw err;
         }
@@ -273,7 +273,7 @@ app.post('/update-sales-order-detail-by-customer',  async (req, res) => {
                 }else{
                     res.send({
                         status: false,
-                        reason: "fail"
+                        reason: "fail - maybe due to fail validation checking or server down"
                     });
                 }
             }else{
@@ -299,7 +299,7 @@ app.post('/update-sales-order-detail-by-customer',  async (req, res) => {
 async function iterate_through_sales_order_detail_update(Order_Number, Sales_Order_Detail_data, Customer_Code){
     return new Promise(async resolve => {
         if(
-            (await delete_all_Sales_Order_Detail_data(Order_Number).then(async value => {
+            (await delete_all_Sales_Order_Detail_data(Order_Number, Customer_Code).then(async value => {
                 return await value;
             }))
         ){
@@ -314,7 +314,15 @@ async function iterate_through_sales_order_detail_update(Order_Number, Sales_Ord
                 ){
                     Total_Quantity_Requested = Total_Quantity_Requested + parseFloat(Sales_Order_Detail_data[i].Quantity_Requested);
                     Total_Price_Based_On_Total_Quantity = Total_Price_Based_On_Total_Quantity + parseFloat(Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity);
-                    i++;
+                    if(
+                        !(await check_product_code_existance(Sales_Order_Detail_data[i].Product_Code).then(async value => {
+                            return await value;
+                        }))
+                    ){
+                        resolve(false);
+                    }else{
+                        i++
+                    }
                 }else{
                     resolve(false);
                 }
@@ -366,7 +374,7 @@ async function update_Sales_Order_Detail_data(Order_Number, Sales_Order_Detail_d
     });
 } 
 
-async function delete_all_Sales_Order_Detail_data(Order_Number){
+async function delete_all_Sales_Order_Detail_data(Order_Number, Customer_Code){
     var sql = `
         delete from vtportal.sales_order_detail_management
         WHERE Order_Number = '${Order_Number}';
@@ -437,7 +445,6 @@ async function update_sales_order_data_requested_by_customer(Order_Number, Sales
     var sql = `
         UPDATE vtportal.sales_order_management
         SET Status = 'active',
-        Customer_Code = '${Sales_Order_Data.Customer_Code}',
         Unit = '${Sales_Order_Data.Unit}',
         Shipping_Address = '${Sales_Order_Data.Shipping_Address}',
         Shipping_Contact_Number = '${Sales_Order_Data.Shipping_Contact_Number}',
@@ -600,8 +607,8 @@ async function check_if_sales_order_exist_with_customer_code(Customer_Code, Orde
     });
 } 
 
-//create-new-sales-order
-app.post('/create-new-sales-order',  async (req, res) => {
+//create-new-sales-order-by-customer
+app.post('/create-new-sales-order-by-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
     var Sales_Order_Data = req.body.Sales_Order_Data;
     var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
@@ -611,6 +618,9 @@ app.post('/create-new-sales-order',  async (req, res) => {
                 return await value;
             }))
             &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+                return await value;
+            }))
+            &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
                 return await value;
             }))
         ){
@@ -643,7 +653,7 @@ app.post('/create-new-sales-order',  async (req, res) => {
         }else{
             res.send({
                 status: false,
-                reason: "this customer does not exist"
+                reason: "Customer Validation or product Validation fail"
             });
         }
     }
@@ -849,7 +859,10 @@ async function validation_check(Sales_Order_Data, Customer_Code){
 }   
 
 async function check_payment_method(Payment_Method_Name){
-    var sql = `select * from vtportal.payment_method_management where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}' limit 1;`;
+    var sql = `select * from vtportal.payment_method_management 
+    where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}' 
+    and Delete_Mark != '1'
+    limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
@@ -867,7 +880,55 @@ async function check_payment_method(Payment_Method_Name){
 }
 
 async function check_customer_code_existance(Customer_Code){
-    var sql = `select * from vtportal.customer_management where upper(Customer_Code) = '${Customer_Code.toUpperCase()}' limit 1;`;
+    var sql = `select * from vtportal.customer_management 
+    where upper(Customer_Code) = '${Customer_Code.toUpperCase()}' 
+    and Delete_Mark != '1'
+    limit 1;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined && result[0] != undefined){
+                resolve(true);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data){
+    return new Promise(async resolve => {
+        var i = 0;
+        var total_sales_order_quantity = 0;
+        var total_sales_order_price = 0;
+        for(i = 0; i < Sales_Order_Detail_data.length;){
+            total_sales_order_quantity = total_sales_order_quantity + parseFloat(Sales_Order_Detail_data[i].Quantity_Requested);
+            total_sales_order_price = total_sales_order_price + parseFloat(Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity);
+            if(
+                !(await check_product_code_existance(Sales_Order_Detail_data[i].Product_Code).then(async value => {
+                    return await value;
+                }))
+            ){
+                resolve(false);
+            }else{
+                i++
+            }
+        }
+        if(
+            (total_sales_order_quantity == parseFloat(Sales_Order_Data.Total_Quantity))
+            &&(total_sales_order_price == parseFloat(Sales_Order_Data.Total_Price))    
+        ){
+            resolve(true);
+        }else{
+            resolve(false);
+        }
+    });
+}
+
+async function check_product_code_existance(Product_Code){
+    var sql = `select * from vtportal.product_management 
+    where upper(Product_Code) = '${Product_Code.toUpperCase()}' 
+    and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);

@@ -44,13 +44,13 @@ function handle_disconnect() {
     con.connect(function(err) {
         if (err) {
             console.log('error when connecting to db:', err);
-            setTimeout(handleDisconnect, 2000);
+            setTimeout(handle_disconnect, 2000);
         }
     });
     con.on('error', function(err) {
         console.log('db error', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            handleDisconnect();
+            handle_disconnect();
         } else {
             throw err;
         }

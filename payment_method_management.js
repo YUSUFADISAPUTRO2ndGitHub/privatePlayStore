@@ -45,13 +45,13 @@ function handle_disconnect() {
     con.connect(function(err) {
         if (err) {
             console.log('error when connecting to db:', err);
-            setTimeout(handleDisconnect, 2000);
+            setTimeout(handle_disconnect, 2000);
         }
     });
     con.on('error', function(err) {
         console.log('db error', err);
         if (err.code === 'PROTOCOL_CONNECTION_LOST') {
-            handleDisconnect();
+            handle_disconnect();
         } else {
             throw err;
         }
@@ -86,7 +86,7 @@ app.get('/get-all-payment-method',  async (req, res) => {
 })
 
 async function get_all_payment_methode(){
-    var sql = `select * from vtportal.payment_method_management;`;
+    var sql = `select * from vtportal.payment_method_management where Delete_Mark != '1';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err){
@@ -126,15 +126,23 @@ app.post('/delete-payment-method',  async (req, res) => {
         }else{
             res.send({
                 status: false,
-                reason: "incomplete param"
+                reason: "not found target"
             });
         }
+    }
+    else{
+        res.send({
+            status: false,
+            reason: "incomplete param"
+        });
     }
     
 })
 
 async function delete_payment_method(Payment_Method_Name){
-    var sql = `delete from vtportal.payment_method_management where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}' limit 1;`;
+    var sql = `UPDATE vtportal.payment_method_management 
+    SET Delete_Mark = '1'
+    where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err){
@@ -153,14 +161,15 @@ app.post('/create-new-payment-method',  async (req, res) => {
     var Payment_Method_Desc = req.query.Payment_Method_Desc;
     var Payment_Method_Default_Charge = req.query.Payment_Method_Default_Charge;
     var Payment_Method_Default_Discount = req.query.Payment_Method_Default_Discount;
-    if(Payment_Method_Name != undefined && Payment_Method_Desc != undefined && Payment_Method_Default_Charge != undefined && Payment_Method_Default_Discount != undefined){
+    var Creator = req.query.Creator;
+    if(Creator != undefined && Payment_Method_Name != undefined && Payment_Method_Desc != undefined && Payment_Method_Default_Charge != undefined && Payment_Method_Default_Discount != undefined){
         if(
             !(await check_Payment_Name_existance(Payment_Method_Name).then(async value => {
                 return await value;
             }))
         ){
             if(
-                await create_new_payment_method(Payment_Method_Name, Payment_Method_Desc, Payment_Method_Default_Charge, Payment_Method_Default_Discount).then(async value => {
+                await create_new_payment_method(Payment_Method_Name, Payment_Method_Desc, Payment_Method_Default_Charge, Payment_Method_Default_Discount, Creator).then(async value => {
                     return await value;
                 })
             ){
@@ -177,15 +186,20 @@ app.post('/create-new-payment-method',  async (req, res) => {
         }else{
             res.send({
                 status: false,
-                reason: "incomplete param"
+                reason: "duplicate target"
             });
         }
+    }else{
+        res.send({
+            status: false,
+            reason: "incomplete param"
+        });
     }
     
 })
 
 async function check_Payment_Name_existance(Payment_Method_Name){
-    var sql = `select * from vtportal.payment_method_management where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}' limit 1;`;
+    var sql = `select * from vtportal.payment_method_management where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -198,21 +212,35 @@ async function check_Payment_Name_existance(Payment_Method_Name){
     });
 }
 
-async function create_new_payment_method(Payment_Method_Name, Payment_Method_Desc, Payment_Method_Default_Charge, Payment_Method_Default_Discount){
+async function create_new_payment_method(Payment_Method_Name, Payment_Method_Desc, Payment_Method_Default_Charge, Payment_Method_Default_Discount, Creator){
     var sql = `
         INSERT INTO vtportal.payment_method_management 
         (
             Payment_Method_Name,
             Payment_Method_Desc,
             Payment_Method_Default_Charge,
-            Payment_Method_Default_Discount
+            Payment_Method_Default_Discount,
+            Start_Date,
+            Status,
+            Creator,
+            Create_Date,
+            Modifier,
+            Update_date,
+            Delete_Mark
         )
         VALUES 
         (
             '${Payment_Method_Name}',
             '${Payment_Method_Desc}',
             '${Payment_Method_Default_Charge}',
-            '${Payment_Method_Default_Discount}'
+            '${Payment_Method_Default_Discount}',
+            CURRENT_TIMESTAMP(),
+            'approving',
+            '${Creator}',
+            CURRENT_TIMESTAMP(),
+            '${Creator}',
+            CURRENT_TIMESTAMP(),
+            '0'
         );
     `;
     return new Promise(async resolve => {
