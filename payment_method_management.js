@@ -77,7 +77,7 @@ const get_latest_recorded_token = async () => {
 }
 
 //get-all-payment-method
-app.get('/get-all-payment-method',  async (req, res) => {
+app.post('/get-all-payment-method',  async (req, res) => {
     res.send(
         (await get_all_payment_methode().then(async value => {
             return await value;

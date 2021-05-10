@@ -191,7 +191,7 @@ function update_last_login(email, encrypted_password){
 }
 
 //generate password
-app.get('/password-generator',  async (req, res) => {
+app.post('/password-generator',  async (req, res) => {
     var password = req.query.Password;
     if(password != undefined){
         res.send(
@@ -214,7 +214,7 @@ async function encrypt_password(password){
 }
 
 //get customer information
-app.get('/get-customer-information',  async (req, res) => {
+app.post('/get-customer-information',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
     var First_Name = req.query.First_Name;
     var Last_Name = req.query.Last_Name;

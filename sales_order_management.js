@@ -76,8 +76,160 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//close-group-buy-status
+app.post('/close-group-buy-status',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    if(Product_Code != undefined){
+        res.send(
+            (await close_group_buy_status(Product_Code).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function close_group_buy_status(Product_Code){
+    var sql = `
+    UPDATE vtportal.product_management 
+    SET GroupBuy_Purchase = 'false',
+    GroupBuy_SellQuantity = '0',
+    GroupBuy_SellPrice = '0';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+} 
+
+//check-group-buy-quantity-so-far-gross
+app.post('/check-group-buy-quantity-so-far-gross',  async (req, res) => {
+    var Group_Buy_Purchase_PC = req.query.Group_Buy_Purchase_PC;
+    if(Group_Buy_Purchase_PC != undefined){
+        res.send(
+            (await check_group_buy_quantity_so_far_gross(Group_Buy_Purchase_PC).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function check_group_buy_quantity_so_far_gross(Group_Buy_Purchase_PC){
+    var sql = `
+    select SUM(Total_Quantity) as Total_Quantity from vtportal.sales_order_management 
+    where Group_Buy_Purchase_PC = '${Group_Buy_Purchase_PC}'
+    and upper(Payment_Status) != 'PAYMENT' 
+    and Delete_Mark != '1';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result[0]);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
+
+//get-unpaid-sales-order-per-customer
+app.post('/get-unpaid-sales-order-per-customer',  async (req, res) => {
+    var Customer_Code = req.query.Customer_Code;
+    if(Customer_Code != undefined){
+        res.send(
+            (await get_unpaid_sales_order_based_on_Customer_Code(Customer_Code).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function get_unpaid_sales_order_based_on_Customer_Code(Customer_Code){
+    var sql = `
+        select * from 
+        vtportal.sales_order_management so
+        where Customer_Code = '${Customer_Code}'
+        and upper(Payment_Status) = 'NULL'
+        and upper(Payment_Status) = 'UNDEFINED'
+        and upper(Payment_Status) != 'PAYMENT'
+        and Delete_Mark != '1';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
+
+//get-unpaid-group-buy-sales-order-per-customer
+app.post('/get-unpaid-group-buy-sales-order-per-customer',  async (req, res) => {
+    var Customer_Code = req.query.Customer_Code;
+    var Group_Buy_Purchase_PC = req.query.Group_Buy_Purchase_PC;
+    if(Customer_Code != undefined && Group_Buy_Purchase_PC != undefined){
+        res.send(
+            (await get_unpaid_sales_order_based_on_Group_Buy_Purchase_PC(Customer_Code, Group_Buy_Purchase_PC).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function get_unpaid_sales_order_based_on_Group_Buy_Purchase_PC(Customer_Code, Group_Buy_Purchase_PC){
+    var sql = `
+        select * from 
+        vtportal.sales_order_management so
+        where so.Group_Buy_Purchase_PC = '${Group_Buy_Purchase_PC}'
+        and upper(Payment_Status) = 'NULL'
+        and upper(Payment_Status) = 'UNDEFINED'
+        and upper(Payment_Status) != 'PAYMENT'
+        and Customer_Code = '${Customer_Code}'
+        and Delete_Mark != '1' limit 1;
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
+
 //get-sales-order-data-per-customer
-app.get('/get-sales-order-data-per-customer',  async (req, res) => {
+app.post('/get-sales-order-data-per-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
     if(Customer_Code != undefined){
         res.send(
@@ -112,7 +264,7 @@ async function get_sales_order_based_on_customer_code(Customer_Code){
 } 
 
 //get-sales-order-data-and-detail
-app.get('/get-sales-order-data-and-detail',  async (req, res) => {
+app.post('/get-sales-order-data-and-detail',  async (req, res) => {
     var Order_Number = req.query.Order_Number;
     if(Order_Number != undefined){
         res.send(
@@ -236,7 +388,8 @@ async function update_Sales_Order_Payment_status_to_payment(Order_Number){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
-        Payment_Status = 'payment'
+        Group_Buy_Purchase_PC = 'NULL'
+        and Payment_Status = 'payment'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
@@ -607,6 +760,87 @@ async function check_if_sales_order_exist_with_customer_code(Customer_Code, Orde
     });
 } 
 
+//create-new-group-buy-sales-order-by-customer
+app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
+    var Customer_Code = req.query.Customer_Code;
+    var Sales_Order_Data = req.body.Sales_Order_Data;
+    var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
+    if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
+        if(
+            (await check_customer_code_existance(Customer_Code).then(async value => {
+                return await value;
+            }))
+            &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+                return await value;
+            }))
+            &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
+                return await value;
+            }))
+        ){
+            if(
+                await validation_check(Sales_Order_Data, Customer_Code).then(async value => {
+                    return await value;
+                })
+            ){
+                var Order_Number = await order_number_creation().then(async value => {
+                        return await value;
+                });
+
+                if(
+                    await create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number).then(async value => {
+                        return await value;
+                    })
+                ){
+                    res.send({
+                        status: true,
+                        order_number: Order_Number
+                    });
+                }
+            }else{
+                res.send({
+                    status: false,
+                    reason: "this order is invalid",
+                    subreason: "this maybe caused by numeric value is 0 or customer code is mismatch between order data and details"
+                });
+            }
+        }else{
+            res.send({
+                status: false,
+                reason: "Customer Validation or product Validation fail"
+            });
+        }
+    }
+    
+})
+
+async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number){
+    return new Promise(async resolve => {
+        if(
+            (
+                await insert_into_sales_order_management(Sales_Order_Data, Order_Number, Sales_Order_Detail_data[0].Product_Code).then(async value => {
+                    return await value;
+                })
+            )
+        ){
+            var i = 0;
+            for(i; i < Sales_Order_Detail_data.length;){
+                if(
+                    await insert_into_sales_order_detail_management(Sales_Order_Detail_data[i], Order_Number).then(async value => {
+                        return await value;
+                    })
+                ){
+                    i++;
+                }else{
+                    resolve(false);
+                }
+            }
+            resolve(true);
+        }else{
+            resolve(false);
+        }
+    });
+} 
+
 //create-new-sales-order-by-customer
 app.post('/create-new-sales-order-by-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
@@ -664,7 +898,7 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
     return new Promise(async resolve => {
         if(
             (
-                await insert_into_sales_order_management(Sales_Order_Data, Order_Number).then(async value => {
+                await insert_into_sales_order_management(Sales_Order_Data, Order_Number, "NULL").then(async value => {
                     return await value;
                 })
             )
@@ -717,7 +951,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
     });
 } 
 
-async function insert_into_sales_order_management(Sales_Order_Data, Order_Number){
+async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
     var sql = `
         INSERT INTO vtportal.sales_order_management 
         (
@@ -737,7 +971,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             Creator,
             Create_Date,
             Update_date,
-            Delete_Mark
+            Delete_Mark,
+            Group_Buy_Purchase_PC
         )
         VALUES 
         (
@@ -757,7 +992,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             'customer',
             CURRENT_TIMESTAMP(),
             CURRENT_TIMESTAMP(),
-            '0'
+            '0',
+            '${Product_Code}'
         );
     `;
     if(Sales_Order_Data.Payment_Method.toUpperCase() == 'BCA VA TRANSFER' || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
@@ -790,7 +1026,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 Creator,
                 Create_Date,
                 Update_date,
-                Delete_Mark
+                Delete_Mark,
+                Group_Buy_Purchase_PC
             )
             VALUES 
             (
@@ -812,7 +1049,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 'customer',
                 CURRENT_TIMESTAMP(),
                 CURRENT_TIMESTAMP(),
-                '0'
+                '0',
+                '${Product_Code}'
             );
         `;
     }

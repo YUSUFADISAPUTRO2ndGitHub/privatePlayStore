@@ -80,7 +80,7 @@ const get_latest_recorded_token = async () => {
     })
 }
 
-app.get('/get-lastest-token-and-session',  async (req, res) => {
+app.post('/get-lastest-token-and-session',  async (req, res) => {
     res.send(
         await get_latest_recorded_token().then(async value => {
             return await value;
@@ -290,12 +290,15 @@ async function delete_product_based_on_product_code(Product_Code, Deleter){
 }
 
 // get product information from MySQL
-app.get('/get-product-details',  async (req, res) => {
+app.post('/get-product-details',  async (req, res) => {
     var product_code = req.query.product_code;
     var product_name = req.query.product_name;
     var category = req.query.category;
     var subcategory = req.query.subcategory;
     var GroupBuy_Purchase = req.query.GroupBuy_Purchase;
+    var Categorize_NEW = req.query.Categorize_NEW;
+    var Get_ALL_Category = req.query.Get_ALL_Category;
+    var Get_ALL_Sub_Category_Based_On_Category = req.query.Get_ALL_Sub_Category_Based_On_Category;
     if(product_code != undefined || product_code != null){
         res.send(await get_product_details_based_on_product_code(product_code).then(async value => {
             return await value;
@@ -322,6 +325,28 @@ app.get('/get-product-details',  async (req, res) => {
                 return await value;
             }));
         }
+    }else if(Categorize_NEW != undefined || Categorize_NEW != null){
+        if(Categorize_NEW == 'true'){
+            res.send(await get_product_details_based_on_new_items().then(async value => {
+                return await value;
+            }));
+        }else{
+            res.send(await get_product_details_not_new_items().then(async value => {
+                return await value;
+            }));
+        }
+    }else if(Get_ALL_Category != undefined || Get_ALL_Category != null){
+        if(Get_ALL_Category == 'true'){
+            res.send(await get_all_product_category().then(async value => {
+                return await value;
+            }));
+        }else{
+            res.send(false);
+        }
+    }else if(Get_ALL_Sub_Category_Based_On_Category != undefined || Get_ALL_Sub_Category_Based_On_Category != null){
+        res.send(await get_all_product_sub_category_based_on_category(Get_ALL_Sub_Category_Based_On_Category).then(async value => {
+            return await value;
+        }));
     }else{
         res.send(await get_all_products().then(async value => {
             return await value;
@@ -329,9 +354,90 @@ app.get('/get-product-details',  async (req, res) => {
     }
 })
 
+async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Category_Based_On_Category){
+    var sql = `
+    select Subcategory from vtportal.product_management where Delete_Mark != '1' and Subcategory != 'undefined' and upper(Subcategory) != 'NULL'
+    and Category = '${Get_ALL_Sub_Category_Based_On_Category}' group by Subcategory;
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function get_all_product_category(){
+    var sql = `
+    select Category from vtportal.product_management where Delete_Mark != '1' and Category != 'undefined' and upper(Category) != 'NULL' group by Category;
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function get_product_details_not_new_items(){
+    var sql = `
+        select * from vtportal.product_management where Categorize_NEW = 'false' and Categorize_NEW = 'undefined' and Categorize_NEW = 'NULL';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function get_product_details_based_on_new_items(){
+    var sql = `
+        select * from vtportal.product_management where Categorize_NEW != 'false' and Categorize_NEW != 'undefined' and Categorize_NEW != 'NULL';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                if(result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
 async function get_product_details_not_groupbuy_purchase(){
     var sql = `
-        select * from vtportal.product_management where GroupBuy_Purchase = 'false' and GroupBuy_Purchase = 'undefined';
+        select * from vtportal.product_management where GroupBuy_Purchase = 'false' and GroupBuy_Purchase = 'undefined' and GroupBuy_Purchase = 'NULL';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -351,7 +457,7 @@ async function get_product_details_not_groupbuy_purchase(){
 
 async function get_product_details_based_on_groupbuy_purchase(){
     var sql = `
-        select * from vtportal.product_management where GroupBuy_Purchase != 'false' and GroupBuy_Purchase != 'undefined';
+        select * from vtportal.product_management where GroupBuy_Purchase != 'false' and GroupBuy_Purchase != 'undefined' and GroupBuy_Purchase != 'NULL';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -398,11 +504,17 @@ async function get_product_details_based_on_product_name(product_name){
     var sql = `select * from vtportal.product_management where upper(Name) like '%${product_name.toUpperCase()}%';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            if(result != undefined && result[0] != undefined){
-                resolve(result);
+            if (err) {
+                await console.log(err);
+                await get_product_details_based_on_product_name(product_name).then(async value => {
+                    resolve(value);
+                });
             }else{
-                resolve(false);
+                if(result != undefined && result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
             }
         });
     });
@@ -437,7 +549,7 @@ async function get_product_details_based_on_subcategory(subcategory){
 }
 
 async function get_all_products(){
-    var sql = `select * from vtportal.product_management;`;
+    var sql = `select * from vtportal.product_management where Delete_Mark != '1';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -464,6 +576,7 @@ app.post('/upload-new-product-management-excel', async function(req, res) {
                 if(await add_or_edit_product_details().then(async value => {
                     return await value;
                 })){
+                    console.log("add_or_edit_product_details done");
                     res.send(true);
                 }
             }); 
@@ -475,7 +588,7 @@ app.post('/upload-new-product-management-excel', async function(req, res) {
 
 function add_or_edit_product_details(){
     var options = {
-        'method': 'GET',
+        'method': 'POST',
         'url': 'http://localhost:3001/add-or-edit-product-details',
     };
     return new Promise(async resolve => {
@@ -493,7 +606,7 @@ function add_or_edit_product_details(){
 }
 
 // add/edit mySQL from excel doc
-app.get('/add-or-edit-product-details',  async (req, res) => {
+app.post('/add-or-edit-product-details',  async (req, res) => {
     res.send(
         await read_excel().then(async value => {
             await send_to_mysql(value).then(async value => {
@@ -506,6 +619,7 @@ app.get('/add-or-edit-product-details',  async (req, res) => {
 
 // save product to MySQL
 async function send_to_mysql(product_datas){
+    console.log("send_to_mysql");
     var i = 0;
     return new Promise(async resolve => {
         for(i; i < product_datas.length; i ++){
@@ -528,6 +642,7 @@ async function send_to_mysql(product_datas){
 }
 
 async function check_existing_product_code(product_code){
+    console.log("check_existing_product_code");
     var sql = `select * from vtportal.product_management where Product_Code = '${product_code}' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -550,6 +665,7 @@ async function check_existing_product_code(product_code){
 }
 
 async function update_existing_product_code(product_details){
+    console.log("update_existing_product_code");
     if(product_details.Product_Code != undefined){
         if(product_details.Product_Code != 'NULL'){
             var sql = `update vtportal.product_management 
@@ -567,6 +683,7 @@ async function update_existing_product_code(product_details){
                 Picture_3 = '${product_details.Picture_3}',
                 GroupBuy_Purchase = '${product_details.GroupBuy_Purchase}',
                 GroupBuy_SellPrice = '${product_details.GroupBuy_SellPrice}',
+                GroupBuy_SellQuantity = '${product_details.GroupBuy_SellQuantity}',
                 In_Store_Price = '${product_details.In_Store_Price}',
                 Last_Updated = CURRENT_TIMESTAMP(),
                 Start_Date = CURRENT_TIMESTAMP(),
@@ -593,6 +710,7 @@ async function update_existing_product_code(product_details){
 }
 
 async function insert_existing_product_code(product_details){
+    console.log("insert_existing_product_code");
     if(product_details.Product_Code != undefined){
         if(product_details.Product_Code != 'NULL'){
             var sql = `INSERT INTO vtportal.product_management 
@@ -612,6 +730,7 @@ async function insert_existing_product_code(product_details){
                     Picture_3,
                     GroupBuy_Purchase,
                     GroupBuy_SellPrice,
+                    GroupBuy_SellQuantity,
                     In_Store_Price,
                     Last_Updated,
                     Start_Date,
@@ -643,6 +762,7 @@ async function insert_existing_product_code(product_details){
                     '${product_details.Picture_3}',
                     '${product_details.GroupBuy_Purchase}',
                     '${product_details.GroupBuy_SellPrice}',
+                    '${product_details.GroupBuy_SellQuantity}',
                     '${product_details.In_Store_Price}',
                     CURRENT_TIMESTAMP(),
                     CURRENT_TIMESTAMP(),
@@ -669,6 +789,7 @@ async function insert_existing_product_code(product_details){
 
 // read product from excel form
 async function read_excel(){
+    console.log("read_excel");
     const workSheetsFromFile = await xlsx.parse(`${__dirname}/Product Details.xlsx`);
     var excelDatas = await workSheetsFromFile[0].data;
     var i = 1;
@@ -692,13 +813,14 @@ async function read_excel(){
                 Picture_3: excelDatas[i][13],
                 GroupBuy_Purchase: excelDatas[i][14],
                 GroupBuy_SellPrice: excelDatas[i][15],
-                In_Store_Price: excelDatas[i][16],
+                GroupBuy_SellQuantity: excelDatas[i][16],
+                In_Store_Price: excelDatas[i][17],
                 //new 
-                Creator: excelDatas[i][17],
-                Modifier: excelDatas[i][18],
-                Weight_KG: excelDatas[i][19],
-                Dimension_CM_CUBIC: excelDatas[i][20],
-                Tax: excelDatas[i][21]
+                Creator: excelDatas[i][18],
+                Modifier: excelDatas[i][19],
+                Weight_KG: excelDatas[i][20],
+                Dimension_CM_CUBIC: excelDatas[i][21],
+                Tax: excelDatas[i][22]
             }
         );
     }
