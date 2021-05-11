@@ -335,7 +335,7 @@ app.get('/access-sales-orders-from-accurate', async (req, res) => {
                     execution(saved_sales_order_id_list, saved_sales_order_id_list_with_details, sorted_out_saved_sales_order_id_list_with_details);
                     setTimeout(() => {
                         res.send(sorted_out_saved_sales_order_id_list_with_details);
-                    }, saved_sales_order_id_list.length*700*1.2);
+                    }, saved_sales_order_id_list.length*650*1.26);
                 }, saved_sales_order_id_list.length*650*1.25);
                 // res.send(saved_sales_order_id_list);
             }, total_page_available*1000);
@@ -573,8 +573,12 @@ async function gettingSalesOrderListWithDetails(token, session, id, saved_sales_
               'X-Session-ID': session
             }
         };
+        console.log(options);
         request(options, function (error, response) {
-            if (error) console.log(error);
+            if (error) {
+                console.log(error);
+                console.log(response);
+            }
             console.log("id " + id);
             if(response != undefined){
                 saved_sales_order_id_list_with_details.push(JSON.parse(response.body).d);   
