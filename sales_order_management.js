@@ -151,30 +151,58 @@ async function check_group_buy_quantity_so_far_gross(Group_Buy_Purchase_PC){
 //get-unpaid-sales-order-per-customer
 app.post('/get-unpaid-sales-order-per-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
+    var Order_Number =  req.query.Order_Number;
     if(Customer_Code != undefined){
         res.send(
             (await get_unpaid_sales_order_based_on_Customer_Code(Customer_Code).then(async value => {
                 return await value;
             }))
         );
+    }else if(Order_Number != undefined){
+        res.send(
+            (await get_unpaid_sales_order_based_on_Order_Number(Order_Number).then(async value => {
+                return await value;
+            }))
+        );
     }else{
         res.send({
             status: false,
-            reason: "Order_Number is incomplete"
+            reason: "param is incomplete"
         });
     }
 })
 
+async function get_unpaid_sales_order_based_on_Order_Number(Order_Number){
+    var sql = `
+        select * from
+        vtportal.sales_order_management so
+        inner join 
+        vtportal.sales_order_detail_management sod 
+        on so.Order_Number = sod.Order_Number
+        where so.Order_Number = '${Order_Number}'
+        and so.Delete_Mark != '1' and (so.Payment_Status is null or so.Payment_Status = 'NULL' or so.Payment_Status != 'PAYMENT');
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
+
 async function get_unpaid_sales_order_based_on_Customer_Code(Customer_Code){
     var sql = `
-        select * from 
+        select * from
         vtportal.sales_order_management so
         where Customer_Code = '${Customer_Code}'
-        and upper(Payment_Status) = 'NULL'
-        and upper(Payment_Status) = 'UNDEFINED'
-        and upper(Payment_Status) != 'PAYMENT'
-        and Delete_Mark != '1';
+        and Delete_Mark != '1' and (Payment_Status is null or Payment_Status = 'NULL' or Payment_Status != 'PAYMENT');
     `;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -231,9 +259,16 @@ async function get_unpaid_sales_order_based_on_Group_Buy_Purchase_PC(Customer_Co
 //get-sales-order-data-per-customer
 app.post('/get-sales-order-data-per-customer',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
+    var Order_Number = req.query.Order_Number;
     if(Customer_Code != undefined){
         res.send(
             (await get_sales_order_based_on_customer_code(Customer_Code).then(async value => {
+                return await value;
+            }))
+        );
+    }else if(Order_Number != undefined){
+        res.send(
+            (await get_sales_order_based_on_Order_Number_all(Order_Number).then(async value => {
                 return await value;
             }))
         );
@@ -244,6 +279,29 @@ app.post('/get-sales-order-data-per-customer',  async (req, res) => {
         });
     }
 })
+
+async function get_sales_order_based_on_Order_Number_all(Order_Number){
+    var sql = `
+        select * from
+        vtportal.sales_order_management so
+        inner join 
+        vtportal.sales_order_detail_management sod 
+        on so.Order_Number = sod.Order_Number
+        where so.Order_Number = '${Order_Number}'
+        and so.Delete_Mark != '1';
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined){
+                resolve(result);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+} 
 
 async function get_sales_order_based_on_customer_code(Customer_Code){
     var sql = `
@@ -997,14 +1055,22 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
         );
     `;
     if(Sales_Order_Data.Payment_Method.toUpperCase() == 'BCA VA TRANSFER' || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
-        var today = new Date();
-        var d = today.getDate();
-        var mth = today.getMonth() + 1;
-        var y = today.getFullYear();
-        var h = today.getHours();
-        var m = today.getMinutes();
-        var s = today.getSeconds();
-        var final_va = '12943' + y + '' + mth + '' + d + '' + h + '' + m + '' + s + '';
+        var now = new Date();
+        var year = now.getFullYear(); //得到年份
+        var month = now.getMonth();//得到月份
+        var date = now.getDate();//得到日期
+        var day = now.getDay();//得到周几
+        var hour = now.getHours();//得到小时
+        var minu = now.getMinutes();//得到分钟
+        var sec = now.getSeconds();//得到秒
+        month = month + 1;
+        if (month < 10) month = "0" + month;
+        if (date < 10) date = "0" + date;
+        if (hour < 10) hour = "0" + hour;
+        if (minu < 10) minu = "0" + minu;
+        if (sec < 10) sec = "0" + sec;
+        var final_va = "12943";
+        final_va = final_va + year + "" + month + "" + date + ""  + hour + "" + minu + "" + sec;
         var sql = `
             INSERT INTO vtportal.sales_order_management 
             (
