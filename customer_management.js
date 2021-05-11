@@ -91,6 +91,9 @@ app.post('/customer-forgot-password-request',  async (req, res) => {
             var encrypted_password = await encrypt_password(requestedNewPassword).then(async value => {
                 return await value;
             });
+            console.log(Email);
+            console.log(PrimaryContactNumber);
+            console.log(encrypted_password);
             res.send(
                 await update_user_password(Email, PrimaryContactNumber, encrypted_password).then(async value => {
                     return await value;
@@ -107,13 +110,17 @@ app.post('/customer-forgot-password-request',  async (req, res) => {
 async function update_user_password(Email, PrimaryContactNumber, encrypted_password){
     var sql = `
         UPDATE vtportal.customer_management
-        User_Password = '${encrypted_password}'
+        SET User_Password = '${encrypted_password}'
         WHERE Email = '${Email}' and Contact_Number_1 = '${PrimaryContactNumber}';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
         });
     });
 }
@@ -436,17 +443,13 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
 
 async function check_existing_customer_code(customer_data){
     var sql = `
-        select * from vtportal.customer_management where Customer_Code = '${customer_data.Customer_Code}' and upper(Email) like '%${customer_data.Email.toUpperCase()}%' 
+        select * from vtportal.customer_management where Customer_Code = '${customer_data.Customer_Code}' or upper(Email) like '%${customer_data.Email.toUpperCase()}%' 
     ;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
             if(result[0] != undefined){
-                if(result[0].Customer_Code == customer_data.Customer_Code){
-                    resolve(true);
-                }else{
-                    resolve(false);
-                }
+                resolve(true);
             }else{
                 resolve(false);
             } 
