@@ -133,9 +133,10 @@ async function check_group_buy_quantity_so_far_gross(Group_Buy_Purchase_PC){
     var sql = `
     select SUM(Total_Quantity) as Total_Quantity from vtportal.sales_order_management 
     where Group_Buy_Purchase_PC = '${Group_Buy_Purchase_PC}'
-    and upper(Payment_Status) != 'PAYMENT' 
+    and upper(Payment_Status) = 'PAYMENT' 
     and Delete_Mark != '1';
     `;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -1010,6 +1011,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 } 
 
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
+    console.log(Product_Code);
     var sql = `
         INSERT INTO vtportal.sales_order_management 
         (
