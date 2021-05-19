@@ -447,14 +447,17 @@ async function update_Sales_Order_Payment_status_to_payment(Order_Number){
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
-        Group_Buy_Purchase_PC = 'NULL'
-        and Payment_Status = 'payment'
+        Payment_Status = 'payment'
         WHERE Order_Number = '${Order_Number}';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
         });
     });
 } 
