@@ -5,7 +5,7 @@ const cors = require('cors');
 var mysql = require('mysql');
 const e = require('express');
 const app = express();
-const port = 3001;
+const port = 5000;
 app.use(cors(), express.json(), busboy())
 
 var con = mysql.createConnection({
