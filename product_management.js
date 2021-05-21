@@ -304,9 +304,15 @@ app.post('/get-product-details',  async (req, res) => {
             return await value;
         }));
     }else if(product_name != undefined || product_name != null){
-        res.send(await get_product_details_based_on_product_name(product_name).then(async value => {
-            return await value;
-        }));
+        var product_names = product_name.split(" ");
+        var collected_results = [];
+        var i = 0;
+        for(i; i < product_names.length; i ++){
+            collected_results = collected_results.concat(await get_product_details_based_on_product_name(product_name[i]).then(async value => {
+                return await value;
+            }));
+        }
+        res.send(collected_results);
     }else if(category != undefined || category != null){
         res.send(await get_product_details_based_on_category(category).then(async value => {
             return await value;
