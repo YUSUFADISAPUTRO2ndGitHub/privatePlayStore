@@ -727,8 +727,12 @@ async function update_customer_status_to_pending(customer_code, Rejector_Id){
     and Delete_Mark = '0';`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
         });
     });
 }
