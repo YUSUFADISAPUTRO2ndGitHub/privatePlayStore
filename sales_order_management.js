@@ -415,13 +415,23 @@ async function update_Sales_Order_Payment_status_to_cancelled(Order_Number){
         UPDATE vtportal.sales_order_management
         SET 
         Payment_Status = 'cancelled',
-        Update_date = CURRENT_TIMESTAMP()
-        WHERE Order_Number = '${Order_Number}';
+        Update_date = CURRENT_TIMESTAMP(),
+        Status = 'cancelled'
+        WHERE Order_Number = '${Order_Number}' and (Payment_Status is NULL or upper(Payment_Status) = 'WAITPAY') and upper(Status) = 'PENDING';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err){
+                await console.log(err);
+                resolve(false);
+            }else{
+                console.log(result.affectedRows);
+                if(result.affectedRows == 0){
+                    resolve(false);
+                }else{
+                    resolve(true);
+                }
+            }
         });
     });
 } 
