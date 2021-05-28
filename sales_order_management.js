@@ -1270,7 +1270,7 @@ async function check_product_code_existance(Product_Code){
 var transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'automatedemailaddressforyusuf@gmail.com',
+        user: 'automated.email.sold.co.id@gmail.com',
         pass: 'NOName1414++'
     }
 });
@@ -1281,7 +1281,7 @@ async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
             return await value;
         })
     );
-    var automated_email = 'automatedemailaddressforyusuf@gmail.com';
+    var automated_email = 'automated.email.sold.co.id@gmail.com';
     if(customer_email != false || customer_email.length > 0){
         var mailOptions = {
             from: automated_email,
