@@ -138,6 +138,16 @@ setInterval(() => {
         if (error) throw new Error(error);
         console.log(response.body);
     });
+    var options = {
+        'method': 'GET',
+        'url': 'localhost:5002/get-all-product-details',
+        'headers': {
+        }
+    };
+    request(options, function (error, response) {
+        if (error) throw new Error(error);
+        console.log(response.body);
+    });
 }, 1.08e+7);
 
 /*
@@ -1853,6 +1863,241 @@ async function requesting_employee_details_based_on_id_from_accurate(id){
                                 });
                             }
                         }
+                    }
+                }
+            });
+        });
+    });
+}
+
+/*
+    backup products 
+*/
+
+app.get('/get-all-product-details',  async (req, res) => {
+    var  collected_product_ids = [];
+    var total_page = await collecting_all_products_from_accurate().then(async value => {
+        return await value;
+    });
+    var current_page = 1;
+    for(current_page; current_page <= total_page; current_page++){//total_page
+        console.log("loading ids from Accurate to array : " + current_page);
+        collected_product_ids = collected_product_ids.concat(
+            await requesting_product_ids_from_accurate(current_page, total_page).then(async value => {
+                return await value;
+            })
+        );
+    }
+    var collected_product_details = [];
+    var current_id = 0;
+    for(current_id; current_id < collected_product_ids.length; current_id++){
+        console.log("loading details based on id from Accurate to array : " + current_id);
+        collected_product_details.push(
+            await requesting_product_details_based_on_id_from_accurate(collected_product_ids[current_id]).then(async value => {
+                return await value;
+            })
+        );
+    }
+    console.log("=========================================================================================");
+    var current_id = 0;
+    for(current_id; current_id < collected_product_details.length; current_id++){
+        if(await check_if_product_has_existed_in_MYSQL(collected_product_details[current_id].Product_Code).then(async value => {
+            return await value;
+        })){
+            console.log("current_id = " + current_id);
+            if(await update_product_in_json_to_mysql(collected_product_details[current_id]).then(async value => {
+                return await value;
+            })){
+                console.log("udpate successfully in mysql");
+            }
+        }else{
+            console.log("current_id = " + current_id);
+            if(await insert_product_in_json_to_mysql(collected_product_details[current_id]).then(async value => {
+                return await value;
+            })){
+                console.log("insert successfully in mysql");
+            }
+        }
+    }
+    res.send(
+        collected_product_details
+    );
+})
+
+async function check_if_product_has_existed_in_MYSQL(Product_Code){
+    return new Promise(async resolve => {
+        var sql = `select count(*) as total_found from vtportal.product_data_accurate where Product_Code = '${Product_Code}';`;
+        // console.log(sql);
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+            }else{
+                if(result[0].total_found > 0){
+                    resolve(true);
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
+
+const update_product_in_json_to_mysql = async (sorted_collected_product_with_details) => {
+    return new Promise(async resolve => {
+        var sql = `UPDATE vtportal.product_data_accurate SET 
+        Product_Code = '${sorted_collected_product_with_details.Product_Code}'
+        , Name = '${sorted_collected_product_with_details.Name}'
+        , Sell_Price = '${sorted_collected_product_with_details.Sell_Price}'
+        , Quantity = '${sorted_collected_product_with_details.Quantity}'
+        , Unit = '${sorted_collected_product_with_details.Unit}'
+        WHERE Product_Code = '${sorted_collected_product_with_details.Product_Code}';`;
+        con.query(sql, function (err, result) {
+            if (err) console.log(err);
+        });
+        resolve(true);
+    });
+}
+
+const insert_product_in_json_to_mysql = async (sorted_collected_product_with_details) => {
+    return new Promise(async resolve => {
+        var sql = `insert into vtportal.product_data_accurate (
+            Product_Code,
+            Name,
+            Sell_Price,
+            Quantity,
+            Unit
+        ) values 
+        ('${sorted_collected_product_with_details.Product_Code}'
+        , '${sorted_collected_product_with_details.Name}'
+        , '${sorted_collected_product_with_details.Sell_Price}'
+        , '${sorted_collected_product_with_details.Quantity}'
+        , '${sorted_collected_product_with_details.Unit}'
+        );`;
+        con.query(sql, function (err, result) {
+            if (err) console.log(err);
+        });
+        resolve(true);
+    });
+}
+
+async function collecting_all_products_from_accurate(){
+    var pageFlipper = 1;
+    var pageCount = 0;
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:5002/get-lastest-token-and-session'
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) throw new Error(error);
+            var credentials = JSON.parse(await response.body);
+            options = {
+                'method': 'GET',
+                'url': 'https://public.accurate.id/accurate/api/item/list.do?sp.page=' + pageFlipper,
+                'headers': {
+                    'Authorization': 'Bearer ' + credentials.access_token,
+                    'X-Session-ID': credentials.session_id
+                }
+            };
+            await request(options, async function (error, response) {
+                if (error) console.log(error);
+                if(response != undefined || response != null){
+                    var result = JSON.parse(await response.body);
+                    if(result != undefined && result.sp != undefined){
+                        pageCount = result.sp.pageCount;
+                        if(pageCount != undefined){
+                            resolve(pageCount);
+                        }else{
+                            console.log("Bad pagecount");
+                        }
+                    }else{
+                        console.log("ERROR FROM ACCURATE, NO JSON RESPONSE WHEN GETTING product LIST");
+                    }
+                }
+            });
+        });
+    });
+}
+
+async function requesting_product_ids_from_accurate(pageFlipper){
+    options = {
+        'method': 'GET',
+        'url': 'http://localhost:5002/get-lastest-token-and-session',
+        'headers': {
+        }
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(await requesting_product_ids_from_accurate(id));
+            };
+            var credentials = JSON.parse(await response.body);
+            options = {
+                'method': 'GET',
+                'url': 'https://public.accurate.id/accurate/api/item/list.do?sp.page=' + pageFlipper,
+                'headers': {
+                    'Authorization': 'Bearer ' + credentials.access_token,
+                    'X-Session-ID': credentials.session_id
+                }
+            };
+            await request(options, async function (error, response) {
+                if (error) {
+                    console.log(error);
+                    resolve(await requesting_product_ids_from_accurate(id));
+                };
+                if(response != undefined || response != null){
+                    var result = JSON.parse(await response.body);
+                    var i =0;
+                    var responseArray = [];
+                    for(i; i < result.d.length; i++){
+                        responseArray.push(result.d[i].id);
+                    }
+                    resolve(responseArray);
+                }
+            }); 
+        });
+    });
+}
+
+async function requesting_product_details_based_on_id_from_accurate(id){
+    console.log("saving data to MEM -> " + id);
+    options = {
+        'method': 'GET',
+        'url': 'http://localhost:5002/get-lastest-token-and-session',
+        'headers': {
+        }
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(await requesting_product_details_based_on_id_from_accurate(id));
+            };
+            var credentials = JSON.parse(await response.body);
+            options = {
+                'method': 'GET',
+                'url': 'https://public.accurate.id/accurate/api/item/detail.do?id=' + id,
+                'headers': {
+                    'Authorization': 'Bearer ' + credentials.access_token,
+                    'X-Session-ID': credentials.session_id
+                }
+            };
+            await request(options, async function (error, response) {
+                if (error) {
+                    console.log(error);
+                    resolve(await requesting_product_details_based_on_id_from_accurate(id));
+                }
+                if(response != undefined || response != null){
+                    result = JSON.parse(await response.body);
+                    if(result.d != undefined ){
+                        resolve({
+                            Product_Code: result.d.no,
+                            Name: result.d.name,
+                            Sell_Price: result.d.unitPrice,
+                            Quantity: result.d.totalUnit1Quantity,
+                            Unit: result.d.unit1Name
+                        });
                     }
                 }
             });
