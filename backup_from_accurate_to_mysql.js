@@ -23,60 +23,47 @@ con.connect(function(err) {
 });
 
 var accesstoken = "";
-var refreshtoken = "42cdadbb-5359-4184-a7f5-9c71e7f452bf";
+var refreshtoken = "526420ec-45db-4bc8-be23-423e30f33fb3";
 var sessionid = "";
 
 const get_latest_recorded_token = async () => {
-    // return new Promise(async resolve => {
-    //     console.log(refreshtoken);
-    //     var options = {
-    //         'method': 'POST',
-    //         'url': 'https://account.accurate.id/oauth/token?grant_type=refresh_token&refresh_token=' + refreshtoken,
-    //         'headers': {
-    //         'Authorization': 'Basic ZTI3MTQzYTktNmU4NC00MGE0LTlhYmUtNGQ1NzM2YzZlNDdkOmYxOGU2ZjRiMjE5NTUwNWFiZjZjMWZmOTZlOTJlZDY3'
-    //         }
-    //     };
-    //     console.log(options.url);
-    //     await request(options, async function (error, response) {
-    //         if (error) {
-    //             console.log(error);
-    //         }else{
-    //             console.log(response.access_token);
-    //             console.log(accesstoken);
-    //             accesstoken = response.access_token;
-    //             refreshtoken = response.refresh_token;
-    //             console.log(accesstoken);
-    //             var options = {
-    //                 'method': 'GET',
-    //                 'url': 'https://account.accurate.id/api/open-db.do?id=300600',
-    //                 'headers': {
-    //                 'Authorization': 'Bearer ' + response.access_token
-    //                 }
-    //             };
-    //             await request(options, async function (error, response) {
-    //                 if (error) {
-    //                     console.log(error);   
-    //                 }else{
-    //                     sessionid = response.session;
-    //                     console.log({
-    //                         access_token: accesstoken,
-    //                         session_id: sessionid
-    //                     });
-    //                     resolve({
-    //                         access_token: accesstoken,
-    //                         session_id: sessionid
-    //                     });
-    //                 }
-    //             });
-    //         }
-    //     });
-    // });
     return new Promise(async resolve => {
-        resolve({
-            access_token: "3c9010b2-d729-45a3-a96e-648714e1ae11",
-            session_id: "1426efb4-a4a9-4ae4-aa91-55e4adaeca82"
+        var options = {
+            'method': 'POST',
+            'url': 'https://account.accurate.id/oauth/token?grant_type=refresh_token&refresh_token=' + refreshtoken,
+            'headers': {
+              'Authorization': 'Basic ZTI3MTQzYTktNmU4NC00MGE0LTlhYmUtNGQ1NzM2YzZlNDdkOmYxOGU2ZjRiMjE5NTUwNWFiZjZjMWZmOTZlOTJlZDY3'
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+            }else{
+                refreshtoken = await JSON.parse(response.body).refresh_token;
+                accesstoken = await JSON.parse(response.body).access_token;
+                console.log(refreshtoken);
+                var options = {
+                    'method': 'GET',
+                    'url': 'https://account.accurate.id/api/open-db.do?id=300600',
+                    'headers': {
+                      'Authorization': 'Bearer ' + JSON.parse(response.body).access_token
+                    }
+                };
+                await request(options, async function (error, response) {
+                    if (error) {
+                        console.log(error);
+                    }else{
+                        // console.log(JSON.parse(response.body));
+                        sessionid = await JSON.parse(response.body).session;
+                        resolve({
+                            access_token: accesstoken,
+                            session_id: JSON.parse(response.body).session
+                        });
+                    }
+                });
+            }
         });
-    })
+    });
 }
 
 app.get('/get-lastest-token-and-session',  async (req, res) => {
@@ -148,7 +135,7 @@ setInterval(() => {
         if (error) throw new Error(error);
         console.log(response.body);
     });
-}, 1.08e+7);
+}, 10000000);
 
 /*
     backup sales order
