@@ -2,6 +2,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const express = require('express');
 const cors = require('cors');
 var request = require('request');
+var nodemailer = require('nodemailer');
 var mysql = require('mysql');
 const app = express();
 const port = 3003;
@@ -894,6 +895,7 @@ async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_De
                 })
             )
         ){
+            await send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number);
             var i = 0;
             for(i; i < Sales_Order_Detail_data.length;){
                 if(
@@ -975,6 +977,7 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
                 })
             )
         ){
+            await send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number);
             var i = 0;
             for(i; i < Sales_Order_Detail_data.length;){
                 if(
@@ -1137,8 +1140,12 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
     }
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err){
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
         });
     });
 } 
@@ -1253,6 +1260,92 @@ async function check_product_code_existance(Product_Code){
             if (err) await console.log(err);
             if(result != undefined && result[0] != undefined){
                 resolve(true);
+            }else{
+                resolve(false);
+            }
+        });
+    });
+}
+
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'automatedemailaddressforyusuf@gmail.com',
+        pass: 'NOName1414++'
+    }
+});
+
+async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
+    var customer_email = (
+        await get_customer_email_address(Sales_Order_Data.Customer_Code).then(async value => {
+            return await value;
+        })
+    );
+    var automated_email = 'automatedemailaddressforyusuf@gmail.com';
+    if(customer_email != false || customer_email.length > 0){
+        var mailOptions = {
+            from: automated_email,
+            to: customer_email,
+            subject: 'Copy of receipt',
+            text: `
+                Order Number: ${Order_Number}
+                Customer Name: ${Sales_Order_Data.Primary_Recipient_Name}
+                Your Customer Code: ${Sales_Order_Data.Customer_Code}
+                Total Price: ${Sales_Order_Data.Total_Price}
+                Total Quantity: ${Sales_Order_Data.Total_Quantity}
+                Unit: ${Sales_Order_Data.Unit}
+                Shipping to: ${Sales_Order_Data.Shipping_Address}
+    
+                Do not reply this email
+                Thank you for your purchase
+                不要回覆这封电子邮件
+                感谢您的购买
+                Jangan balas email ini
+                Terima kasih atas pembelian Anda
+            `
+        };
+    
+        transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+                mailOptions = {
+                    from: automated_email,
+                    to: automated_email,
+                    subject: 'Copy of receipt',
+                    text: `
+                        Order Number: ${Order_Number}
+                        Customer Name: ${Sales_Order_Data.Primary_Recipient_Name}
+                        Your Customer Code: ${Sales_Order_Data.Customer_Code}
+                        Total Price: ${Sales_Order_Data.Total_Price}
+                        Total Quantity: ${Sales_Order_Data.Total_Quantity}
+                        Unit: ${Sales_Order_Data.Unit}
+                        Shipping to: ${Sales_Order_Data.Shipping_Address}
+                    ` 
+                };
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                    }
+                });
+            }
+        });
+    }
+}
+
+async function get_customer_email_address(Customer_Code){
+    var sql = `select Email from vtportal.customer_management 
+    where upper(Customer_Code) = '${Customer_Code.toUpperCase()}' 
+    and Delete_Mark != '1'
+    limit 1;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined && result[0] != undefined){
+                resolve(result[0].Email);
             }else{
                 resolve(false);
             }
