@@ -1336,6 +1336,52 @@ async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
     }
 }
 
+app.post('/send-text-api',  async (req, res) => {
+    if(req.query.send_to != undefined && req.query.message != undefined){
+        res.send(await send_copy_receipt_via_sms(req.query.send_to, req.query.message).then(async value => {
+            return await value;
+        }));
+    }
+})
+
+var key="5879d9603e59d9c48f33ac6b15b0a41e0146454b87685a35";
+var sid="soldcoid1";
+var token="ac4f0489e5ba7f7d822d248d36234fe9655661736e8726d2";
+var from="6285315801777";
+const axios = require('axios');
+async function send_copy_receipt_via_sms(send_to, message){
+    return new Promise(async resolve => {
+        var to=send_to;
+        var body=message;
+        const formUrlEncoded = x =>Object.keys(x).reduce((p, c) => p + `&${c}=${encodeURIComponent(x[c])}`, '');
+        url="https://"+key+":"+token+"@api.exotel.in/v1/Accounts/"+sid+"/Sms/send.json";
+        axios.post(
+            url, 
+                formUrlEncoded({
+                "From": from,
+                "To": to,
+                "Body":body
+            }),
+            {   
+                withCredentials: true,
+                headers: {
+                    "Accept":"application/x-www-form-urlencoded",
+                    "Content-Type": "application/x-www-form-urlencoded"
+                }
+            },
+        )
+        .then((res) => {
+            console.log(`statusCode: ${res.statusCode}`);
+            console.log(res);
+            resolve(res);
+        })
+        .catch((error) => {
+            console.error(error);
+            resolve(error);
+        })
+    })
+}
+
 async function get_customer_email_address(Customer_Code){
     var sql = `select Email from vtportal.customer_management 
     where upper(Customer_Code) = '${Customer_Code.toUpperCase()}' 

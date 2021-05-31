@@ -255,6 +255,11 @@ async function create_new_payment_method(Payment_Method_Name, Payment_Method_Des
     });
 }
 
+app.get('/download-sold-co-id-trial', (req, res) => {
+    const file = `./sold.apk`;
+    res.download(file); // Set disposition and send it.
+})
+
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
 })
