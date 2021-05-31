@@ -23,7 +23,7 @@ con.connect(function(err) {
 });
 
 var accesstoken = "";
-var refreshtoken = "bc992661-7da2-4ed6-a1ca-f21ba928ea47";
+var refreshtoken = "9b6ab23f-193b-47d8-8047-cf016af472e7";
 var sessionid = "";
 
 const get_latest_recorded_token = async () => {
@@ -87,8 +87,6 @@ var options = {
 request(options, function (error, response) {
     if (error) throw new Error(error);
     console.log(response.body);
-});
-setTimeout(() => {
     var options = {
         'method': 'GET',
         'url': 'http://localhost:5002/get-all-customer-details',
@@ -98,56 +96,48 @@ setTimeout(() => {
     request(options, function (error, response) {
         if (error) throw new Error(error);
         console.log(response.body);
+        var options = {
+            'method': 'GET',
+            'url': 'http://localhost:5002/get-all-purchase-order-details',
+            'headers': {
+            }
+        };
+        request(options, function (error, response) {
+            if (error) throw new Error(error);
+            console.log(response.body);
+            var options = {
+                'method': 'GET',
+                'url': 'http://localhost:5002/get-all-delivery-order-details',
+                'headers': {
+                }
+            };
+            request(options, function (error, response) {
+                if (error) throw new Error(error);
+                console.log(response.body);
+                var options = {
+                    'method': 'GET',
+                    'url': 'http://localhost:5002/get-all-employee-details',
+                    'headers': {
+                    }
+                };
+                request(options, function (error, response) {
+                    if (error) throw new Error(error);
+                    console.log(response.body);
+                    var options = {
+                        'method': 'GET',
+                        'url': 'http://localhost:5002/get-all-product-details',
+                        'headers': {
+                        }
+                    };
+                    request(options, function (error, response) {
+                        if (error) throw new Error(error);
+                        console.log(response.body);
+                    });
+                });
+            });
+        });
     });
-}, 6000000);
-setTimeout(() => {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-all-purchase-order-details',
-        'headers': {
-        }
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(response.body);
-    });
-}, 12000000);
-setTimeout(() => {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-all-delivery-order-details',
-        'headers': {
-        }
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(response.body);
-    });
-}, 15000000);
-setTimeout(() => {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-all-employee-details',
-        'headers': {
-        }
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(response.body);
-    });
-}, 18000000);
-setTimeout(() => {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-all-product-details',
-        'headers': {
-        }
-    };
-    request(options, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(response.body);
-    });
-}, 22000000);
+});
 
 /*
     interval
@@ -163,8 +153,6 @@ setInterval(() => {
     request(options, function (error, response) {
         if (error) throw new Error(error);
         console.log(response.body);
-    });
-    setTimeout(() => {
         var options = {
             'method': 'GET',
             'url': 'http://localhost:5002/get-all-customer-details',
@@ -174,56 +162,48 @@ setInterval(() => {
         request(options, function (error, response) {
             if (error) throw new Error(error);
             console.log(response.body);
+            var options = {
+                'method': 'GET',
+                'url': 'http://localhost:5002/get-all-purchase-order-details',
+                'headers': {
+                }
+            };
+            request(options, function (error, response) {
+                if (error) throw new Error(error);
+                console.log(response.body);
+                var options = {
+                    'method': 'GET',
+                    'url': 'http://localhost:5002/get-all-delivery-order-details',
+                    'headers': {
+                    }
+                };
+                request(options, function (error, response) {
+                    if (error) throw new Error(error);
+                    console.log(response.body);
+                    var options = {
+                        'method': 'GET',
+                        'url': 'http://localhost:5002/get-all-employee-details',
+                        'headers': {
+                        }
+                    };
+                    request(options, function (error, response) {
+                        if (error) throw new Error(error);
+                        console.log(response.body);
+                        var options = {
+                            'method': 'GET',
+                            'url': 'http://localhost:5002/get-all-product-details',
+                            'headers': {
+                            }
+                        };
+                        request(options, function (error, response) {
+                            if (error) throw new Error(error);
+                            console.log(response.body);
+                        });
+                    });
+                });
+            });
         });
-    }, 6000000);
-    setTimeout(() => {
-        var options = {
-            'method': 'GET',
-            'url': 'http://localhost:5002/get-all-purchase-order-details',
-            'headers': {
-            }
-        };
-        request(options, function (error, response) {
-            if (error) throw new Error(error);
-            console.log(response.body);
-        });
-    }, 12000000);
-    setTimeout(() => {
-        var options = {
-            'method': 'GET',
-            'url': 'http://localhost:5002/get-all-delivery-order-details',
-            'headers': {
-            }
-        };
-        request(options, function (error, response) {
-            if (error) throw new Error(error);
-            console.log(response.body);
-        });
-    }, 15000000);
-    setTimeout(() => {
-        var options = {
-            'method': 'GET',
-            'url': 'http://localhost:5002/get-all-employee-details',
-            'headers': {
-            }
-        };
-        request(options, function (error, response) {
-            if (error) throw new Error(error);
-            console.log(response.body);
-        });
-    }, 18000000);
-    setTimeout(() => {
-        var options = {
-            'method': 'GET',
-            'url': 'http://localhost:5002/get-all-product-details',
-            'headers': {
-            }
-        };
-        request(options, function (error, response) {
-            if (error) throw new Error(error);
-            console.log(response.body);
-        });
-    }, 22000000);
+    });
 }, 25000000);
 
 /*
