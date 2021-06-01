@@ -23,7 +23,7 @@ con.connect(function(err) {
 });
 
 var accesstoken = "";
-var refreshtoken = "9b6ab23f-193b-47d8-8047-cf016af472e7";
+var refreshtoken = "1b0cd139-06e8-47d3-8a5f-850fe35a1cea";
 var sessionid = "";
 
 const get_latest_recorded_token = async () => {
@@ -534,21 +534,39 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id){
                                     total_price_based_on_quantity : result.d.detailItem[u].totalPrice
                                 });
                             }
-                            resolve({
-                                sales_order_number: result.d.number,
-                                order_date: result.d.transDateView,
-                                period_date: result.d.paymentTerm.netDays,
-                                payment_method: result.d.paymentTerm.name,
-                                customer_name: result.d.customer.name,
-                                customer_code: result.d.customer.customerNo,
-                                contact_number: result.d.customer.contactInfo.mobilePhone,
-                                salesman: result.d.detailItem[0].salesmanName,
-                                delivery_address: result.d.toAddress,
-                                total_quantities: totalQuantities,
-                                total_amount: result.d.totalAmount,
-                                order_details: detailItem,
-                                approval_status: result.d.approvalStatus
-                            });
+                            if(result.d.customer.contactInfo.mobilePhone != null){
+                                resolve({
+                                    sales_order_number: result.d.number,
+                                    order_date: result.d.transDateView,
+                                    period_date: result.d.paymentTerm.netDays,
+                                    payment_method: result.d.paymentTerm.name,
+                                    customer_name: result.d.customer.name,
+                                    customer_code: result.d.customer.customerNo,
+                                    contact_number: result.d.customer.contactInfo.mobilePhone,
+                                    salesman: result.d.detailItem[0].salesmanName,
+                                    delivery_address: result.d.toAddress,
+                                    total_quantities: totalQuantities,
+                                    total_amount: result.d.totalAmount,
+                                    order_details: detailItem,
+                                    approval_status: result.d.approvalStatus
+                                });
+                            }else{
+                                resolve({
+                                    sales_order_number: result.d.number,
+                                    order_date: result.d.transDateView,
+                                    period_date: result.d.paymentTerm.netDays,
+                                    payment_method: result.d.paymentTerm.name,
+                                    customer_name: result.d.customer.name,
+                                    customer_code: result.d.customer.customerNo,
+                                    contact_number: result.d.customer.contactInfo.workPhone,
+                                    salesman: result.d.detailItem[0].salesmanName,
+                                    delivery_address: result.d.toAddress,
+                                    total_quantities: totalQuantities,
+                                    total_amount: result.d.totalAmount,
+                                    order_details: detailItem,
+                                    approval_status: result.d.approvalStatus
+                                });
+                            }
                         }
                     }
                 }
