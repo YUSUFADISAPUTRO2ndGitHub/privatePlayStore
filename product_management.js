@@ -304,11 +304,13 @@ app.post('/get-product-details',  async (req, res) => {
             return await value;
         }));
     }else if(product_name != undefined || product_name != null){
+        console.log("get by name " + product_name)
         var product_names = product_name.split(" ");
         var collected_results = [];
         var i = 0;
         for(i; i < product_names.length; i ++){
-            collected_results = collected_results.concat(await get_product_details_based_on_product_name(product_name[i]).then(async value => {
+            console.log("Name " + product_names[i])
+            collected_results = collected_results.concat(await get_product_details_based_on_product_name(product_names[i]).then(async value => {
                 return await value;
             }));
         }
