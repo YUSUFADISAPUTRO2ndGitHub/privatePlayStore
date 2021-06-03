@@ -412,13 +412,21 @@ app.post('/update-sales-order-payment-status-to-cancelled',  async (req, res) =>
 })
 
 async function update_Sales_Order_Payment_status_to_cancelled(Order_Number){
+    // var sql = `
+    //     UPDATE vtportal.sales_order_management
+    //     SET 
+    //     Payment_Status = 'cancelled',
+    //     Update_date = CURRENT_TIMESTAMP(),
+    //     Status = 'cancelled'
+    //     WHERE Order_Number = '${Order_Number}' and (Payment_Status is NULL or upper(Payment_Status) = 'WAITPAY') and upper(Status) = 'PENDING';
+    // `;
     var sql = `
         UPDATE vtportal.sales_order_management
         SET 
         Payment_Status = 'cancelled',
         Update_date = CURRENT_TIMESTAMP(),
         Status = 'cancelled'
-        WHERE Order_Number = '${Order_Number}' and (Payment_Status is NULL or upper(Payment_Status) = 'WAITPAY') and upper(Status) = 'PENDING';
+        WHERE Order_Number = '${Order_Number}' and upper(Status) = 'PENDING';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {

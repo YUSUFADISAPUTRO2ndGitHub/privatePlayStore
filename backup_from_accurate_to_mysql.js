@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "63701e6d-91a9-403f-b094-c26ab7eba689";
+var refreshtoken = "daac13fb-ad79-4c6f-a52c-a6a2a2054fa2";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -622,7 +622,7 @@ app.get('/get-all-customer-details', async(req, res) => {
         return await value;
     });
     var current_page = 1;
-    for (current_page; current_page <= total_page; current_page++) { //total_page
+    for (current_page; current_page <= 1; current_page++) { //total_page
         console.log("loading ids from Accurate to array : " + current_page);
         collected_customer_ids = collected_customer_ids.concat(
             await requesting_customer_ids_from_accurate(current_page, total_page).then(async value => {
@@ -646,14 +646,14 @@ app.get('/get-all-customer-details', async(req, res) => {
         if (await check_if_customer_has_existed_in_MYSQL(collected_customer_details[current_id].customer_no).then(async value => {
                 return await value;
             })) {
-            console.log("current_id = " + current_id);
+            console.log("current_id = " + collected_customer_details[current_id].customer_no);
             if (await update_customer_in_json_to_mysql(collected_customer_details[current_id]).then(async value => {
                     return await value;
                 })) {
                 console.log("udpate successfully in mysql");
             }
         } else {
-            console.log("current_id = " + current_id);
+            console.log("current_id = " + collected_customer_details[current_id].customer_no);
             if (await insert_customer_in_json_to_mysql(collected_customer_details[current_id]).then(async value => {
                     return await value;
                 })) {
