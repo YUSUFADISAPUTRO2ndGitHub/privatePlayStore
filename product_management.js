@@ -88,6 +88,44 @@ app.post('/get-lastest-token-and-session',  async (req, res) => {
     );
 })
 
+//get-unpaid-sales-order-specific-for-a-product
+app.post('/get-unpaid-sales-order-specific-for-a-product',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    var Customer_Code = req.query.Customer_Code;
+    if(Product_Code != undefined && Customer_Code != undefined){
+        res.send(
+            (await check_upaid_order_in_regards_to_product_code(Product_Code, Customer_Code).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Customer_Code and(or) Product_Code are(is) incomplete"
+        });
+    }
+})
+
+async function check_upaid_order_in_regards_to_product_code(Product_Code, Customer_Code){
+    var sql = `
+    select count(*) as found from vtportal.sales_order_management so where Customer_Code = '${Customer_Code}' and Group_Buy_Purchase_PC = '${Product_Code}' and Payment_Status = 'waitpay';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                if(result[0].found > 0){
+                    resolve(false);
+                }else{
+                    resolve(true);
+                }
+            }
+        });
+    });
+}
+
 //set-product-as-pending
 app.post('/set-product-as-pending',  async (req, res) => {
     var Product_Code = req.query.Product_Code;
