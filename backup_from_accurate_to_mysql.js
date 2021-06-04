@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "b1be8a67-86b6-4d0d-8817-0bac653492c0";
+var refreshtoken = "2aedc113-0781-4330-95f0-768677bd496e";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -643,6 +643,7 @@ app.get('/get-all-customer-details', async(req, res) => {
         );
     }
     console.log("=========================================================================================");
+    await delete_all_customer_has_existed_in_MYSQL(); // update requested by Rafa and Dayat
     var current_id = 0;
     for (current_id; current_id < collected_customer_details.length; current_id++) {
         if (await check_if_customer_has_existed_in_MYSQL(collected_customer_details[current_id].customer_no).then(async value => {
@@ -667,6 +668,21 @@ app.get('/get-all-customer-details', async(req, res) => {
         collected_customer_details
     );
 })
+
+async function delete_all_customer_has_existed_in_MYSQL() {
+    return new Promise(async resolve => {
+        var sql = `delete from vtportal.customer_list_accurate;`;
+        // console.log(sql);
+        await con.query(sql, async function(err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+}
 
 async function check_if_customer_has_existed_in_MYSQL(customer_no) {
     return new Promise(async resolve => {
