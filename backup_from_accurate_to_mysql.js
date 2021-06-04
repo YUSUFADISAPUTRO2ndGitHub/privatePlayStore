@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "daac13fb-ad79-4c6f-a52c-a6a2a2054fa2";
+var refreshtoken = "b1be8a67-86b6-4d0d-8817-0bac653492c0";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -76,6 +76,7 @@ const get_latest_recorded_token = async() => {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
+                await get_latest_recorded_token();
             } else {
                 refreshtoken = await JSON.parse(response.body).refresh_token;
                 accesstoken = await JSON.parse(response.body).access_token;
@@ -90,6 +91,7 @@ const get_latest_recorded_token = async() => {
                 await request(options, async function(error, response) {
                     if (error) {
                         console.log(error);
+                        await get_latest_recorded_token();
                     } else {
                         // console.log(JSON.parse(response.body));
                         sessionid = await JSON.parse(response.body).session;
