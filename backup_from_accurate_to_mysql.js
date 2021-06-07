@@ -831,7 +831,7 @@ async function requesting_customer_ids_from_accurate(pageFlipper) {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                console.log("action skipped because of error from Accurate 1");
+                console.log("error from Accurate 1");
                 resolve(await requesting_customer_ids_from_accurate(pageFlipper));
             }else{
                 var credentials = JSON.parse(await response.body);
@@ -846,7 +846,7 @@ async function requesting_customer_ids_from_accurate(pageFlipper) {
                 await request(options, async function(error, response) {
                     if (error) {
                         console.log(error);
-                        console.log("action skipped because of error from Accurate 2 " + pageFlipper);
+                        console.log("error from Accurate 2 " + pageFlipper);
                         resolve(await requesting_customer_ids_from_accurate(pageFlipper));
                     }else{
                         if (response != undefined || response != null) {
