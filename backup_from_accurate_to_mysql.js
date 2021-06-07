@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "2cdeafee-7921-4911-876f-cdc35aeee5ae";
+var refreshtoken = "543c7c3b-5885-4d10-b31d-782214cab76b";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -75,8 +75,14 @@ const get_latest_recorded_token = async() => {
         };
         await request(options, async function(error, response) {
             if (error) {
+                console.log("=================================================================");
+                console.log("Fail to get refresh token");
                 console.log(error);
-                resolve(await get_latest_recorded_token());
+                // resolve(await get_latest_recorded_token());
+                resolve({
+                    access_token: accesstoken,
+                    session_id: sessionid
+                });
             } else {
                 if(JSON.parse(response.body).access_token != undefined){
                     if(await JSON.parse(response.body).access_token.length > 0){
@@ -92,8 +98,14 @@ const get_latest_recorded_token = async() => {
                         };
                         await request(options, async function(error, response) {
                             if (error) {
+                                console.log("=================================================================");
+                                console.log("Fail to get session id");
                                 console.log(error);
-                                resolve(await get_latest_recorded_token());
+                                // resolve(await get_latest_recorded_token());
+                                resolve({
+                                    access_token: accesstoken,
+                                    session_id: sessionid
+                                });
                             } else {
                                 // console.log(JSON.parse(response.body));
                                 if(JSON.parse(response.body).session != undefined){
