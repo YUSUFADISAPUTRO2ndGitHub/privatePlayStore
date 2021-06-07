@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "2aedc113-0781-4330-95f0-768677bd496e";
+var refreshtoken = "1aa11740-8ba6-4c68-a4b4-3969a7745e3b";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -624,7 +624,7 @@ app.get('/get-all-customer-details', async(req, res) => {
         return await value;
     });
     var current_page = 1;
-    for (current_page; current_page <= 1; current_page++) { //total_page
+    for (current_page; current_page <= total_page; current_page++) { //total_page
         console.log("loading ids from Accurate to array : " + current_page);
         collected_customer_ids = collected_customer_ids.concat(
             await requesting_customer_ids_from_accurate(current_page, total_page).then(async value => {
