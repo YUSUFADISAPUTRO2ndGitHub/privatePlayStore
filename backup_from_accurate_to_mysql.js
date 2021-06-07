@@ -104,17 +104,21 @@ const get_latest_recorded_token = async() => {
                                             session_id: JSON.parse(response.body).session
                                         });
                                     }else{
+                                        console.log(response.body);
                                         resolve(await get_latest_recorded_token());
                                     }
                                 }else{
+                                    console.log(response.body);
                                     resolve(await get_latest_recorded_token());
                                 }
                             }
                         });
                     }else{
+                        console.log(response.body);
                         resolve(await get_latest_recorded_token());
                     }
                 }else{
+                    console.log(response.body);
                     resolve(await get_latest_recorded_token());
                 }
             }
