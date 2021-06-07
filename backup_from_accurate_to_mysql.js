@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "c938fedd-e1de-448d-8e5e-fa8a7bbea030";
+var refreshtoken = "2cdeafee-7921-4911-876f-cdc35aeee5ae";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -78,34 +78,42 @@ const get_latest_recorded_token = async() => {
                 console.log(error);
                 resolve(await get_latest_recorded_token());
             } else {
-                if(await JSON.parse(response.body).access_token.length > 0){
-                    refreshtoken = await JSON.parse(response.body).refresh_token;
-                    accesstoken = await JSON.parse(response.body).access_token;
-                    console.log(refreshtoken);
-                    var options = {
-                        'method': 'GET',
-                        'url': 'https://account.accurate.id/api/open-db.do?id=300600',
-                        'headers': {
-                            'Authorization': 'Bearer ' + JSON.parse(response.body).access_token
-                        }
-                    };
-                    await request(options, async function(error, response) {
-                        if (error) {
-                            console.log(error);
-                            resolve(await get_latest_recorded_token());
-                        } else {
-                            // console.log(JSON.parse(response.body));
-                            if(JSON.parse(response.body).session.length > 0){
-                                sessionid = await JSON.parse(response.body).session;
-                                resolve({
-                                    access_token: accesstoken,
-                                    session_id: JSON.parse(response.body).session
-                                });
-                            }else{
-                                resolve(await get_latest_recorded_token());
+                if(JSON.parse(response.body).access_token != undefined){
+                    if(await JSON.parse(response.body).access_token.length > 0){
+                        refreshtoken = await JSON.parse(response.body).refresh_token;
+                        accesstoken = await JSON.parse(response.body).access_token;
+                        console.log(refreshtoken);
+                        var options = {
+                            'method': 'GET',
+                            'url': 'https://account.accurate.id/api/open-db.do?id=300600',
+                            'headers': {
+                                'Authorization': 'Bearer ' + JSON.parse(response.body).access_token
                             }
-                        }
-                    });
+                        };
+                        await request(options, async function(error, response) {
+                            if (error) {
+                                console.log(error);
+                                resolve(await get_latest_recorded_token());
+                            } else {
+                                // console.log(JSON.parse(response.body));
+                                if(JSON.parse(response.body).session != undefined){
+                                    if(JSON.parse(response.body).session.length > 0){
+                                        sessionid = await JSON.parse(response.body).session;
+                                        resolve({
+                                            access_token: accesstoken,
+                                            session_id: JSON.parse(response.body).session
+                                        });
+                                    }else{
+                                        resolve(await get_latest_recorded_token());
+                                    }
+                                }else{
+                                    resolve(await get_latest_recorded_token());
+                                }
+                            }
+                        });
+                    }else{
+                        resolve(await get_latest_recorded_token());
+                    }
                 }else{
                     resolve(await get_latest_recorded_token());
                 }
