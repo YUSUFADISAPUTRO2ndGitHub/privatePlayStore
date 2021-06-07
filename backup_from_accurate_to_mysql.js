@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "1aa11740-8ba6-4c68-a4b4-3969a7745e3b";
+var refreshtoken = "6e571774-af08-48ea-abd0-34a88e76e892";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -76,7 +76,7 @@ const get_latest_recorded_token = async() => {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                await get_latest_recorded_token();
+                resolve(await get_latest_recorded_token());
             } else {
                 refreshtoken = await JSON.parse(response.body).refresh_token;
                 accesstoken = await JSON.parse(response.body).access_token;
@@ -91,7 +91,7 @@ const get_latest_recorded_token = async() => {
                 await request(options, async function(error, response) {
                     if (error) {
                         console.log(error);
-                        await get_latest_recorded_token();
+                        resolve(await get_latest_recorded_token());
                     } else {
                         // console.log(JSON.parse(response.body));
                         sessionid = await JSON.parse(response.body).session;
@@ -485,32 +485,34 @@ async function requesting_sales_order_ids_from_accurate(pageFlipper) {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                resolve(await requesting_sales_order_ids_from_accurate(id));
-            };
-            var credentials = JSON.parse(await response.body);
-            options = {
-                'method': 'GET',
-                'url': 'https://public.accurate.id/accurate/api/sales-order/list.do?sp.page=' + pageFlipper,
-                'headers': {
-                    'Authorization': 'Bearer ' + credentials.access_token,
-                    'X-Session-ID': credentials.session_id
-                }
-            };
-            await request(options, async function(error, response) {
-                if (error) {
-                    console.log(error);
-                    resolve(await requesting_sales_order_ids_from_accurate(id));
-                };
-                if (response != undefined || response != null) {
-                    var result = JSON.parse(await response.body);
-                    var i = 0;
-                    var responseArray = [];
-                    for (i; i < result.d.length; i++) {
-                        responseArray.push(result.d[i].id);
+                resolve(await requesting_sales_order_ids_from_accurate(pageFlipper));
+            }else{
+                var credentials = JSON.parse(await response.body);
+                options = {
+                    'method': 'GET',
+                    'url': 'https://public.accurate.id/accurate/api/sales-order/list.do?sp.page=' + pageFlipper,
+                    'headers': {
+                        'Authorization': 'Bearer ' + credentials.access_token,
+                        'X-Session-ID': credentials.session_id
                     }
-                    resolve(responseArray);
-                }
-            });
+                };
+                await request(options, async function(error, response) {
+                    if (error) {
+                        console.log(error);
+                        resolve(await requesting_sales_order_ids_from_accurate(pageFlipper));
+                    }else{
+                        if (response != undefined || response != null) {
+                            var result = JSON.parse(await response.body);
+                            var i = 0;
+                            var responseArray = [];
+                            for (i; i < result.d.length; i++) {
+                                responseArray.push(result.d[i].id);
+                            }
+                            resolve(responseArray);
+                        }
+                    }
+                });
+            }
         });
     });
 }
@@ -527,75 +529,77 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_sales_order_details_based_on_id_from_accurate(id));
-            };
-            var credentials = JSON.parse(await response.body);
-            options = {
-                'method': 'GET',
-                'url': 'https://public.accurate.id/accurate/api/sales-order/detail.do?id=' + id,
-                'headers': {
-                    'Authorization': 'Bearer ' + credentials.access_token,
-                    'X-Session-ID': credentials.session_id
-                }
-            };
-            await request(options, async function(error, response) {
-                if (error) {
-                    console.log(error);
-                    resolve(await requesting_sales_order_details_based_on_id_from_accurate(id));
-                }
-                if (response != undefined || response != null) {
-                    result = JSON.parse(await response.body);
-                    var u = 0;
-                    var detailItem = [];
-                    var totalQuantities = 0;
-                    if (result.d != undefined) {
-                        if (result.d.detailItem != undefined) {
-                            for (u; u < result.d.detailItem.length; u++) {
-                                totalQuantities = totalQuantities + result.d.detailItem[u].quantityDefault;
-                                detailItem.push({
-                                    name: result.d.detailItem[u].item.name,
-                                    product_code: result.d.detailItem[u].item.no,
-                                    quantity_bought: result.d.detailItem[u].quantityDefault,
-                                    price_per_unit: result.d.detailItem[u].availableUnitPrice,
-                                    total_price_based_on_quantity: result.d.detailItem[u].totalPrice
-                                });
-                            }
-                            if (result.d.customer.contactInfo.mobilePhone != null) {
-                                resolve({
-                                    sales_order_number: result.d.number,
-                                    order_date: result.d.transDateView,
-                                    period_date: result.d.paymentTerm.netDays,
-                                    payment_method: result.d.paymentTerm.name,
-                                    customer_name: result.d.customer.name,
-                                    customer_code: result.d.customer.customerNo,
-                                    contact_number: result.d.customer.contactInfo.mobilePhone,
-                                    salesman: result.d.detailItem[0].salesmanName,
-                                    delivery_address: result.d.toAddress,
-                                    total_quantities: totalQuantities,
-                                    total_amount: result.d.totalAmount,
-                                    order_details: detailItem,
-                                    approval_status: result.d.approvalStatus
-                                });
-                            } else {
-                                resolve({
-                                    sales_order_number: result.d.number,
-                                    order_date: result.d.transDateView,
-                                    period_date: result.d.paymentTerm.netDays,
-                                    payment_method: result.d.paymentTerm.name,
-                                    customer_name: result.d.customer.name,
-                                    customer_code: result.d.customer.customerNo,
-                                    contact_number: result.d.customer.contactInfo.workPhone,
-                                    salesman: result.d.detailItem[0].salesmanName,
-                                    delivery_address: result.d.toAddress,
-                                    total_quantities: totalQuantities,
-                                    total_amount: result.d.totalAmount,
-                                    order_details: detailItem,
-                                    approval_status: result.d.approvalStatus
-                                });
+            }else{
+                var credentials = JSON.parse(await response.body);
+                options = {
+                    'method': 'GET',
+                    'url': 'https://public.accurate.id/accurate/api/sales-order/detail.do?id=' + id,
+                    'headers': {
+                        'Authorization': 'Bearer ' + credentials.access_token,
+                        'X-Session-ID': credentials.session_id
+                    }
+                };
+                await request(options, async function(error, response) {
+                    if (error) {
+                        console.log(error);
+                        resolve(await requesting_sales_order_details_based_on_id_from_accurate(id));
+                    }else{
+                        if (response != undefined || response != null) {
+                            result = JSON.parse(await response.body);
+                            var u = 0;
+                            var detailItem = [];
+                            var totalQuantities = 0;
+                            if (result.d != undefined) {
+                                if (result.d.detailItem != undefined) {
+                                    for (u; u < result.d.detailItem.length; u++) {
+                                        totalQuantities = totalQuantities + result.d.detailItem[u].quantityDefault;
+                                        detailItem.push({
+                                            name: result.d.detailItem[u].item.name,
+                                            product_code: result.d.detailItem[u].item.no,
+                                            quantity_bought: result.d.detailItem[u].quantityDefault,
+                                            price_per_unit: result.d.detailItem[u].availableUnitPrice,
+                                            total_price_based_on_quantity: result.d.detailItem[u].totalPrice
+                                        });
+                                    }
+                                    if (result.d.customer.contactInfo.mobilePhone != null) {
+                                        resolve({
+                                            sales_order_number: result.d.number,
+                                            order_date: result.d.transDateView,
+                                            period_date: result.d.paymentTerm.netDays,
+                                            payment_method: result.d.paymentTerm.name,
+                                            customer_name: result.d.customer.name,
+                                            customer_code: result.d.customer.customerNo,
+                                            contact_number: result.d.customer.contactInfo.mobilePhone,
+                                            salesman: result.d.detailItem[0].salesmanName,
+                                            delivery_address: result.d.toAddress,
+                                            total_quantities: totalQuantities,
+                                            total_amount: result.d.totalAmount,
+                                            order_details: detailItem,
+                                            approval_status: result.d.approvalStatus
+                                        });
+                                    } else {
+                                        resolve({
+                                            sales_order_number: result.d.number,
+                                            order_date: result.d.transDateView,
+                                            period_date: result.d.paymentTerm.netDays,
+                                            payment_method: result.d.paymentTerm.name,
+                                            customer_name: result.d.customer.name,
+                                            customer_code: result.d.customer.customerNo,
+                                            contact_number: result.d.customer.contactInfo.workPhone,
+                                            salesman: result.d.detailItem[0].salesmanName,
+                                            delivery_address: result.d.toAddress,
+                                            total_quantities: totalQuantities,
+                                            total_amount: result.d.totalAmount,
+                                            order_details: detailItem,
+                                            approval_status: result.d.approvalStatus
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         });
     });
 }
@@ -636,13 +640,17 @@ app.get('/get-all-customer-details', async(req, res) => {
     var current_id = 0;
     for (current_id; current_id < collected_customer_ids.length; current_id++) {
         console.log("loading details based on id from Accurate to array : " + current_id);
-        collected_customer_details.push(
-            await requesting_customer_details_based_on_id_from_accurate(collected_customer_ids[current_id]).then(async value => {
-                return await value;
-            })
-        );
+        var data_response = await requesting_customer_details_based_on_id_from_accurate(collected_customer_ids[current_id]).then(async value => {
+            return await value;
+        });
+        if(data_response.customer_no.length > 0){
+            collected_customer_details.push(
+                data_response
+            );
+        }
     }
     console.log("=========================================================================================");
+    console.log(collected_customer_details.length);
     await delete_all_customer_has_existed_in_MYSQL(); // update requested by Rafa and Dayat
     var current_id = 0;
     for (current_id; current_id < collected_customer_details.length; current_id++) {
@@ -797,6 +805,7 @@ async function collecting_all_customers_from_accurate() {
                         }
                     } else {
                         console.log("ERROR FROM ACCURATE, NO JSON RESPONSE WHEN GETTING CUSTOMER LIST");
+                        resolve(collecting_all_customers_from_accurate());
                     }
                 }
             });
@@ -814,32 +823,36 @@ async function requesting_customer_ids_from_accurate(pageFlipper) {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                resolve(await requesting_customer_ids_from_accurate(id));
-            };
-            var credentials = JSON.parse(await response.body);
-            options = {
-                'method': 'GET',
-                'url': 'https://public.accurate.id/accurate/api/customer/list.do?sp.page=' + pageFlipper,
-                'headers': {
-                    'Authorization': 'Bearer ' + credentials.access_token,
-                    'X-Session-ID': credentials.session_id
-                }
-            };
-            await request(options, async function(error, response) {
-                if (error) {
-                    console.log(error);
-                    resolve(await requesting_customer_ids_from_accurate(id));
-                };
-                if (response != undefined || response != null) {
-                    var result = JSON.parse(await response.body);
-                    var i = 0;
-                    var responseArray = [];
-                    for (i; i < result.d.length; i++) {
-                        responseArray.push(result.d[i].id);
+                console.log("action skipped because of error from Accurate 1");
+                resolve(await requesting_customer_ids_from_accurate(pageFlipper));
+            }else{
+                var credentials = JSON.parse(await response.body);
+                options = {
+                    'method': 'GET',
+                    'url': 'https://public.accurate.id/accurate/api/customer/list.do?sp.page=' + pageFlipper,
+                    'headers': {
+                        'Authorization': 'Bearer ' + credentials.access_token,
+                        'X-Session-ID': credentials.session_id
                     }
-                    resolve(responseArray);
-                }
-            });
+                };
+                await request(options, async function(error, response) {
+                    if (error) {
+                        console.log(error);
+                        console.log("action skipped because of error from Accurate 2 " + pageFlipper);
+                        resolve(await requesting_customer_ids_from_accurate(pageFlipper));
+                    }else{
+                        if (response != undefined || response != null) {
+                            var result = JSON.parse(await response.body);
+                            var i = 0;
+                            var responseArray = [];
+                            for (i; i < result.d.length; i++) {
+                                responseArray.push(result.d[i].id);
+                            }
+                            resolve(responseArray);
+                        }
+                    }
+                });
+            }
         });
     });
 }
@@ -856,95 +869,131 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_customer_details_based_on_id_from_accurate(id));
-            };
-            var credentials = JSON.parse(await response.body);
-            options = {
-                'method': 'GET',
-                'url': 'https://public.accurate.id/accurate/api/customer/detail.do?id=' + id,
-                'headers': {
-                    'Authorization': 'Bearer ' + credentials.access_token,
-                    'X-Session-ID': credentials.session_id
-                }
-            };
-            await request(options, async function(error, response) {
-                if (error) {
-                    console.log(error);
-                    resolve(await requesting_customer_details_based_on_id_from_accurate(id));
-                }
-                if (response != undefined || response != null) {
-                    result = JSON.parse(await response.body);
-                    var u = 0;
-                    if (result.d != undefined) {
-                        if (!result.d.suspended) {
-                            if (result.d.salesman != null) {
-                                if (result.d.detailContact.length > 0) {
+            }else{
+                var credentials = JSON.parse(await response.body);
+                options = {
+                    'method': 'GET',
+                    'url': 'https://public.accurate.id/accurate/api/customer/detail.do?id=' + id,
+                    'headers': {
+                        'Authorization': 'Bearer ' + credentials.access_token,
+                        'X-Session-ID': credentials.session_id
+                    }
+                };
+                await request(options, async function(error, response) {
+                    if (error) {
+                        console.log(error);
+                        resolve(await requesting_customer_details_based_on_id_from_accurate(id));
+                    }else{
+                        if (response != undefined || response != null) {
+                            result = JSON.parse(await response.body);
+                            var u = 0;
+                            if (result.d != undefined) {
+                                if (!result.d.suspended) {
+                                    if (result.d.salesman != null) {
+                                        if (result.d.detailContact.length > 0) {
+                                            resolve({
+                                                create_date: result.d.createDate,
+                                                name: result.d.wpName,
+                                                customer_no: result.d.customerNo,
+                                                contact_name: result.d.detailContact[0].name,
+                                                work_phone: result.d.detailContact[0].workPhone,
+                                                salesman: result.d.salesman.name,
+                                                bill_city: result.d.billCity,
+                                                bill_province: result.d.billProvince,
+                                                bill_street: result.d.billStreet,
+                                                bill_zipCode: result.d.billZipCode,
+                                                bill_country: result.d.billCountry,
+                                                bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
+                                            });
+                                        } else {
+                                            resolve({
+                                                create_date: result.d.createDate,
+                                                name: result.d.wpName,
+                                                customer_no: result.d.customerNo,
+                                                contact_name: '',
+                                                work_phone: '',
+                                                salesman: result.d.salesman.name,
+                                                bill_city: result.d.billCity,
+                                                bill_province: result.d.billProvince,
+                                                bill_street: result.d.billStreet,
+                                                bill_zipCode: result.d.billZipCode,
+                                                bill_country: result.d.billCountry,
+                                                bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
+                                            });
+                                        }
+                                    } else {
+                                        if (result.d.detailContact.length > 0) {
+                                            resolve({
+                                                create_date: result.d.createDate,
+                                                name: result.d.wpName,
+                                                customer_no: result.d.customerNo,
+                                                contact_name: result.d.detailContact[0].name,
+                                                work_phone: result.d.detailContact[0].workPhone,
+                                                salesman: result.d.salesman,
+                                                bill_city: result.d.billCity,
+                                                bill_province: result.d.billProvince,
+                                                bill_street: result.d.billStreet,
+                                                bill_zipCode: result.d.billZipCode,
+                                                bill_country: result.d.billCountry,
+                                                bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
+                                            });
+                                        } else {
+                                            resolve({
+                                                create_date: result.d.createDate,
+                                                name: result.d.wpName,
+                                                customer_no: result.d.customerNo,
+                                                contact_name: '',
+                                                work_phone: '',
+                                                salesman: result.d.salesman,
+                                                bill_city: result.d.billCity,
+                                                bill_province: result.d.billProvince,
+                                                bill_street: result.d.billStreet,
+                                                bill_zipCode: result.d.billZipCode,
+                                                bill_country: result.d.billCountry,
+                                                bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
+                                            });
+                                        }
+                                    }
+                                }else{
+                                    console.log("========================================================================");
+                                    console.log("reason " + result.d.suspended + " fail 1");
+                                    console.log("requesting_customer_details_based_on_id_from_accurate " + id + " fail 1");
                                     resolve({
-                                        create_date: result.d.createDate,
-                                        name: result.d.wpName,
-                                        customer_no: result.d.customerNo,
-                                        contact_name: result.d.detailContact[0].name,
-                                        work_phone: result.d.detailContact[0].workPhone,
-                                        salesman: result.d.salesman.name,
-                                        bill_city: result.d.billCity,
-                                        bill_province: result.d.billProvince,
-                                        bill_street: result.d.billStreet,
-                                        bill_zipCode: result.d.billZipCode,
-                                        bill_country: result.d.billCountry,
-                                        bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
-                                    });
-                                } else {
-                                    resolve({
-                                        create_date: result.d.createDate,
-                                        name: result.d.wpName,
-                                        customer_no: result.d.customerNo,
+                                        create_date: '',
+                                        name: '',
+                                        customer_no: '',
                                         contact_name: '',
                                         work_phone: '',
-                                        salesman: result.d.salesman.name,
-                                        bill_city: result.d.billCity,
-                                        bill_province: result.d.billProvince,
-                                        bill_street: result.d.billStreet,
-                                        bill_zipCode: result.d.billZipCode,
-                                        bill_country: result.d.billCountry,
-                                        bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
+                                        salesman: '',
+                                        bill_city: '',
+                                        bill_province: '',
+                                        bill_street: '',
+                                        bill_zipCode: '',
+                                        bill_country: '',
+                                        bill_complete_address: '',
                                     });
                                 }
-                            } else {
-                                if (result.d.detailContact.length > 0) {
-                                    resolve({
-                                        create_date: result.d.createDate,
-                                        name: result.d.wpName,
-                                        customer_no: result.d.customerNo,
-                                        contact_name: result.d.detailContact[0].name,
-                                        work_phone: result.d.detailContact[0].workPhone,
-                                        salesman: result.d.salesman,
-                                        bill_city: result.d.billCity,
-                                        bill_province: result.d.billProvince,
-                                        bill_street: result.d.billStreet,
-                                        bill_zipCode: result.d.billZipCode,
-                                        bill_country: result.d.billCountry,
-                                        bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
-                                    });
-                                } else {
-                                    resolve({
-                                        create_date: result.d.createDate,
-                                        name: result.d.wpName,
-                                        customer_no: result.d.customerNo,
-                                        contact_name: '',
-                                        work_phone: '',
-                                        salesman: result.d.salesman,
-                                        bill_city: result.d.billCity,
-                                        bill_province: result.d.billProvince,
-                                        bill_street: result.d.billStreet,
-                                        bill_zipCode: result.d.billZipCode,
-                                        bill_country: result.d.billCountry,
-                                        bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
-                                    });
-                                }
+                            }else{
+                                console.log("requesting_customer_details_based_on_id_from_accurate " + id + " fail 2");
+                                resolve(resolve({
+                                    create_date: '',
+                                    name: '',
+                                    customer_no: '',
+                                    contact_name: '',
+                                    work_phone: '',
+                                    salesman: '',
+                                    bill_city: '',
+                                    bill_province: '',
+                                    bill_street: '',
+                                    bill_zipCode: '',
+                                    bill_country: '',
+                                    bill_complete_address: '',
+                                }));
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         });
     });
 }
