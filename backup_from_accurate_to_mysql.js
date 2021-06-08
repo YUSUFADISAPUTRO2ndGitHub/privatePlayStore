@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "c41a574b-2191-4983-a1c5-ec9a91cb71f3";
+var refreshtoken = "6f845394-dce2-4122-a2de-ff28a16d1e20";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -152,7 +152,7 @@ app.get('/get-lastest-token-and-session', async(req, res) => {
 
 var options = {
     'method': 'GET',
-    'url': 'http://localhost:5002/get-all-customer-details',//get-all-customer-details
+    'url': 'http://localhost:5002/get-all-product-details',
     'headers': {}
 };
 request(options, function(error, response) {
@@ -160,7 +160,7 @@ request(options, function(error, response) {
     console.log(response.body);
     var options = {
         'method': 'GET',
-        'url': 'http://localhost:5002/get-all-sales-order-details',
+        'url': 'http://localhost:5002/get-all-customer-details',
         'headers': {}
     };
     request(options, function(error, response) {
@@ -168,7 +168,7 @@ request(options, function(error, response) {
         console.log(response.body);
         var options = {
             'method': 'GET',
-            'url': 'http://localhost:5002/get-all-purchase-order-details',
+            'url': 'http://localhost:5002/get-all-sales-order-details',
             'headers': {}
         };
         request(options, function(error, response) {
@@ -192,7 +192,7 @@ request(options, function(error, response) {
                     console.log(response.body);
                     var options = {
                         'method': 'GET',
-                        'url': 'http://localhost:5002/get-all-product-details',
+                        'url': 'http://localhost:5002/get-all-purchase-order-details',
                         'headers': {}
                     };
                     request(options, function(error, response) {
@@ -2155,6 +2155,7 @@ const update_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         , Sell_Price = '${sorted_collected_product_with_details.Sell_Price}'
         , Quantity = '${sorted_collected_product_with_details.Quantity}'
         , Unit = '${sorted_collected_product_with_details.Unit}'
+        , Category = '${sorted_collected_product_with_details.Category_Name}'
         WHERE Product_Code = '${sorted_collected_product_with_details.Product_Code}';`;
         con.query(sql, function(err, result) {
             if (err) console.log(err);
@@ -2170,13 +2171,15 @@ const insert_product_in_json_to_mysql = async(sorted_collected_product_with_deta
             Name,
             Sell_Price,
             Quantity,
-            Unit
+            Unit,
+            Category
         ) values 
         ('${sorted_collected_product_with_details.Product_Code}'
         , '${sorted_collected_product_with_details.Name}'
         , '${sorted_collected_product_with_details.Sell_Price}'
         , '${sorted_collected_product_with_details.Quantity}'
         , '${sorted_collected_product_with_details.Unit}'
+        , '${sorted_collected_product_with_details.Category_Name}'
         );`;
         con.query(sql, function(err, result) {
             if (err) console.log(err);
@@ -2299,7 +2302,8 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Name: result.d.name,
                             Sell_Price: result.d.unitPrice,
                             Quantity: result.d.totalUnit1Quantity,
-                            Unit: result.d.unit1Name
+                            Unit: result.d.unit1Name,
+                            Category_Name: result.d.itemCategory.name
                         });
                     }
                 }
