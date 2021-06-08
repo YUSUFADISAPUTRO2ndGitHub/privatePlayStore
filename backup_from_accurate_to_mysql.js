@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "b5fc4168-a087-45a6-9239-25aba2cace70";
+var refreshtoken = "c41a574b-2191-4983-a1c5-ec9a91cb71f3";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -1863,6 +1863,7 @@ app.get('/get-all-employee-details', async(req, res) => {
         );
     }
     console.log("=========================================================================================");
+    console.log(collected_employee_ids);
     var current_id = 0;
     for (current_id; current_id < collected_employee_details.length; current_id++) {
         if (await check_if_employee_has_existed_in_MYSQL(collected_employee_details[current_id].emp_number).then(async value => {
@@ -1924,7 +1925,7 @@ const update_employee_in_json_to_mysql = async(sorted_collected_employee_with_de
 
 const insert_employee_in_json_to_mysql = async(sorted_collected_employee_with_details) => {
     return new Promise(async resolve => {
-        var sql = `insert into vtportal.employee_data_accurate values 
+        var sql = `insert into vtportal.employee_data_accurate (name, emp_number, mobilePhone, email, emp_position) values 
         ('${sorted_collected_employee_with_details.name}'
         , '${sorted_collected_employee_with_details.emp_number}'
         , '${sorted_collected_employee_with_details.mobilePhone}'
