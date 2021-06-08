@@ -402,7 +402,7 @@ app.post('/get-product-details',  async (req, res) => {
 
 async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Category_Based_On_Category){
     var sql = `
-    select Subcategory from vtportal.product_management where Delete_Mark != '1' and Subcategory != 'undefined' and upper(Subcategory) != 'NULL'
+    select Subcategory, Picture_1 from vtportal.product_management where Delete_Mark != '1' and Subcategory != 'undefined' and upper(Subcategory) != 'NULL'
     and Category = '${Get_ALL_Sub_Category_Based_On_Category}' group by Subcategory;
     `;
     return new Promise(async resolve => {

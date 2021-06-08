@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "543c7c3b-5885-4d10-b31d-782214cab76b";
+var refreshtoken = "b5fc4168-a087-45a6-9239-25aba2cace70";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -675,10 +675,12 @@ app.get('/get-all-customer-details', async(req, res) => {
         var data_response = await requesting_customer_details_based_on_id_from_accurate(collected_customer_ids[current_id]).then(async value => {
             return await value;
         });
-        if(data_response.customer_no.length > 0){
-            collected_customer_details.push(
-                data_response
-            );
+        if(data_response.customer_no != undefined){
+            if(data_response.customer_no.length > 0){
+                collected_customer_details.push(
+                    data_response
+                );
+            }
         }
     }
     console.log("=========================================================================================");
