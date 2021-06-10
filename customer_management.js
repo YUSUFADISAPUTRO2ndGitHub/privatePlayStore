@@ -407,6 +407,8 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                     && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
                     && (customer_data.Email != undefined || customer_data.Email.length != 0)
                     && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
+                    && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
+                    && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
                     && (
                         customer_data.Email.toLowerCase().includes('@gmail.com') 
                         || customer_data.Email.toLowerCase().includes('@outlook.com') 
@@ -482,7 +484,9 @@ async function create_new_customer_direct_from_customer(customer_data){
         Creator,
         Create_Date,
         Update_date,
-        Delete_Mark
+        Delete_Mark,
+        extra_column_1,
+        extra_column_2
         )
         values
         ('${customer_data.Customer_Code}',
@@ -507,7 +511,9 @@ async function create_new_customer_direct_from_customer(customer_data){
         '${customer_data.Customer_Code}',
         CURRENT_TIMESTAMP(),
         CURRENT_TIMESTAMP(),
-        '0'
+        '0',
+        '${customer_data.account_number}',
+        '${customer_data.referral_customer_code}'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
