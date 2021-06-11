@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "6f845394-dce2-4122-a2de-ff28a16d1e20";
+var refreshtoken = "ffe77c09-441f-4f4f-b384-67bfbe1db1f5";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -398,7 +398,21 @@ const insert_sales_order_in_json_to_mysql = async(sorted_collected_sales_order_w
         } else {
             contactNumber = `${sorted_collected_sales_order_with_details.contact_number} / ${sorted_collected_sales_order_with_details.workPhone}`;
         }
-        var sql = `insert into vtportal.sales_order_list_accurate values 
+        var sql = `insert into vtportal.sales_order_list_accurate (
+            so_number
+            , order_date
+            , period_date
+            , payment_method
+            , customer_name
+            , customer_code
+            , salesman
+            , delivery_address
+            , total_quantities
+            , total_amount
+            , status
+            , deleted
+            , contact_number
+        ) values 
         ('${sorted_collected_sales_order_with_details.sales_order_number}'
         , '${year + "-" + month + "-" + day}'
         , '${yearPeriod + "-" + monthPeriod + "-" + dayPeriod}'
@@ -449,7 +463,16 @@ async function insertSalesOrderDetails(sorted_collected_sales_order_with_details
                 (Math.floor((Math.random() * 1210) + 1201) * 23) +
                 (Math.floor((Math.random() * 1310) + 1301) * 24)
             ) * (Math.floor((Math.random() * 10) + 1) * 2) * (Math.floor((Math.random() * 7) + 1) * 7) +  thedate.getMilliseconds();
-        var sql = `insert into vtportal.sales_order_details_accurate values 
+        var sql = `insert into vtportal.sales_order_details_accurate 
+        (
+            so_number
+            , name
+            , product_code
+            , quantity_bought
+            , price_per_unit
+            , total_price
+            , oid
+        ) values 
         ('${sorted_collected_sales_order_with_details.sales_order_number}'
         , '${sorted_collected_sales_order_with_details.order_details[x].name}'
         , '${sorted_collected_sales_order_with_details.order_details[x].product_code}'
@@ -653,6 +676,37 @@ async function sort_sales_order_with_details(sorted_collected_sales_order_with_d
 /*
     Customer Backup
 */
+var customer_details_list_global_variable = [];
+
+app.get('/get-all-customers-based-on-salesman', async(req, res) => {
+    var collected_customer_details = customer_details_list_global_variable;
+    console.log("=========================================================================================");
+    console.log(collected_customer_details.length);
+    var i = 0;
+    var collected_customers_based_on_salesman = [];
+    for(i; i < collected_customer_details.length; i++){
+        if(req.query.salesman_name != undefined){
+            if(req.query.salesman_name.length > 0){
+                if(collected_customer_details[i].salesman != undefined){
+                    if(collected_customer_details[i].salesman.length > 0){
+                        if(collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())){
+                            collected_customers_based_on_salesman.push(
+                                {
+                                    value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
+                                    label: collected_customer_details[i].customer_no
+                                }
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    res.send(
+        collected_customers_based_on_salesman
+    );
+})
 
 app.get('/get-all-customer-details', async(req, res) => {
     var collected_customer_ids = [];
@@ -684,9 +738,11 @@ app.get('/get-all-customer-details', async(req, res) => {
         }
     }
     console.log("=========================================================================================");
+    customer_details_list_global_variable = collected_customer_details;
     console.log(collected_customer_details.length);
     await delete_all_customer_has_existed_in_MYSQL(); // update requested by Rafa and Dayat
     var current_id = 0;
+    console.log(collected_customer_details.length);
     for (current_id; current_id < collected_customer_details.length; current_id++) {
         if (await check_if_customer_has_existed_in_MYSQL(collected_customer_details[current_id].customer_no).then(async value => {
                 return await value;
@@ -786,7 +842,21 @@ const insert_customer_in_json_to_mysql = async(sorted_collected_customer_with_de
         var theSubmittedDate = year + "-" + month + "-" + day;
         console.log(sorted_collected_customer_with_details.create_date);
         console.log(theSubmittedDate);
-        var sql = `insert into vtportal.customer_list_accurate values 
+        // create_date	name	customer_no	contact_name	work_phone	salesman	bill_city	bill_province	bill_street	bill_zipCode	bill_country	bill_complete_address	latitude	longitude
+        var sql = `insert into vtportal.customer_list_accurate (
+            create_date
+            , name
+            , customer_no
+            , contact_name
+            , work_phone
+            , salesman
+            , bill_city
+            , bill_province
+            , bill_street
+            , bill_zipCode
+            , bill_country
+            , bill_complete_address
+        ) values 
         ('${theSubmittedDate}'
         , '${sorted_collected_customer_with_details.name}'
         , '${sorted_collected_customer_with_details.customer_no}'
@@ -1213,7 +1283,21 @@ const insert_purchase_order_in_json_to_mysql = async(sorted_collected_purchase_o
         var dayPeriod = thedate.getDate().toString();
         var monthPeriod = (thedate.getMonth() + 1).toString();
         var yearPeriod = thedate.getUTCFullYear().toString();
-        var sql = `insert into vtportal.purchase_order_list_accurate values 
+        var sql = `insert into vtportal.purchase_order_list_accurate 
+        (
+            po_number
+            , order_date
+            , period_date
+            , payment_method
+            , supplier_name
+            , supplier_code
+            , supplier_number
+            , delivery_address
+            , total_quantities
+            , total_amount
+            , status
+            , deleted
+        ) values 
         ('${sorted_collected_purchase_order_with_details.purchase_order_number}'
         , '${year + "-" + month + "-" + day}'
         , '${yearPeriod + "-" + monthPeriod + "-" + dayPeriod}'
@@ -1267,7 +1351,15 @@ async function insertPurchaseOrderDetails(sorted_collected_purchase_order_with_d
                 (Math.floor((Math.random() * 1210) + 1201) * 23) +
                 (Math.floor((Math.random() * 1310) + 1301) * 24)
             ) * (Math.floor((Math.random() * 10) + 1) * 2) * (Math.floor((Math.random() * 7) + 1) * 7) +  thedate.getMilliseconds();
-        var sql = `insert into vtportal.purchase_order_details_accurate values 
+        var sql = `insert into vtportal.purchase_order_details_accurate (
+            po_number
+            , name
+            , product_code
+            , quantity_bought
+            , price_per_unit
+            , total_price
+            , oid
+        ) values 
         ('${sorted_collected_purchase_order_with_details.purchase_order_number}'
         , '${sorted_collected_purchase_order_with_details.order_details[x].name}'
         , '${sorted_collected_purchase_order_with_details.order_details[x].product_code}'
@@ -1596,7 +1688,17 @@ const insert_delivery_order_in_json_to_mysql = async(sorted_collected_delivery_o
             day = thedate[0];
             month = thedate[1];
             year = thedate[2];
-            sql = `insert into vtportal.delivery_order_list_accurate values 
+            sql = `insert into vtportal.delivery_order_list_accurate (
+                delivery_number
+                , customer_name
+                , shipping_address
+                , responsible_user
+                , sales_order_number
+                , status
+                , total_price
+                , total_quantity
+                , delivery_time
+            ) values 
             ('${sorted_collected_delivery_order_with_details.delivery_number}'
             , '${sorted_collected_delivery_order_with_details.customer_name}'
             , '${sorted_collected_delivery_order_with_details.shipping_address}'
@@ -1608,7 +1710,17 @@ const insert_delivery_order_in_json_to_mysql = async(sorted_collected_delivery_o
             , '${year + "-" + month + "-" + day}'
             );`;
         } else {
-            sql = `insert into vtportal.delivery_order_list_accurate values 
+            sql = `insert into vtportal.delivery_order_list_accurate (
+                delivery_number
+                , customer_name
+                , shipping_address
+                , responsible_user
+                , sales_order_number
+                , status
+                , total_price
+                , total_quantity
+                , delivery_time
+            ) values 
             ('${sorted_collected_delivery_order_with_details.delivery_number}'
             , '${sorted_collected_delivery_order_with_details.customer_name}'
             , '${sorted_collected_delivery_order_with_details.shipping_address}'
@@ -1660,7 +1772,14 @@ async function insertDeliveryOrderDetails(sorted_collected_delivery_order_with_d
                 (Math.floor((Math.random() * 1210) + 1201) * 23) +
                 (Math.floor((Math.random() * 1310) + 1301) * 24)
             ) * (Math.floor((Math.random() * 10) + 1) * 2) * (Math.floor((Math.random() * 7) + 1) * 7) +  thedate.getMilliseconds();
-        var sql = `insert into vtportal.delivery_order_details_accurate values 
+        var sql = `insert into vtportal.delivery_order_details_accurate (
+            oid
+            , delivery_number
+            , product_code
+            , product_name
+            , quantity
+            , total_price
+        ) values 
         (
         '${uniqueCode}'
         , '${sorted_collected_delivery_order_with_details.delivery_number}'
