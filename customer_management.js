@@ -77,6 +77,29 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+async function get_today_salesorder_based_on_referral_code(referral_customer_code){
+    var sql = `
+    select Order_Number, Total_Quantity, Total_Price from vtportal.sales_order_management som 
+    where 
+    Customer_Code in (
+        select Customer_Code from vtportal.customer_management 
+        where extra_column_2 = '${referral_customer_code}' 
+        and Delete_Mark = '0' and Status = 'approving'
+        ) 
+    and Create_Date >= CURRENT_DATE();
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //customer forgot password
 app.post('/customer-forgot-password-request',  async (req, res) => {
     var Email = req.query.Email;
@@ -400,36 +423,52 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
     if(customer_data != undefined || customer_data != null){
         if(customer_data.Email != undefined){
             if(customer_data.Email.length > 0){
-                if(
-                    (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
-                    && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
-                    && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
-                    && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
-                    && (customer_data.Email != undefined || customer_data.Email.length != 0)
-                    && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
-                    && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
-                    && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
-                    && (
-                        customer_data.Email.toLowerCase().includes('@gmail.com') 
-                        || customer_data.Email.toLowerCase().includes('@outlook.com') 
-                        || customer_data.Email.toLowerCase().includes('@hotmail.com') 
-                        || customer_data.Email.toLowerCase().includes('@yahoo.com') 
-                        || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
-                        || customer_data.Email.toLowerCase().includes('@aol.com')
-                    )
+                if(customer_data.account_number != undefined && customer_data.referral_customer_code != undefined){
+                    if(
+                        (await check_existing_referral_code(customer_data.referral_customer_code).then(async value => {
+                            return await value;
+                        }))
                     ){
                         if(
-                            (await check_existing_customer_code(customer_data).then(async value => {
-                                return await value;
-                            }))
-                        ){
-                            res.send(false);
+                            (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
+                            && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
+                            && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
+                            && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
+                            && (customer_data.Email != undefined || customer_data.Email.length != 0)
+                            && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
+                            && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
+                            && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
+                            && (
+                                customer_data.Email.toLowerCase().includes('@gmail.com') 
+                                || customer_data.Email.toLowerCase().includes('@outlook.com') 
+                                || customer_data.Email.toLowerCase().includes('@hotmail.com') 
+                                || customer_data.Email.toLowerCase().includes('@yahoo.com') 
+                                || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
+                                || customer_data.Email.toLowerCase().includes('@aol.com')
+                            )
+                            ){
+                                if(
+                                    (await check_existing_customer_code(customer_data).then(async value => {
+                                        return await value;
+                                    }))
+                                ){
+                                    res.send(false);
+                                }else{
+                                    res.send(await create_new_customer_direct_from_customer(customer_data).then(async value => {
+                                        return await value;
+                                    }));
+                                }
                         }else{
-                            res.send(await create_new_customer_direct_from_customer(customer_data).then(async value => {
-                                return await value;
-                            }));
+                            res.send(false);
                         }
+                    }else{
+                        console.log("===============================================");
+                        console.log("referral_customer_code not found");
+                        res.send(false);
+                    }
                 }else{
+                    console.log("===============================================");
+                    console.log("customer_data.account_number = undefined && customer_data.referral_customer_code = undefined");
                     res.send(false);
                 }
             }else{
@@ -442,6 +481,22 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
         res.send(false);
     }
 })
+
+async function check_existing_referral_code(referral_customer_code){
+    var sql = `
+        select * from vtportal.customer_management where Customer_Code = '${referral_customer_code}'
+    ;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result[0] != undefined){
+                resolve(true);
+            }else{
+                resolve(false);
+            } 
+        });
+    });
+}
 
 async function check_existing_customer_code(customer_data){
     var sql = `
@@ -486,7 +541,8 @@ async function create_new_customer_direct_from_customer(customer_data){
         Update_date,
         Delete_Mark,
         extra_column_1,
-        extra_column_2
+        extra_column_2,
+        extra_column_3
         )
         values
         ('${customer_data.Customer_Code}',
@@ -513,7 +569,8 @@ async function create_new_customer_direct_from_customer(customer_data){
         CURRENT_TIMESTAMP(),
         '0',
         '${customer_data.account_number}',
-        '${customer_data.referral_customer_code}'
+        '${customer_data.referral_customer_code}',
+        '3%'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
