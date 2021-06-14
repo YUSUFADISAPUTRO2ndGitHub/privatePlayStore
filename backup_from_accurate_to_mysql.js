@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "5b418ee7-322c-47ae-9e42-4a7ad3b5a961";
+var refreshtoken = "9ee37fc7-ad9e-4594-bf4c-d565c1bbd404";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -684,18 +684,41 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
     console.log(collected_customer_details.length);
     var i = 0;
     var collected_customers_based_on_salesman = [];
-    for(i; i < collected_customer_details.length; i++){
-        if(req.query.salesman_name != undefined){
-            if(req.query.salesman_name.length > 0){
-                if(collected_customer_details[i].salesman != undefined){
-                    if(collected_customer_details[i].salesman.length > 0){
-                        if(collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())){
-                            collected_customers_based_on_salesman.push(
-                                {
-                                    value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
-                                    label: collected_customer_details[i].customer_no
-                                }
-                            );
+
+    if(collected_customer_details.length > 0 ){
+        for(i; i < collected_customer_details.length; i++){
+            if(req.query.salesman_name != undefined){
+                if(req.query.salesman_name.length > 0){
+                    if(collected_customer_details[i].salesman != undefined){
+                        if(collected_customer_details[i].salesman.length > 0){
+                            if(collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())){
+                                collected_customers_based_on_salesman.push(
+                                    {
+                                        value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
+                                        label: collected_customer_details[i].customer_no
+                                    }
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }else{
+        collected_customer_details = await get_customer_from_db_based_on_salesman(req.query.salesman_name.toUpperCase());
+        for(i; i < collected_customer_details.length; i++){
+            if(req.query.salesman_name != undefined){
+                if(req.query.salesman_name.length > 0){
+                    if(collected_customer_details[i].salesman != undefined){
+                        if(collected_customer_details[i].salesman.length > 0){
+                            if(collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())){
+                                collected_customers_based_on_salesman.push(
+                                    {
+                                        value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
+                                        label: collected_customer_details[i].customer_no
+                                    }
+                                );
+                            }
                         }
                     }
                 }
@@ -707,6 +730,20 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
         collected_customers_based_on_salesman
     );
 })
+
+const get_customer_from_db_based_on_salesman = async(salesman) => {
+    return new Promise(async resolve => {
+        var sql = `select * from vtportal.customer_list_accurate where UPPER(salesman) like '%${salesman.toUpperCase()}%';`;
+        con.query(sql, function(err, result) {
+            if (err) {
+                console.log(err);
+                resolve([]);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
 
 app.get('/get-all-customer-details', async(req, res) => {
     var collected_customer_ids = [];
