@@ -77,6 +77,27 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//customer forgot password
+app.post('/get-sales-order-which-referral-code-customer',  async (req, res) => {
+    var referral_customer_code = req.query.referral_customer_code;
+    var given_date = req.query.given_date;
+    if(referral_customer_code != undefined && given_date != undefined){
+        res.send(
+            await get_today_salesorder_based_on_referral_code_and_given_date(referral_customer_code, given_date).then(async value => {
+                return await value;
+            })
+        );
+    }else if(referral_customer_code != undefined){
+        res.send(
+            await get_today_salesorder_based_on_referral_code(referral_customer_code).then(async value => {
+                return await value;
+            })
+        );
+    }else{
+        res.send(false);
+    }
+})
+
 async function get_today_salesorder_based_on_referral_code(referral_customer_code){
     var sql = `
     select Order_Number, Total_Quantity, Total_Price from vtportal.sales_order_management som 
@@ -87,6 +108,29 @@ async function get_today_salesorder_based_on_referral_code(referral_customer_cod
         and Delete_Mark = '0' and Status = 'approving'
         ) 
     and Create_Date >= CURRENT_DATE();
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function get_today_salesorder_based_on_referral_code_and_given_date(referral_customer_code, given_date){
+    var sql = `
+    select Order_Number, Total_Quantity, Total_Price from vtportal.sales_order_management som 
+    where 
+    Customer_Code in (
+        select Customer_Code from vtportal.customer_management 
+        where extra_column_2 = '${referral_customer_code}' 
+        and Delete_Mark = '0' and Status = 'approving'
+        ) 
+    and Create_Date >= '${given_date}';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {

@@ -21,7 +21,7 @@ con.connect(function(err) {
     if (err) {
         console.log(err);
         handle_disconnect();
-    }else{
+    } else {
         console.log("Connected! to MySQL");
     }
 });
@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "9ee37fc7-ad9e-4594-bf4c-d565c1bbd404";
+var refreshtoken = "a01bb31d-a74f-4409-8961-b361da861695";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -84,8 +84,8 @@ const get_latest_recorded_token = async() => {
                     session_id: sessionid
                 });
             } else {
-                if(JSON.parse(response.body).access_token != undefined){
-                    if(await JSON.parse(response.body).access_token.length > 0){
+                if (JSON.parse(response.body).access_token != undefined) {
+                    if (await JSON.parse(response.body).access_token.length > 0) {
                         refreshtoken = await JSON.parse(response.body).refresh_token;
                         accesstoken = await JSON.parse(response.body).access_token;
                         console.log(refreshtoken);
@@ -108,28 +108,28 @@ const get_latest_recorded_token = async() => {
                                 });
                             } else {
                                 // console.log(JSON.parse(response.body));
-                                if(JSON.parse(response.body).session != undefined){
-                                    if(JSON.parse(response.body).session.length > 0){
+                                if (JSON.parse(response.body).session != undefined) {
+                                    if (JSON.parse(response.body).session.length > 0) {
                                         sessionid = await JSON.parse(response.body).session;
                                         resolve({
                                             access_token: accesstoken,
                                             session_id: JSON.parse(response.body).session
                                         });
-                                    }else{
+                                    } else {
                                         console.log(response.body);
                                         resolve(await get_latest_recorded_token());
                                     }
-                                }else{
+                                } else {
                                     console.log(response.body);
                                     resolve(await get_latest_recorded_token());
                                 }
                             }
                         });
-                    }else{
+                    } else {
                         console.log(response.body);
                         resolve(await get_latest_recorded_token());
                     }
-                }else{
+                } else {
                     console.log(response.body);
                     resolve(await get_latest_recorded_token());
                 }
@@ -541,7 +541,7 @@ async function requesting_sales_order_ids_from_accurate(pageFlipper) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_sales_order_ids_from_accurate(pageFlipper));
-            }else{
+            } else {
                 var credentials = JSON.parse(await response.body);
                 options = {
                     'method': 'GET',
@@ -555,7 +555,7 @@ async function requesting_sales_order_ids_from_accurate(pageFlipper) {
                     if (error) {
                         console.log(error);
                         resolve(await requesting_sales_order_ids_from_accurate(pageFlipper));
-                    }else{
+                    } else {
                         if (response != undefined || response != null) {
                             var result = JSON.parse(await response.body);
                             var i = 0;
@@ -584,7 +584,7 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_sales_order_details_based_on_id_from_accurate(id));
-            }else{
+            } else {
                 var credentials = JSON.parse(await response.body);
                 options = {
                     'method': 'GET',
@@ -598,7 +598,7 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id) {
                     if (error) {
                         console.log(error);
                         resolve(await requesting_sales_order_details_based_on_id_from_accurate(id));
-                    }else{
+                    } else {
                         if (response != undefined || response != null) {
                             result = JSON.parse(await response.body);
                             var u = 0;
@@ -685,39 +685,35 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
     var i = 0;
     var collected_customers_based_on_salesman = [];
 
-    if(collected_customer_details.length > 0 ){
-        for(i; i < collected_customer_details.length; i++){
-            if(req.query.salesman_name != undefined){
-                if(req.query.salesman_name.length > 0){
-                    if(collected_customer_details[i].salesman != undefined){
-                        if(collected_customer_details[i].salesman.length > 0){
-                            if(collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())){
-                                collected_customers_based_on_salesman.push(
-                                    {
-                                        value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
-                                        label: collected_customer_details[i].customer_no
-                                    }
-                                );
+    if (collected_customer_details.length > 0) {
+        for (i; i < collected_customer_details.length; i++) {
+            if (req.query.salesman_name != undefined) {
+                if (req.query.salesman_name.length > 0) {
+                    if (collected_customer_details[i].salesman != undefined) {
+                        if (collected_customer_details[i].salesman.length > 0) {
+                            if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
+                                collected_customers_based_on_salesman.push({
+                                    value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
+                                    label: collected_customer_details[i].customer_no
+                                });
                             }
                         }
                     }
                 }
             }
         }
-    }else{
+    } else {
         collected_customer_details = await get_customer_from_db_based_on_salesman(req.query.salesman_name.toUpperCase());
-        for(i; i < collected_customer_details.length; i++){
-            if(req.query.salesman_name != undefined){
-                if(req.query.salesman_name.length > 0){
-                    if(collected_customer_details[i].salesman != undefined){
-                        if(collected_customer_details[i].salesman.length > 0){
-                            if(collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())){
-                                collected_customers_based_on_salesman.push(
-                                    {
-                                        value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
-                                        label: collected_customer_details[i].customer_no
-                                    }
-                                );
+        for (i; i < collected_customer_details.length; i++) {
+            if (req.query.salesman_name != undefined) {
+                if (req.query.salesman_name.length > 0) {
+                    if (collected_customer_details[i].salesman != undefined) {
+                        if (collected_customer_details[i].salesman.length > 0) {
+                            if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
+                                collected_customers_based_on_salesman.push({
+                                    value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
+                                    label: collected_customer_details[i].customer_no
+                                });
                             }
                         }
                     }
@@ -725,7 +721,7 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
             }
         }
     }
-    
+
     res.send(
         collected_customers_based_on_salesman
     );
@@ -738,7 +734,7 @@ const get_customer_from_db_based_on_salesman = async(salesman) => {
             if (err) {
                 console.log(err);
                 resolve([]);
-            }else{
+            } else {
                 resolve(result);
             }
         });
@@ -766,8 +762,8 @@ app.get('/get-all-customer-details', async(req, res) => {
         var data_response = await requesting_customer_details_based_on_id_from_accurate(collected_customer_ids[current_id]).then(async value => {
             return await value;
         });
-        if(data_response.customer_no != undefined){
-            if(data_response.customer_no.length > 0){
+        if (data_response.customer_no != undefined) {
+            if (data_response.customer_no.length > 0) {
                 collected_customer_details.push(
                     data_response
                 );
@@ -966,7 +962,7 @@ async function requesting_customer_ids_from_accurate(pageFlipper) {
                 console.log(error);
                 console.log("error from Accurate 1");
                 resolve(await requesting_customer_ids_from_accurate(pageFlipper));
-            }else{
+            } else {
                 var credentials = JSON.parse(await response.body);
                 options = {
                     'method': 'GET',
@@ -981,7 +977,7 @@ async function requesting_customer_ids_from_accurate(pageFlipper) {
                         console.log(error);
                         console.log("error from Accurate 2 " + pageFlipper);
                         resolve(await requesting_customer_ids_from_accurate(pageFlipper));
-                    }else{
+                    } else {
                         if (response != undefined || response != null) {
                             var result = JSON.parse(await response.body);
                             var i = 0;
@@ -1010,7 +1006,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_customer_details_based_on_id_from_accurate(id));
-            }else{
+            } else {
                 var credentials = JSON.parse(await response.body);
                 options = {
                     'method': 'GET',
@@ -1024,14 +1020,14 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                     if (error) {
                         console.log(error);
                         resolve(await requesting_customer_details_based_on_id_from_accurate(id));
-                    }else{
+                    } else {
                         if (response != undefined || response != null) {
                             result = JSON.parse(await response.body);
                             var u = 0;
                             if (result.d != undefined) {
                                 if (!result.d.suspended) {
                                     if (result.d.salesman != null) {
-                                        if(result.d.detailContact != undefined){
+                                        if (result.d.detailContact != undefined) {
                                             if (result.d.detailContact.length > 0) {
                                                 resolve({
                                                     create_date: result.d.createDate,
@@ -1063,7 +1059,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                     bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
                                                 });
                                             }
-                                        }else{
+                                        } else {
                                             resolve({
                                                 create_date: result.d.createDate,
                                                 name: result.d.wpName,
@@ -1080,7 +1076,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                             });
                                         }
                                     } else {
-                                        if(result.d.detailContact != undefined){
+                                        if (result.d.detailContact != undefined) {
                                             if (result.d.detailContact.length > 0) {
                                                 resolve({
                                                     create_date: result.d.createDate,
@@ -1112,7 +1108,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                     bill_complete_address: result.d.billProvince + " " + result.d.billCity + " " + result.d.billZipCode + " " + result.d.billStreet,
                                                 });
                                             }
-                                        }else{
+                                        } else {
                                             resolve({
                                                 create_date: result.d.createDate,
                                                 name: result.d.wpName,
@@ -1129,7 +1125,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                             });
                                         }
                                     }
-                                }else{
+                                } else {
                                     console.log("========================================================================");
                                     console.log("reason " + result.d.suspended + " fail 1");
                                     console.log("requesting_customer_details_based_on_id_from_accurate " + id + " fail 1");
@@ -1148,7 +1144,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                         bill_complete_address: '',
                                     });
                                 }
-                            }else{
+                            } else {
                                 console.log("requesting_customer_details_based_on_id_from_accurate " + id + " fail 2");
                                 resolve(resolve({
                                     create_date: '',
@@ -1165,7 +1161,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                     bill_complete_address: '',
                                 }));
                             }
-                        }else{
+                        } else {
                             console.log("========================================================================");
                             console.log("reason " + result.d.suspended + " fail 3");
                             console.log(error);
@@ -1880,7 +1876,7 @@ async function requesting_delivery_order_ids_from_accurate(pageFlipper) {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                resolve(await requesting_delivery_order_ids_from_accurate(id));
+                resolve(await requesting_delivery_order_ids_from_accurate(pageFlipper));
             };
             var credentials = JSON.parse(await response.body);
             options = {
@@ -1894,7 +1890,7 @@ async function requesting_delivery_order_ids_from_accurate(pageFlipper) {
             await request(options, async function(error, response) {
                 if (error) {
                     console.log(error);
-                    resolve(await requesting_delivery_order_ids_from_accurate(id));
+                    resolve(await requesting_delivery_order_ids_from_accurate(pageFlipper));
                 };
                 if (response != undefined || response != null) {
                     var result = JSON.parse(await response.body);
