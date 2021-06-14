@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "ffe77c09-441f-4f4f-b384-67bfbe1db1f5";
+var refreshtoken = "5b418ee7-322c-47ae-9e42-4a7ad3b5a961";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -680,7 +680,7 @@ var customer_details_list_global_variable = [];
 
 app.get('/get-all-customers-based-on-salesman', async(req, res) => {
     var collected_customer_details = customer_details_list_global_variable;
-    console.log("=========================================================================================");
+    console.log("get-all-customers-based-on-salesman =========================================================================================");
     console.log(collected_customer_details.length);
     var i = 0;
     var collected_customers_based_on_salesman = [];
@@ -2028,7 +2028,7 @@ async function check_if_employee_has_existed_in_MYSQL(emp_number) {
 
 const update_employee_in_json_to_mysql = async(sorted_collected_employee_with_details) => {
     return new Promise(async resolve => {
-        var sql = `UPDATE vtportal.employee_data_accurate SET 
+        var sql = `UPDATE vtportal.employee_data_accurate_new SET 
         name = '${sorted_collected_employee_with_details.name}'
         , emp_number = '${sorted_collected_employee_with_details.emp_number}'
         , mobilePhone = '${sorted_collected_employee_with_details.mobilePhone}'
@@ -2044,7 +2044,7 @@ const update_employee_in_json_to_mysql = async(sorted_collected_employee_with_de
 
 const insert_employee_in_json_to_mysql = async(sorted_collected_employee_with_details) => {
     return new Promise(async resolve => {
-        var sql = `insert into vtportal.employee_data_accurate (name, emp_number, mobilePhone, email, emp_position) values 
+        var sql = `insert into vtportal.employee_data_accurate_new (name, emp_number, mobilePhone, email, emp_position) values 
         ('${sorted_collected_employee_with_details.name}'
         , '${sorted_collected_employee_with_details.emp_number}'
         , '${sorted_collected_employee_with_details.mobilePhone}'
