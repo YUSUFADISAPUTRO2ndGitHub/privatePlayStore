@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "d29a3998-8aa4-4e77-86fa-09539f267c4b";
+var refreshtoken = "a2d86db8-6ce4-482b-a092-a3a5092d0597";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -694,7 +694,7 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
                                     value: collected_customer_details[i].customer_no,
-                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name
+                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].bill_complete_address
                                 });
                             }
                         }
@@ -712,7 +712,7 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
                                     value: collected_customer_details[i].customer_no,
-                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name
+                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].bill_complete_address
                                 });
                             }
                         }
