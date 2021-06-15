@@ -482,7 +482,7 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                             && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
                             && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
                             && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
-                            && (customer_data.ktp != undefined || customer_data.ktp.length != 0)
+                            // && (customer_data.ktp != undefined || customer_data.ktp.length != 0)
                             && (
                                 customer_data.Email.toLowerCase().includes('@gmail.com') 
                                 || customer_data.Email.toLowerCase().includes('@outlook.com') 
