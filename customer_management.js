@@ -175,7 +175,7 @@ app.post('/customer-forgot-password-request',  async (req, res) => {
     var Birthday = req.query.Birthday;
     var PrimaryContactNumber = req.query.PrimaryContactNumber;
     var requestedNewPassword = req.query.requestedNewPassword;
-    if(PrimaryContactNumber != undefined && Birthday != undefined && Email != undefined){
+    if(PrimaryContactNumber != undefined && Email != undefined && Birthday != undefined){
         var user_data_found = await check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, Birthday, Email).then(async value => {
             return await value;
         });

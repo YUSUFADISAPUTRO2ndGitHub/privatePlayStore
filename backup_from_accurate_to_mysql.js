@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "a2d86db8-6ce4-482b-a092-a3a5092d0597";
+var refreshtoken = "0ae5d9c3-7c04-4d7c-97e7-8a40d0faf4df";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -694,7 +694,7 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
                                     value: collected_customer_details[i].customer_no,
-                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].bill_complete_address
+                                    label: collected_customer_details[i].contact_name + " / " + collected_customer_details[i].bill_complete_address
                                 });
                             }
                         }
@@ -712,7 +712,7 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
                                     value: collected_customer_details[i].customer_no,
-                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].bill_complete_address
+                                    label: collected_customer_details[i].contact_name + " / " + collected_customer_details[i].bill_complete_address
                                 });
                             }
                         }
@@ -2389,7 +2389,7 @@ async function requesting_product_ids_from_accurate(pageFlipper) {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                resolve(await requesting_product_ids_from_accurate(id));
+                resolve(await requesting_product_ids_from_accurate(pageFlipper));
             };
             var credentials = JSON.parse(await response.body);
             options = {
@@ -2403,7 +2403,7 @@ async function requesting_product_ids_from_accurate(pageFlipper) {
             await request(options, async function(error, response) {
                 if (error) {
                     console.log(error);
-                    resolve(await requesting_product_ids_from_accurate(id));
+                    resolve(await requesting_product_ids_from_accurate(pageFlipper));
                 };
                 if (response != undefined || response != null) {
                     var result = JSON.parse(await response.body);
