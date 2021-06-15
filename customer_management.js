@@ -172,11 +172,11 @@ async function get_today_salesorder_based_on_referral_code_and_given_date(referr
 //customer forgot password
 app.post('/customer-forgot-password-request',  async (req, res) => {
     var Email = req.query.Email;
-    var Birthday = req.query.Birthday;
+    var ktp = req.query.ktp;
     var PrimaryContactNumber = req.query.PrimaryContactNumber;
     var requestedNewPassword = req.query.requestedNewPassword;
-    if(PrimaryContactNumber != undefined && Email != undefined && Birthday != undefined){
-        var user_data_found = await check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, Birthday, Email).then(async value => {
+    if(PrimaryContactNumber != undefined && Email != undefined && ktp != undefined){
+        var user_data_found = await check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email).then(async value => {
             return await value;
         });
         if(user_data_found.status == true && user_data_found.data.Email.toUpperCase() == Email.toUpperCase()){
@@ -217,8 +217,8 @@ async function update_user_password(Email, PrimaryContactNumber, encrypted_passw
     });
 }
 
-async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, Birthday, Email){
-    var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(Birthday) like '%${Birthday.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
+async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email){
+    var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(ktp) like '%${ktp.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
