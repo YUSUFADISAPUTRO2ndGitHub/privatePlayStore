@@ -77,7 +77,32 @@ const get_latest_recorded_token = async () => {
     })
 }
 
-//customer forgot password
+//get-available-referral-codes
+app.post('/get-available-referral-codes',  async (req, res) => {
+    res.send(
+        await get_all_avaible_referrals().then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_all_avaible_referrals(){
+    var sql = `
+    select Customer_Code, First_Name, Last_Name, Nama_Perusahaan from vtportal.customer_management where Delete_Mark = '0';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+//get-sales-order-which-referral-code-customer
 app.post('/get-sales-order-which-referral-code-customer',  async (req, res) => {
     var referral_customer_code = req.query.referral_customer_code;
     var given_date = req.query.given_date;
@@ -568,6 +593,7 @@ app.post('/create-new-customer-supplier-direct-from-user',  async (req, res) => 
                         && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
                         && (customer_data.npwp != undefined || customer_data.npwp.length != 0)
                         && (customer_data.nik != undefined || customer_data.nik.length != 0)
+                        && (customer_data.Nama_Perusahaan != undefined || customer_data.Nama_Perusahaan.length != 0)
                         ){
                             if(
                                 (await check_existing_customer_code(customer_data).then(async value => {
@@ -729,7 +755,8 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         extra_column_2,
         extra_column_5,
         extra_column_3,
-        ktp
+        ktp,
+        Nama_Perusahaan
         )
         values
         ('${customer_data.Customer_Code}',
@@ -759,7 +786,8 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         '${customer_data.npwp}',
         '${customer_data.nik}',
         '7.5%',
-        '${customer_data.ktp}'
+        '${customer_data.ktp}',
+        '${customer_data.Nama_Perusahaan}'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
