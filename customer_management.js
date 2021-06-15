@@ -464,7 +464,7 @@ app.post('/create-new-customer-by-admin',  async (req, res) => {
 //create new customer-direct-from-user
 app.post('/create-new-customer-direct-from-user',  async (req, res) => {
     var customer_data = req.body.customer_data;
-    if(customer_data != undefined || customer_data != null){
+    if(customer_data != undefined){
         if(customer_data.Email != undefined){
             if(customer_data.Email.length > 0){
                 if(customer_data.account_number != undefined && customer_data.referral_customer_code != undefined){
@@ -497,6 +497,12 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                                         return await value;
                                     }))
                                 ){
+                                    console.log("===============================================");
+                                    console.log(
+                                        await check_existing_customer_code(customer_data).then(async value => {
+                                            return await value;
+                                        })
+                                    );
                                     res.send(false);
                                 }else{
                                     res.send(await create_new_customer_direct_from_customer(customer_data).then(async value => {
@@ -504,6 +510,18 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                                     }));
                                 }
                         }else{
+                            console.log(
+                                (
+                                    customer_data.Email.toLowerCase().includes('@gmail.com') 
+                                    || customer_data.Email.toLowerCase().includes('@outlook.com') 
+                                    || customer_data.Email.toLowerCase().includes('@hotmail.com') 
+                                    || customer_data.Email.toLowerCase().includes('@yahoo.com') 
+                                    || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
+                                    || customer_data.Email.toLowerCase().includes('@aol.com')
+                                )
+                            );
+                            console.log("===============================================");
+                            console.log("Email ending is false");
                             res.send(false);
                         }
                     }else{
@@ -517,12 +535,18 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                     res.send(false);
                 }
             }else{
+                console.log("===============================================");
+                console.log("email too short");
                 res.send(false);
             }
         }else{
+            console.log("===============================================");
+            console.log("email cannot be read");
             res.send(false);
         }
     }else{
+        console.log("===============================================");
+        console.log("customer_data cannot be read");
         res.send(false);
     }
 })
