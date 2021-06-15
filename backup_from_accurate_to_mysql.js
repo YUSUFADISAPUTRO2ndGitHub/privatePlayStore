@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "a01bb31d-a74f-4409-8961-b361da861695";
+var refreshtoken = "d29a3998-8aa4-4e77-86fa-09539f267c4b";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -693,8 +693,8 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                         if (collected_customer_details[i].salesman.length > 0) {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
-                                    value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
-                                    label: collected_customer_details[i].customer_no
+                                    value: collected_customer_details[i].customer_no,
+                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name
                                 });
                             }
                         }
@@ -711,8 +711,8 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                         if (collected_customer_details[i].salesman.length > 0) {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
-                                    value: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name,
-                                    label: collected_customer_details[i].customer_no
+                                    value: collected_customer_details[i].customer_no,
+                                    label: collected_customer_details[i].contact_name + " " + collected_customer_details[i].name
                                 });
                             }
                         }
