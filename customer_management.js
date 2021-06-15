@@ -526,6 +526,54 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
     }
 })
 
+//create new customer-direct-from-user
+app.post('/create-new-customer-supplier-direct-from-user',  async (req, res) => {
+    var customer_data = req.body.customer_data;
+    if(customer_data != undefined || customer_data != null){
+        if(customer_data.Email != undefined){
+            if(customer_data.Email.length > 0){
+                if(customer_data.account_number != undefined && customer_data.npwp != undefined){
+                    if(
+                        (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
+                        && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
+                        && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
+                        && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
+                        && (customer_data.Email != undefined || customer_data.Email.length != 0)
+                        && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
+                        && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
+                        && (customer_data.npwp != undefined || customer_data.npwp.length != 0)
+                        && (customer_data.nik != undefined || customer_data.nik.length != 0)
+                        ){
+                            if(
+                                (await check_existing_customer_code(customer_data).then(async value => {
+                                    return await value;
+                                }))
+                            ){
+                                res.send(false);
+                            }else{
+                                res.send(await create_new_supplier_customer_direct_from_customer(customer_data).then(async value => {
+                                    return await value;
+                                }));
+                            }
+                    }else{
+                        res.send(false);
+                    }
+                }else{
+                    console.log("===============================================");
+                    console.log("customer_data.account_number = undefined && customer_data.referral_customer_code = undefined");
+                    res.send(false);
+                }
+            }else{
+                res.send(false);
+            }
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
+})
+
 async function check_existing_referral_code(referral_customer_code){
     var sql = `
         select * from vtportal.customer_management where Customer_Code = '${referral_customer_code}'
@@ -615,6 +663,74 @@ async function create_new_customer_direct_from_customer(customer_data){
         '${customer_data.account_number}',
         '${customer_data.referral_customer_code}',
         '3%'
+        );`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            resolve(true);
+        });
+    });
+}
+
+async function create_new_supplier_customer_direct_from_customer(customer_data){
+    var sql = `INSERT into vtportal.customer_management 
+    (
+        Customer_Code,
+        First_Name,
+        Last_Name,
+        User_Password,
+        Birthday,
+        Created_Date,
+        Last_Login,
+        Email,
+        Contact_Number_1,
+        Contact_Number_2,
+        Address_1,
+        Address_2,
+        Address_3,
+        Address_4,
+        Address_5,
+        Status,
+        User_Type,
+        Start_Date,
+        Remark,
+        Creator,
+        Create_Date,
+        Update_date,
+        Delete_Mark,
+        extra_column_1,
+        extra_column_2,
+        extra_column_4,
+        extra_column_3
+        )
+        values
+        ('${customer_data.Customer_Code}',
+        '${customer_data.First_Name}',
+        '${customer_data.Last_Name}',
+        '${customer_data.User_Password}',
+        '${customer_data.Birthday}',
+        CURDATE(),
+        CURDATE(),
+        '${customer_data.Email}',
+        '${customer_data.Contact_Number_1}',
+        '${customer_data.Contact_Number_2}',
+        '${customer_data.Address_1}',
+        '${customer_data.Address_2}',
+        '${customer_data.Address_3}',
+        '${customer_data.Address_4}',
+        '${customer_data.Address_5}',
+        'approving',
+        '${customer_data.User_Type}',
+        CURRENT_TIMESTAMP(),
+        'created by user',
+        '${customer_data.Customer_Code}',
+        CURRENT_TIMESTAMP(),
+        CURRENT_TIMESTAMP(),
+        '0',
+        '${customer_data.account_number}',
+        '${customer_data.npwp}',
+        '${customer_data.nik}',
+        '7.5%'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
