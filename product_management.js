@@ -88,6 +88,39 @@ app.post('/get-lastest-token-and-session',  async (req, res) => {
     );
 })
 
+//get-products-belong-to-the-supplier
+app.post('/get-products-belong-to-the-supplier',  async (req, res) => {
+    var Creator = req.query.Creator;
+    if(Creator != undefined){
+        res.send(
+            (await get_products_belong_to_supplier(Creator).then(async value => {
+                return await value;
+            }))  
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Creator is incomplete"
+        });
+    }
+})
+
+async function get_products_belong_to_supplier(Creator){
+    var sql = `
+    select * from vtportal.product_management where upper(Creator) like '%${Creator.toUpperCase()}%' and Delete_Mark != '1';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //get-unpaid-sales-order-specific-for-a-product
 app.post('/get-unpaid-sales-order-specific-for-a-product',  async (req, res) => {
     var Product_Code = req.query.Product_Code;
