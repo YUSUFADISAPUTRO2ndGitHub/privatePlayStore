@@ -88,6 +88,75 @@ app.post('/get-lastest-token-and-session',  async (req, res) => {
     );
 })
 
+app.post('/set-product-rating',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    var product_rating = req.query.product_rating;
+    var current_rating = await get_rating_from_a_product(Product_Code).then(async value => {
+        return await value;
+    })
+    res.send(
+        await set_rating_from_a_product(Product_Code, product_rating, current_rating[0].product_rating).then(async value => {
+            return await value;
+        })
+    );
+})
+
+app.post('/get-product-rating',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    res.send(
+        await get_rating_from_a_product(Product_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function set_rating_from_a_product(Product_Code, product_rating, current_product_rating){
+    var rating_calculation = (current_product_rating + product_rating)/2;
+    if(rating_calculation >= 0 && rating_calculation < 25 ){
+        rating_calculation = 0;
+    }else if(rating_calculation >= 25 && rating_calculation < 50 ){
+        rating_calculation = 25;
+    }else if(rating_calculation >= 50 && rating_calculation < 75 ){
+        rating_calculation = 50;
+    }else if(rating_calculation >= 75 && rating_calculation < 100 ){
+        rating_calculation = 75;
+    }else if(rating_calculation >= 100 ){
+        rating_calculation = 100;
+    }else{
+        rating_calculation = 0;
+    }
+    var sql = `
+    UPDATE vtportal.product_management
+    SET Product_Code='${Product_Code}', product_rating='${rating_calculation}'
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+async function get_rating_from_a_product(Product_Code){
+    var sql = `
+    select product_rating from vtportal.product_management where Product_Code like '%${Product_Code}%' and Delete_Mark != '1';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //get-products-belong-to-the-supplier
 app.post('/get-products-belong-to-the-supplier',  async (req, res) => {
     var Creator = req.query.Creator;
