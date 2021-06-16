@@ -77,6 +77,60 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-all-sales-orders-for-a-product-code
+app.post('/get-all-sales-orders-for-a-product-code',  async (req, res) => {
+    if(req.query.Product_Code != undefined && req.query.From_Date != undefined){
+        res.send(
+            await get_all_sales_order_for_a_product_code_start_date_from(req.query.Product_Code, req.query.From_Date).then(async value => {
+                return await value;
+            })
+        );
+    }
+    res.send(
+        await get_all_sales_order_for_a_product_code(req.query.Product_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_all_sales_order_for_a_product_code_start_date_from(Product_Code, From_Date){
+    var sql = `
+    select * from vtportal.sales_order_management som 
+    where Order_Number in (
+        select Order_Number from vtportal.sales_order_detail_management sodm where Product_Code = '${Product_Code}' group by Order_Number
+    ) and Create_Date >= '${From_Date}' ;
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function get_all_sales_order_for_a_product_code(Product_Code){
+    var sql = `
+    select * from vtportal.sales_order_management som 
+    where Order_Number in (
+        select Order_Number from vtportal.sales_order_detail_management sodm where Product_Code = '${Product_Code}' group by Order_Number
+    );
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //get-available-referral-codes
 app.post('/get-available-referral-codes',  async (req, res) => {
     res.send(
