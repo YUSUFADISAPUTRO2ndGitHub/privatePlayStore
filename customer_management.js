@@ -756,7 +756,8 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         extra_column_5,
         extra_column_3,
         ktp,
-        Nama_Perusahaan
+        Nama_Perusahaan,
+        customer_type_status
         )
         values
         ('${customer_data.Customer_Code}',
@@ -787,7 +788,8 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         '${customer_data.nik}',
         '7.5%',
         '${customer_data.ktp}',
-        '${customer_data.Nama_Perusahaan}'
+        '${customer_data.Nama_Perusahaan}',
+        '${customer_data.User_Type}'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
