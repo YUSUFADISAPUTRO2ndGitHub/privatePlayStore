@@ -95,10 +95,19 @@ app.post('/get-all-sales-orders-for-a-product-code',  async (req, res) => {
 
 async function get_all_sales_order_for_a_product_code_start_date_from(Product_Code, From_Date){
     var sql = `
-    select * from vtportal.sales_order_management som 
-    where Order_Number in (
-        select Order_Number from vtportal.sales_order_detail_management sodm where Product_Code = '${Product_Code}' group by Order_Number
-    ) and Create_Date >= '${From_Date}' ;
+    select 
+    sales.Order_Number
+    , Product_Code
+    , Quantity_Requested
+    , Price_Based_On_Total_Quantity
+    , sales.Create_Date 
+    FROM 
+    (select * from vtportal.sales_order_detail_management sodm where Product_Code = '${Product_Code}' group by Order_Number) details_sales
+    inner join
+    (select * from vtportal.sales_order_management) sales
+    on 
+    details_sales.Order_Number = sales.Order_Number
+    where sales.Delete_Mark = '0' and sales.Create_Date >= '${From_Date}' ;
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -114,10 +123,19 @@ async function get_all_sales_order_for_a_product_code_start_date_from(Product_Co
 
 async function get_all_sales_order_for_a_product_code(Product_Code){
     var sql = `
-    select * from vtportal.sales_order_management som 
-    where Order_Number in (
-        select Order_Number from vtportal.sales_order_detail_management sodm where Product_Code = '${Product_Code}' group by Order_Number
-    );
+    select 
+    sales.Order_Number
+    , Product_Code
+    , Quantity_Requested
+    , Price_Based_On_Total_Quantity
+    , sales.Create_Date 
+    FROM 
+    (select * from vtportal.sales_order_detail_management sodm where Product_Code = '${Product_Code}' group by Order_Number) details_sales
+    inner join
+    (select * from vtportal.sales_order_management) sales
+    on 
+    details_sales.Order_Number = sales.Order_Number
+    where sales.Delete_Mark = '0';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
