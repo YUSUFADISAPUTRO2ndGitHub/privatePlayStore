@@ -182,7 +182,7 @@ async function get_unpaid_sales_order_based_on_Order_Number(Order_Number){
         vtportal.sales_order_detail_management sod 
         on so.Order_Number = sod.Order_Number
         where so.Order_Number = '${Order_Number}'
-        and so.Delete_Mark != '1' and (so.Payment_Status is null or so.Payment_Status = 'NULL' or so.Payment_Status != 'PAYMENT');
+        and so.Delete_Mark != '1' and (so.Payment_Status is null or so.Payment_Status = 'NULL' or so.Payment_Status = 'WAITPAY');
     `;
     console.log(sql);
     return new Promise(async resolve => {
@@ -202,7 +202,7 @@ async function get_unpaid_sales_order_based_on_Customer_Code(Customer_Code){
         select * from
         vtportal.sales_order_management so
         where Customer_Code = '${Customer_Code}'
-        and Delete_Mark != '1' and (Payment_Status is null or Payment_Status = 'NULL' or Payment_Status != 'PAYMENT');
+        and Delete_Mark != '1' and (Payment_Status is null or Payment_Status = 'NULL' or upper(Payment_Status) = 'WAITPAY');
     `;
     console.log(sql);
     return new Promise(async resolve => {
