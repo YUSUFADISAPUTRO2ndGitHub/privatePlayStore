@@ -127,7 +127,7 @@ async function set_rating_from_a_product(Product_Code, product_rating, current_p
     }
     var sql = `
     UPDATE vtportal.product_management
-    SET Product_Code='${Product_Code}', product_rating='${rating_calculation}'
+    SET product_rating='${rating_calculation}' where Product_Code='${Product_Code}'
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
