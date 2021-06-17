@@ -111,7 +111,8 @@ app.post('/get-product-rating',  async (req, res) => {
 })
 
 async function set_rating_from_a_product(Product_Code, product_rating, current_product_rating){
-    var rating_calculation = (current_product_rating + product_rating)/2;
+    var rating_calculation = ((current_product_rating*1) + (product_rating*1))/2;
+    console.log("rating_calculation" + rating_calculation);
     if(rating_calculation >= 0 && rating_calculation < 25 ){
         rating_calculation = 0;
     }else if(rating_calculation >= 25 && rating_calculation < 50 ){
