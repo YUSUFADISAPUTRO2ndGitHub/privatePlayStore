@@ -80,6 +80,36 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+app.post('/get-colors-option',  async (req, res) => {
+    res.send(
+        await get_the_same_product_with_different_colors(req.query.Name, req.query.Specification, req.query.Category, req.query.Subcategory, req.query.Brand).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_the_same_product_with_different_colors(Name, Specification, Category, Subcategory, Brand){
+    var sql = `
+    select Product_Code, color, Sell_Price, Description, Picture_1, Picture_2, Picture_3, GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity
+    from vtportal.product_management 
+    where Upper(Name) = '${Name.toUpperCase()}' 
+    and Upper(Specification) = '${Specification.toUpperCase()}' 
+    and Upper(Category) = '${Category.toUpperCase()}' 
+    and Upper(Subcategory) = '${Subcategory.toUpperCase()}' 
+    and Upper(Brand) = '${Brand.toUpperCase()}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 app.post('/get-lastest-token-and-session',  async (req, res) => {
     res.send(
         await get_latest_recorded_token().then(async value => {
