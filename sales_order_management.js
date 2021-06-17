@@ -284,7 +284,23 @@ app.post('/get-sales-order-data-per-customer',  async (req, res) => {
 
 async function get_sales_order_based_on_Order_Number_all(Order_Number){
     var sql = `
-        select * from
+        select 
+        so.Order_Number 
+        , so.Customer_Code
+        , so.Total_Price
+        , so.Total_Quantity 
+        , so.Unit 
+        , so.Shipping_Address 
+        , so.Shipping_Contact_Number 
+        , so.Payment_Method 
+        , so.Primary_Recipient_Name 
+        , so.Create_Date 
+        , so.Status 
+        , sod.Product_Name
+        , sod.Product_Code
+        , sod.Quantity_Requested
+        , sod.Price_Based_On_Total_Quantity
+        from
         vtportal.sales_order_management so
         inner join 
         vtportal.sales_order_detail_management sod 

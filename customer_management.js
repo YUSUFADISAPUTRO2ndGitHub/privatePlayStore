@@ -566,9 +566,10 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
             if(customer_data.Email.length > 0){
                 if(customer_data.account_number != undefined && customer_data.referral_customer_code != undefined){
                     if(
-                        (await check_existing_referral_code(customer_data.referral_customer_code).then(async value => {
-                            return await value;
-                        }))
+                        // (await check_existing_referral_code(customer_data.referral_customer_code).then(async value => {
+                        //     return await value;
+                        // }))
+                        true
                     ){
                         if(
                             (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
