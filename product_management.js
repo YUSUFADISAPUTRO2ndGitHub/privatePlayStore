@@ -875,7 +875,8 @@ async function update_existing_product_code(product_details){
                 Delete_Mark = '0',
                 Weight_KG = '${product_details.Weight_KG}',
                 Dimension_CM_CUBIC = '${product_details.Dimension_CM_CUBIC}',
-                Tax = '${product_details.Tax}'
+                Tax = '${product_details.Tax}',
+                Stock_Quantity = '${product_details.Stock_Quantity}'
                 where Product_Code = '${product_details.Product_Code}'
                 ;`;
             return new Promise(async resolve => {
@@ -922,7 +923,8 @@ async function insert_existing_product_code(product_details){
                     Delete_Mark,
                     Weight_KG,
                     Dimension_CM_CUBIC,
-                    Tax
+                    Tax,
+                    Stock_Quantity
                 ) 
                 VALUES 
                 (
@@ -954,7 +956,8 @@ async function insert_existing_product_code(product_details){
                     '0',
                     '${product_details.Weight_KG}',
                     '${product_details.Dimension_CM_CUBIC}',
-                    '${product_details.Tax}'
+                    '${product_details.Tax}',
+                    '${product_details.Stock_Quantity}'
                 );`;
             return new Promise(async resolve => {
                 await con.query(sql, async function (err, result) {
