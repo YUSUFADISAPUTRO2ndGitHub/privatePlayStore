@@ -77,6 +77,64 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-total-active-customers-of-a-referral-code
+app.post('/get-total-active-customers-of-a-referral-code',  async (req, res) => {
+    res.send(
+        await get_total_active_customers_from_a_referral_code(req.query.Customer_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_total_active_customers_from_a_referral_code(Customer_Code){
+    var sql = `
+    select count(*) as total_active_customers from vtportal.sales_order_management som 
+    where 
+    Customer_Code in (
+        select Customer_Code from vtportal.customer_management 
+        where extra_column_2 ='${Customer_Code}' 
+        and Delete_Mark = '0' 
+        and Status = 'approving'
+    ) 
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+//get-total-customers-of-a-referral-code
+app.post('/get-total-customers-of-a-referral-code',  async (req, res) => {
+    res.send(
+        await get_total_customers_from_a_referral_code(req.query.Customer_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+
+async function get_total_customers_from_a_referral_code(Customer_Code){
+    var sql = `
+        select count(*) as Total_Customers from vtportal.customer_management where extra_column_2 ='${Customer_Code}'
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //get-all-sales-orders-for-a-product-code
 app.post('/get-all-sales-orders-for-a-product-code',  async (req, res) => {
     if(req.query.Product_Code != undefined && req.query.From_Date != undefined){
@@ -206,6 +264,7 @@ async function get_today_salesorder_based_on_referral_code(referral_customer_cod
         ) 
     and Create_Date >= CURRENT_DATE();
     `;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
@@ -229,6 +288,7 @@ async function get_today_salesorder_based_on_referral_code_and_given_date(referr
         ) 
     and Create_Date >= '${given_date}';
     `;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
