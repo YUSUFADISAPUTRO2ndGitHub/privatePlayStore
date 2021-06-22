@@ -79,6 +79,38 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-total-commission-of-all-months-gross
+app.post('/get-total-commission-of-all-months-gross',  async (req, res) => {
+    res.send(
+        await get_total_commission_of_all_months(req.query.Customer_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_total_commission_of_all_months(Customer_Code){
+    var sql = `
+    select sum(Total_Price) from vtportal.sales_order_management som 
+    where 
+    Customer_Code in (
+        select Customer_Code from vtportal.customer_management 
+        where extra_column_2 ='${Customer_Code}' 
+        and Delete_Mark = '0' 
+        and Status = 'approving'
+    ) 
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
 //get-total-active-customers-of-a-referral-code
 app.post('/get-total-active-customers-of-a-referral-code',  async (req, res) => {
     res.send(

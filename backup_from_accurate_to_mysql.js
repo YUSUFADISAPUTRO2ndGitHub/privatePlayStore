@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "3c65371d-aa93-4ba4-b191-d36a11423619";
+var refreshtoken = "a5600590-02ac-4180-bd8f-b1c72e079591";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -1045,7 +1045,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                     name: result.d.wpName,
                                                     customer_no: result.d.customerNo,
                                                     contact_name: result.d.detailContact[0].name,
-                                                    work_phone: result.d.detailContact[0].workPhone,
+                                                    work_phone: result.d.workPhone || result.d.mobilePhone,
                                                     salesman: result.d.salesman.name,
                                                     bill_city: result.d.billCity,
                                                     bill_province: result.d.billProvince,
@@ -1059,8 +1059,8 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                     create_date: result.d.createDate,
                                                     name: result.d.wpName,
                                                     customer_no: result.d.customerNo,
-                                                    contact_name: '',
-                                                    work_phone: '',
+                                                    contact_name: result.d.wpName,
+                                                    work_phone: result.d.workPhone || result.d.mobilePhone,
                                                     salesman: result.d.salesman.name,
                                                     bill_city: result.d.billCity,
                                                     bill_province: result.d.billProvince,
@@ -1075,8 +1075,8 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                 create_date: result.d.createDate,
                                                 name: result.d.wpName,
                                                 customer_no: result.d.customerNo,
-                                                contact_name: '',
-                                                work_phone: '',
+                                                contact_name: result.d.wpName,
+                                                work_phone: result.d.workPhone || result.d.mobilePhone,
                                                 salesman: result.d.salesman.name,
                                                 bill_city: result.d.billCity,
                                                 bill_province: result.d.billProvince,
@@ -1094,7 +1094,7 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                     name: result.d.wpName,
                                                     customer_no: result.d.customerNo,
                                                     contact_name: result.d.detailContact[0].name,
-                                                    work_phone: result.d.detailContact[0].workPhone,
+                                                    work_phone: result.d.workPhone || result.d.mobilePhone,
                                                     salesman: result.d.salesman,
                                                     bill_city: result.d.billCity,
                                                     bill_province: result.d.billProvince,
@@ -1108,8 +1108,8 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                     create_date: result.d.createDate,
                                                     name: result.d.wpName,
                                                     customer_no: result.d.customerNo,
-                                                    contact_name: '',
-                                                    work_phone: '',
+                                                    contact_name: result.d.wpName,
+                                                    work_phone: result.d.workPhone || result.d.mobilePhone,
                                                     salesman: result.d.salesman,
                                                     bill_city: result.d.billCity,
                                                     bill_province: result.d.billProvince,
@@ -1124,8 +1124,8 @@ async function requesting_customer_details_based_on_id_from_accurate(id) {
                                                 create_date: result.d.createDate,
                                                 name: result.d.wpName,
                                                 customer_no: result.d.customerNo,
-                                                contact_name: '',
-                                                work_phone: '',
+                                                contact_name: result.d.wpName,
+                                                work_phone: result.d.workPhone || result.d.mobilePhone,
                                                 salesman: result.d.salesman,
                                                 bill_city: result.d.billCity,
                                                 bill_province: result.d.billProvince,
