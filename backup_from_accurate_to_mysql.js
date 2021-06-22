@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "b5131d62-7c5c-499f-a743-b8e2179aeab8";
+var refreshtoken = "3c65371d-aa93-4ba4-b191-d36a11423619";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -108,19 +108,26 @@ const get_latest_recorded_token = async() => {
                                 // });
                             } else {
                                 // console.log(JSON.parse(response.body));
-                                if (JSON.parse(response.body).session != undefined) {
-                                    if (JSON.parse(response.body).session.length > 0) {
-                                        sessionid = await JSON.parse(response.body).session;
-                                        resolve({
-                                            access_token: accesstoken,
-                                            session_id: JSON.parse(response.body).session
-                                        });
+                                try {
+                                    if (JSON.parse(response.body).session != undefined) {
+                                        if (JSON.parse(response.body).session.length > 0) {
+                                            sessionid = await JSON.parse(response.body).session;
+                                            resolve({
+                                                access_token: accesstoken,
+                                                session_id: JSON.parse(response.body).session
+                                            });
+                                        } else {
+                                            console.log(response.body);
+                                            resolve(await get_latest_recorded_token());
+                                        }
                                     } else {
                                         console.log(response.body);
                                         resolve(await get_latest_recorded_token());
                                     }
-                                } else {
-                                    console.log(response.body);
+                                } catch (e) {
+                                    console.log("=============================================");
+                                    console.log("JSON PARSE FAILED");
+                                    console.log(e);
                                     resolve(await get_latest_recorded_token());
                                 }
                             }
