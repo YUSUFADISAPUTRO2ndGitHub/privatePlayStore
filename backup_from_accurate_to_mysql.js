@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "0ae5d9c3-7c04-4d7c-97e7-8a40d0faf4df";
+var refreshtoken = "ed201324-32d1-4fba-8739-6640cdb6fb34";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -101,11 +101,11 @@ const get_latest_recorded_token = async() => {
                                 console.log("=================================================================");
                                 console.log("Fail to get session id");
                                 console.log(error);
-                                // resolve(await get_latest_recorded_token());
-                                resolve({
-                                    access_token: accesstoken,
-                                    session_id: sessionid
-                                });
+                                resolve(await get_latest_recorded_token());
+                                // resolve({
+                                //     access_token: accesstoken,
+                                //     session_id: sessionid
+                                // });
                             } else {
                                 // console.log(JSON.parse(response.body));
                                 if (JSON.parse(response.body).session != undefined) {
@@ -2457,6 +2457,8 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Unit: result.d.unit1Name,
                             Category_Name: result.d.itemCategory.name
                         });
+                    }else{
+                        resolve(await requesting_product_details_based_on_id_from_accurate(id));
                     }
                 }
             });
