@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "ed201324-32d1-4fba-8739-6640cdb6fb34";
+var refreshtoken = "b5131d62-7c5c-499f-a743-b8e2179aeab8";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
@@ -694,7 +694,7 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
                                     value: collected_customer_details[i].customer_no,
-                                    label: collected_customer_details[i].contact_name + " / " + collected_customer_details[i].bill_complete_address
+                                    label: collected_customer_details[i].name + " / " + collected_customer_details[i].bill_complete_address
                                 });
                             }
                         }
@@ -704,15 +704,19 @@ app.get('/get-all-customers-based-on-salesman', async(req, res) => {
         }
     } else {
         collected_customer_details = await get_customer_from_db_based_on_salesman(req.query.salesman_name.toUpperCase());
+        console.log("get-all-customers-based-on-salesman =========================================================================================");
+        console.log("alternate to get data from DB = " + collected_customer_details.length);
         for (i; i < collected_customer_details.length; i++) {
             if (req.query.salesman_name != undefined) {
                 if (req.query.salesman_name.length > 0) {
                     if (collected_customer_details[i].salesman != undefined) {
                         if (collected_customer_details[i].salesman.length > 0) {
+                            console.log("get-all-customers-based-on-salesman =========================================================================================");
+                            console.log("target acquired = " + req.query.salesman_name);
                             if (collected_customer_details[i].salesman.toUpperCase().includes(req.query.salesman_name.toUpperCase())) {
                                 collected_customers_based_on_salesman.push({
                                     value: collected_customer_details[i].customer_no,
-                                    label: collected_customer_details[i].contact_name + " / " + collected_customer_details[i].bill_complete_address
+                                    label: collected_customer_details[i].name + " / " + collected_customer_details[i].bill_complete_address
                                 });
                             }
                         }
