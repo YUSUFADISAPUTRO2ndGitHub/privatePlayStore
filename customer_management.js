@@ -5,6 +5,7 @@ var crypto = require('crypto');
 var request = require('request');
 var mysql = require('mysql');
 var nodemailer = require('nodemailer');
+const e = require('express');
 const app = express();
 const port = 3002;
 app.use(cors(), express.json())
@@ -322,7 +323,9 @@ async function send_OTP(Email){
     var automated_email = 'automated.email.sold.co.id@gmail.com';
     if(Email.length > 0){
         var OTP = Math.floor((Math.random() * 999999) + 99999);
-        otps.push(OTP);
+        await otps.push(OTP);
+        console.log("===========================");
+        console.log(otps);
         var mailOptions = {
             from: automated_email,
             to: Email,
@@ -398,29 +401,41 @@ async function update_user_password(Email, PrimaryContactNumber, encrypted_passw
 
 async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email, otp){
     var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(ktp) like '%${ktp.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            if(result != undefined && result[0] != undefined){
-
-                var i = 0;
-                var counter = 0;
-                for(i; i < otps.length; i ++){
-                    if(otps[i] == otp){
-                        otps.splice(i, 1);
-                        resolve({
-                            data: result[0],
-                            status: true
-                        });
-                    }else{
-                        counter++;
+            if (err) {
+                await console.log(err);
+            }else{
+                if(result != undefined && result[0] != undefined){
+                    console.log("==========================================");
+                    console.log("otp from user " + otp);
+                    console.log("otps recorded " + otps);
+                    var i = 0;
+                    var counter = 0;
+                    for(i; i < otps.length; i ++){
+                        if(otps[i] == otp){
+                            otps.splice(i, 1);
+                            console.log("==========================================");
+                            console.log("otp found");
+                            console.log("otps recorded " + otps);
+                            resolve({
+                                data: result[0],
+                                status: true
+                            });
+                        }else{
+                            counter++;
+                        }
                     }
-                }
-                if(counter == otps.length){
+                    if(counter == otps.length){
+                        console.log("==========================================");
+                        console.log("otp not found");
+                        console.log("otps recorded " + otps);
+                        resolve(false);
+                    }
+                }else{
                     resolve(false);
                 }
-            }else{
-                resolve(false);
             }
         });
     });
