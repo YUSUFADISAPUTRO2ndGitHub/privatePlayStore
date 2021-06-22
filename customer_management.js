@@ -306,6 +306,7 @@ async function get_today_salesorder_based_on_referral_code_and_given_date(referr
 app.post('/get-otp',  async (req, res) => {
     var Email = req.query.Email;
     await send_OTP(Email);
+    res.send(true);
 })
 
 var transporter = nodemailer.createTransport({
