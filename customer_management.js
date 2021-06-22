@@ -4,6 +4,7 @@ const cors = require('cors');
 var crypto = require('crypto');
 var request = require('request');
 var mysql = require('mysql');
+var nodemailer = require('nodemailer');
 const app = express();
 const port = 3002;
 app.use(cors(), express.json())
@@ -301,14 +302,59 @@ async function get_today_salesorder_based_on_referral_code_and_given_date(referr
     });
 }
 
+//get-otp
+app.post('/get-otp',  async (req, res) => {
+    var Email = req.query.Email;
+    await send_OTP(Email);
+})
+
+var transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'automated.email.sold.co.id@gmail.com',
+        pass: 'NOName1414++'
+    }
+});
+
+var otps= [];
+async function send_OTP(Email){
+    var automated_email = 'automated.email.sold.co.id@gmail.com';
+    if(Email.length > 0){
+        var OTP = Math.floor((Math.random() * 999999) + 99999);
+        otps.push(OTP);
+        var mailOptions = {
+            from: automated_email,
+            to: Email,
+            subject: 'OTP Sold.co.id',
+            text: `
+YOUR OTP FOR SOLD.CO.ID:
+${OTP}
+Do not reply this email
+Thank You
+From SOLD.CO.ID
+            `
+        };
+    
+        await transporter.sendMail(mailOptions, async function(error, info){
+            if (error) {
+                console.log(error);
+            } else {
+                console.log("==============================================");
+                console.log("Success sent email to " + Email);
+            }
+        });
+    }
+}
+
 //customer forgot password
 app.post('/customer-forgot-password-request',  async (req, res) => {
     var Email = req.query.Email;
     var ktp = req.query.ktp;
     var PrimaryContactNumber = req.query.PrimaryContactNumber;
     var requestedNewPassword = req.query.requestedNewPassword;
-    if(PrimaryContactNumber != undefined && Email != undefined && ktp != undefined){
-        var user_data_found = await check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email).then(async value => {
+    var otp = req.query.otp;
+    if(PrimaryContactNumber != undefined && Email != undefined && ktp != undefined && otp != undefined){
+        var user_data_found = await check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email, otp).then(async value => {
             return await value;
         });
         if(user_data_found.status == true && user_data_found.data.Email.toUpperCase() == Email.toUpperCase()){
@@ -349,16 +395,29 @@ async function update_user_password(Email, PrimaryContactNumber, encrypted_passw
     });
 }
 
-async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email){
+async function check_user_data_before_agreeing_to_reset_password(PrimaryContactNumber, ktp, Email, otp){
     var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(ktp) like '%${ktp.toUpperCase()}%' and upper(Contact_Number_1) like '%${PrimaryContactNumber.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
             if(result != undefined && result[0] != undefined){
-                resolve({
-                    data: result[0],
-                    status: true
-                });
+
+                var i = 0;
+                var counter = 0;
+                for(i; i < otps.length; i ++){
+                    if(otps[i] == otp){
+                        otps.splice(i, 1);
+                        resolve({
+                            data: result[0],
+                            status: true
+                        });
+                    }else{
+                        counter++;
+                    }
+                }
+                if(counter == otps.length){
+                    resolve(false);
+                }
             }else{
                 resolve(false);
             }
