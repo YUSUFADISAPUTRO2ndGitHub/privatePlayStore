@@ -90,7 +90,7 @@ app.post('/get-total-commission-of-all-months-gross',  async (req, res) => {
 
 async function get_total_commission_of_all_months(Customer_Code){
     var sql = `
-    select sum(Total_Price) from vtportal.sales_order_management som 
+    select sum(Total_Price) as Total_Price from vtportal.sales_order_management som 
     where 
     Customer_Code in (
         select Customer_Code from vtportal.customer_management 
