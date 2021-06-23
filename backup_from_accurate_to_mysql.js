@@ -61,8 +61,11 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "20f999ae-a73f-473b-b06c-d190a66bc83d";
+var refreshtoken = "342abc04-fe59-4304-8797-ab85701eaf69";
 var sessionid = "";
+var d = new Date();
+var recorded_seconds = d.getSeconds();
+var recorded_minutes = d.getMinutes();
 
 const get_latest_recorded_token = async() => {
     return new Promise(async resolve => {
@@ -80,11 +83,7 @@ const get_latest_recorded_token = async() => {
                 console.log("=================================================================");
                 console.log("Fail to get refresh token");
                 console.log(error);
-                // resolve(await get_latest_recorded_token());
-                resolve({
-                    access_token: accesstoken,
-                    session_id: sessionid
-                });
+                resolve(await get_latest_recorded_token());
             } else {
                 if (JSON.parse(response.body).access_token != undefined) {
                     if (await JSON.parse(response.body).access_token.length > 0) {
@@ -104,12 +103,7 @@ const get_latest_recorded_token = async() => {
                                 console.log("Fail to get session id");
                                 console.log(error);
                                 resolve(await get_latest_recorded_token());
-                                // resolve({
-                                //     access_token: accesstoken,
-                                //     session_id: sessionid
-                                // });
                             } else {
-                                // console.log(JSON.parse(response.body));
                                 try {
                                     if (JSON.parse(response.body).session != undefined) {
                                         if (JSON.parse(response.body).session.length > 0) {
@@ -155,7 +149,33 @@ const get_latest_recorded_token = async() => {
     });
 }
 
+const get_latest_recorded_token_locally = async() => {
+    return new Promise(async resolve => {
+        console.log("=================================================================");
+        console.log("getting locally saved token");
+        console.log(
+            {
+                access_token: accesstoken,
+                session_id: sessionid
+            }
+        );
+        console.log("=================================================================");
+        resolve({
+            access_token: accesstoken,
+            session_id: sessionid
+        });
+    });
+}
+
 app.get('/get-lastest-token-and-session', async(req, res) => {
+    res.send(
+        await get_latest_recorded_token_locally().then(async value => {
+            return await value;
+        })
+    );
+})
+
+app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
     res.send(
         await get_latest_recorded_token().then(async value => {
             return await value;
@@ -166,71 +186,12 @@ app.get('/get-lastest-token-and-session', async(req, res) => {
 /* 
     engine start
 */
-
 var options = {
     'method': 'GET',
-    'url': 'http://localhost:5002/get-all-sales-order-details',
+    'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
     'headers': {}
 };
 request(options, function(error, response) {
-    if (error) throw new Error(error);
-    console.log(response.body);
-    console.log("++=========================================================================++");
-    console.log("Started to get customer informations");
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-all-customer-details',
-        'headers': {}
-    };
-    request(options, function(error, response) {
-        if (error) throw new Error(error);
-        console.log(response.body);
-        console.log("++=========================================================================++");
-        console.log("Started to get product informations");
-        var options = {
-            'method': 'GET',
-            'url': 'http://localhost:5002/get-all-product-details',
-            'headers': {}
-        };
-        request(options, function(error, response) {
-            if (error) throw new Error(error);
-            console.log(response.body);
-            var options = {
-                'method': 'GET',
-                'url': 'http://localhost:5002/get-all-delivery-order-details',
-                'headers': {}
-            };
-            request(options, function(error, response) {
-                if (error) throw new Error(error);
-                console.log(response.body);
-                var options = {
-                    'method': 'GET',
-                    'url': 'http://localhost:5002/get-all-employee-details',
-                    'headers': {}
-                };
-                request(options, function(error, response) {
-                    if (error) throw new Error(error);
-                    console.log(response.body);
-                    var options = {
-                        'method': 'GET',
-                        'url': 'http://localhost:5002/get-all-purchase-order-details',
-                        'headers': {}
-                    };
-                    request(options, function(error, response) {
-                        if (error) throw new Error(error);
-                        console.log(response.body);
-                    });
-                });
-            });
-        });
-    });
-});
-
-/*
-    interval
-*/
-
-setInterval(() => {
     var options = {
         'method': 'GET',
         'url': 'http://localhost:5002/get-all-sales-order-details',
@@ -239,6 +200,8 @@ setInterval(() => {
     request(options, function(error, response) {
         if (error) throw new Error(error);
         console.log(response.body);
+        console.log("++=========================================================================++");
+        console.log("Started to get customer informations");
         var options = {
             'method': 'GET',
             'url': 'http://localhost:5002/get-all-customer-details',
@@ -247,9 +210,11 @@ setInterval(() => {
         request(options, function(error, response) {
             if (error) throw new Error(error);
             console.log(response.body);
+            console.log("++=========================================================================++");
+            console.log("Started to get product informations");
             var options = {
                 'method': 'GET',
-                'url': 'http://localhost:5002/get-all-purchase-order-details',
+                'url': 'http://localhost:5002/get-all-product-details',
                 'headers': {}
             };
             request(options, function(error, response) {
@@ -273,12 +238,80 @@ setInterval(() => {
                         console.log(response.body);
                         var options = {
                             'method': 'GET',
-                            'url': 'http://localhost:5002/get-all-product-details',
+                            'url': 'http://localhost:5002/get-all-purchase-order-details',
                             'headers': {}
                         };
                         request(options, function(error, response) {
                             if (error) throw new Error(error);
                             console.log(response.body);
+                        });
+                    });
+                });
+            });
+        });
+    });
+});
+
+/*
+    interval
+*/
+
+setInterval(() => {
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
+        'headers': {}
+    };
+    request(options, function(error, response) {
+        var options = {
+            'method': 'GET',
+            'url': 'http://localhost:5002/get-all-sales-order-details',
+            'headers': {}
+        };
+        request(options, function(error, response) {
+            if (error) throw new Error(error);
+            console.log(response.body);
+            var options = {
+                'method': 'GET',
+                'url': 'http://localhost:5002/get-all-customer-details',
+                'headers': {}
+            };
+            request(options, function(error, response) {
+                if (error) throw new Error(error);
+                console.log(response.body);
+                var options = {
+                    'method': 'GET',
+                    'url': 'http://localhost:5002/get-all-purchase-order-details',
+                    'headers': {}
+                };
+                request(options, function(error, response) {
+                    if (error) throw new Error(error);
+                    console.log(response.body);
+                    var options = {
+                        'method': 'GET',
+                        'url': 'http://localhost:5002/get-all-delivery-order-details',
+                        'headers': {}
+                    };
+                    request(options, function(error, response) {
+                        if (error) throw new Error(error);
+                        console.log(response.body);
+                        var options = {
+                            'method': 'GET',
+                            'url': 'http://localhost:5002/get-all-employee-details',
+                            'headers': {}
+                        };
+                        request(options, function(error, response) {
+                            if (error) throw new Error(error);
+                            console.log(response.body);
+                            var options = {
+                                'method': 'GET',
+                                'url': 'http://localhost:5002/get-all-product-details',
+                                'headers': {}
+                            };
+                            request(options, function(error, response) {
+                                if (error) throw new Error(error);
+                                console.log(response.body);
+                            });
                         });
                     });
                 });
@@ -623,6 +656,8 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id) {
                         if (response != undefined || response != null) {
                             try {
                                 result = JSON.parse(await response.body);
+                                console.log("=============================================");
+                                console.log("JSON PARSE SUCCESS IN Sales order details");
                                 var u = 0;
                                 var detailItem = [];
                                 var totalQuantities = 0;
@@ -677,6 +712,7 @@ async function requesting_sales_order_details_based_on_id_from_accurate(id) {
                                 console.log("=============================================");
                                 console.log("JSON PARSE FAILED IN Sales order details");
                                 console.log(e);
+                                console.log(response.body);
                                 resolve(await requesting_sales_order_details_based_on_id_from_accurate(id));
                             }
                         }
