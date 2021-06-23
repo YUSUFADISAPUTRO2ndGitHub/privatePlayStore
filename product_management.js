@@ -882,21 +882,52 @@ async function send_to_mysql(product_datas){
     var i = 0;
     return new Promise(async resolve => {
         for(i; i < product_datas.length; i ++){
-            if(await check_existing_product_code(product_datas[i].Product_Code).then(async value => {
+            if(await check_existing_product_code(product_datas[i].Product_Code).then(async value => { //product_datas[i].Creator
                 return await value;
             })){
-                console.log("update_existing_product_code");
-                console.log(await update_existing_product_code(product_datas[i]).then(async value => {
+                if(await check_existing_customer_code(product_datas[i].Creator).then(async value => { //product_datas[i].Creator
                     return await value;
-                }));
+                })){
+                    console.log("update_existing_product_code");
+                    console.log(await update_existing_product_code(product_datas[i]).then(async value => {
+                        return await value;
+                    }));
+                }
             }else{
-                console.log("insert_product_code");
-                console.log(await insert_existing_product_code(product_datas[i]).then(async value => {
+                if(await check_existing_customer_code(product_datas[i].Creator).then(async value => { //product_datas[i].Creator
                     return await value;
-                }));
+                })){
+                    console.log("insert_product_code");
+                    console.log(await insert_existing_product_code(product_datas[i]).then(async value => {
+                        return await value;
+                    }));
+                }
             }
         }
         resolve(true);
+    });
+}
+
+async function check_existing_customer_code(Creator){
+    console.log("check_existing_customer_code");
+    var sql = `select * from vtportal.customer_management where Customer_Code = '${product_code}' and Delete_Mark != '1' limit 1;`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) await console.log(err);
+            if(result != undefined && result[0] != undefined){
+                if(result[0].Customer_Code != undefined){
+                    if(result[0].Customer_Code == Creator){
+                        resolve(true);
+                    }else{
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
+            }else{
+                resolve(false);
+            }
+        });
     });
 }
 
