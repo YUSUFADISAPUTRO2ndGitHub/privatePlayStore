@@ -173,6 +173,8 @@ request(options, function(error, response) {
     request(options, function(error, response) {
         if (error) throw new Error(error);
         console.log(response.body);
+        console.log("++=========================================================================++");
+        console.log("Started to get sales order informations");
         var options = {
             'method': 'GET',
             'url': 'http://localhost:5002/get-all-sales-order-details',
