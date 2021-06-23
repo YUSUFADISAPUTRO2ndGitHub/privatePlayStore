@@ -80,6 +80,34 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+app.post('/update-product-name-price-quantity',  async (req, res) => {
+    res.send(
+        await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function update_product_name_price_quantity(Name, Sell_Price, Stock_Quantity, Product_Code){
+    var sql = `
+    UPDATE vtportal.product_management
+    SET Name = '${Name}' 
+    , Sell_Price = '${Sell_Price}'
+    , Stock_Quantity = '${Stock_Quantity}'
+    WHERE Product_Code = '${Product_Code}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
 app.post('/get-colors-option',  async (req, res) => {
     res.send(
         await get_the_same_product_with_different_colors(req.query.Name, req.query.Specification, req.query.Category, req.query.Subcategory, req.query.Brand).then(async value => {
