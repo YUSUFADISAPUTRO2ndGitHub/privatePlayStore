@@ -61,11 +61,13 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "a5600590-02ac-4180-bd8f-b1c72e079591";
+var refreshtoken = "6c08fe32-c0f4-46bc-b4b7-fe7d519e06a8";
 var sessionid = "";
 
 const get_latest_recorded_token = async() => {
     return new Promise(async resolve => {
+        console.log("=================================================================");
+        console.log("getting refresh token");
         var options = {
             'method': 'POST',
             'url': 'https://account.accurate.id/oauth/token?grant_type=refresh_token&refresh_token=' + refreshtoken,
@@ -133,12 +135,20 @@ const get_latest_recorded_token = async() => {
                             }
                         });
                     } else {
+                        console.log("access token may not exist =================================================================");
                         console.log(response.body);
-                        resolve(await get_latest_recorded_token());
+                        resolve({
+                            access_token: accesstoken,
+                            session_id: sessionid
+                        });
                     }
                 } else {
+                    console.log("access token does not exist =================================================================");
                     console.log(response.body);
-                    resolve(await get_latest_recorded_token());
+                    resolve({
+                        access_token: accesstoken,
+                        session_id: sessionid
+                    });
                 }
             }
         });
@@ -159,12 +169,14 @@ app.get('/get-lastest-token-and-session', async(req, res) => {
 
 var options = {
     'method': 'GET',
-    'url': 'http://localhost:5002/get-all-product-details',
+    'url': 'http://localhost:5002/get-all-sales-order-details',
     'headers': {}
 };
 request(options, function(error, response) {
     if (error) throw new Error(error);
     console.log(response.body);
+    console.log("++=========================================================================++");
+    console.log("Started to get customer informations");
     var options = {
         'method': 'GET',
         'url': 'http://localhost:5002/get-all-customer-details',
@@ -174,10 +186,10 @@ request(options, function(error, response) {
         if (error) throw new Error(error);
         console.log(response.body);
         console.log("++=========================================================================++");
-        console.log("Started to get sales order informations");
+        console.log("Started to get product informations");
         var options = {
             'method': 'GET',
-            'url': 'http://localhost:5002/get-all-sales-order-details',
+            'url': 'http://localhost:5002/get-all-product-details',
             'headers': {}
         };
         request(options, function(error, response) {
