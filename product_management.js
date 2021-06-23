@@ -82,49 +82,61 @@ const get_latest_recorded_token = async () => {
 
 app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => {
     res.send(
-        await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code).then(async value => {
+        await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(req.query.GroupBuy_Purchase, req.query.GroupBuy_SellPrice, req.query.GroupBuy_SellQuantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
             return await value;
         })
     );
 })
 
-async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code){
-    if(GroupBuy_Purchase == true){
-        var sql = `
-        UPDATE vtportal.product_management
-        SET GroupBuy_Purchase = '${true}' 
-        , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
-        , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
-        WHERE Product_Code = '${Product_Code}';
-        `;
-        return new Promise(async resolve => {
-            await con.query(sql, async function (err, result) {
-                if (err) {
-                    await console.log(err);
+async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code, Customer_Code){
+    if(await check_existing_customer_code(Customer_Code)){
+        if((GroupBuy_SellPrice*1) >= 500 && (GroupBuy_SellQuantity*1) >= 5){
+            if(GroupBuy_Purchase == true){
+                var sql = `
+                UPDATE vtportal.product_management
+                SET GroupBuy_Purchase = '${true}' 
+                , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
+                , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
+                WHERE Product_Code = '${Product_Code}';
+                `;
+                return new Promise(async resolve => {
+                    await con.query(sql, async function (err, result) {
+                        if (err) {
+                            await console.log(err);
+                            resolve(false);
+                        }else{
+                            resolve(true);
+                        }
+                    });
+                });
+            }else if(GroupBuy_Purchase ==  false){
+                var sql = `
+                UPDATE vtportal.product_management
+                SET GroupBuy_Purchase = '${false}' 
+                , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
+                , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
+                WHERE Product_Code = '${Product_Code}';
+                `;
+                return new Promise(async resolve => {
+                    await con.query(sql, async function (err, result) {
+                        if (err) {
+                            await console.log(err);
+                            resolve(false);
+                        }else{
+                            resolve(true);
+                        }
+                    });
+                });
+            }else{
+                return new Promise(async resolve => {
                     resolve(false);
-                }else{
-                    resolve(true);
-                }
+                });
+            }
+        }else{
+            return new Promise(async resolve => {
+                resolve(false);
             });
-        });
-    }else if(GroupBuy_Purchase ==  false){
-        var sql = `
-        UPDATE vtportal.product_management
-        SET GroupBuy_Purchase = '${false}' 
-        , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
-        , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
-        WHERE Product_Code = '${Product_Code}';
-        `;
-        return new Promise(async resolve => {
-            await con.query(sql, async function (err, result) {
-                if (err) {
-                    await console.log(err);
-                    resolve(false);
-                }else{
-                    resolve(true);
-                }
-            });
-        });
+        }
     }else{
         return new Promise(async resolve => {
             resolve(false);
@@ -134,30 +146,38 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
 
 app.post('/update-product-name-price-quantity',  async (req, res) => {
     res.send(
-        await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code).then(async value => {
+        await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
             return await value;
         })
     );
 })
 
-async function update_product_name_price_quantity(Name, Sell_Price, Stock_Quantity, Product_Code){
-    var sql = `
-    UPDATE vtportal.product_management
-    SET Name = '${Name}' 
-    , Sell_Price = '${Sell_Price}'
-    , Stock_Quantity = '${Stock_Quantity}'
-    WHERE Product_Code = '${Product_Code}';
-    `;
-    return new Promise(async resolve => {
-        await con.query(sql, async function (err, result) {
-            if (err) {
-                await console.log(err);
-                resolve(false);
-            }else{
-                resolve(true);
-            }
-        });
-    });
+async function update_product_name_price_quantity(Name, Sell_Price, Stock_Quantity, Product_Code, Customer_Code){
+    if(await check_existing_customer_code(Customer_Code)){
+        if((Sell_Price*1) >= 1000 && (Stock_Quantity*1) >= 10){
+            var sql = `
+            UPDATE vtportal.product_management
+            SET Name = '${Name}' 
+            , Sell_Price = '${Sell_Price}'
+            , Stock_Quantity = '${Stock_Quantity}'
+            WHERE Product_Code = '${Product_Code}';
+            `;
+            return new Promise(async resolve => {
+                await con.query(sql, async function (err, result) {
+                    if (err) {
+                        await console.log(err);
+                        resolve(false);
+                    }else{
+                        resolve(true);
+                    }
+                });
+            });
+        }else{
+            resolve(false);
+        }
+    }else{
+        resolve(false);
+    }
 }
 
 app.post('/get-colors-option',  async (req, res) => {
@@ -882,7 +902,7 @@ async function send_to_mysql(product_datas){
     var i = 0;
     return new Promise(async resolve => {
         for(i; i < product_datas.length; i ++){
-            if(await check_existing_product_code(product_datas[i].Product_Code).then(async value => { //product_datas[i].Creator
+            if(await check_existing_product_code(product_datas[i].Product_Code, product_datas[i]).then(async value => { //product_datas[i].Creator
                 return await value;
             })){
                 if(await check_existing_customer_code(product_datas[i].Creator).then(async value => { //product_datas[i].Creator
@@ -892,6 +912,8 @@ async function send_to_mysql(product_datas){
                     console.log(await update_existing_product_code(product_datas[i]).then(async value => {
                         return await value;
                     }));
+                }else{
+                    resolve(false);
                 }
             }else{
                 if(await check_existing_customer_code(product_datas[i].Creator).then(async value => { //product_datas[i].Creator
@@ -901,6 +923,8 @@ async function send_to_mysql(product_datas){
                     console.log(await insert_existing_product_code(product_datas[i]).then(async value => {
                         return await value;
                     }));
+                }else{
+                    resolve(false);
                 }
             }
         }
@@ -910,7 +934,7 @@ async function send_to_mysql(product_datas){
 
 async function check_existing_customer_code(Creator){
     console.log("check_existing_customer_code");
-    var sql = `select * from vtportal.customer_management where Customer_Code = '${product_code}' and Delete_Mark != '1' limit 1;`;
+    var sql = `select * from vtportal.customer_management where Customer_Code = '${Creator}' and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -931,27 +955,31 @@ async function check_existing_customer_code(Creator){
     });
 }
 
-async function check_existing_product_code(product_code){
+async function check_existing_product_code(product_code, product_datas){
     console.log("check_existing_product_code");
-    var sql = `select * from vtportal.product_management where Product_Code = '${product_code}' limit 1;`;
-    return new Promise(async resolve => {
-        await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            if(result != undefined && result[0] != undefined){
-                if(result[0].Product_Code != undefined){
-                    if(result[0].Product_Code == product_code){
-                        resolve(true);
+    if((product_datas.Sell_Price*1) >= 1000 && (product_datas.Stock_Quantity*1) >= 10){
+        var sql = `select * from vtportal.product_management where Product_Code = '${product_code}' limit 1;`;
+        return new Promise(async resolve => {
+            await con.query(sql, async function (err, result) {
+                if (err) await console.log(err);
+                if(result != undefined && result[0] != undefined){
+                    if(result[0].Product_Code != undefined){
+                        if(result[0].Product_Code == product_code){
+                            resolve(true);
+                        }else{
+                            resolve(false);
+                        }
                     }else{
                         resolve(false);
                     }
                 }else{
                     resolve(false);
                 }
-            }else{
-                resolve(false);
-            }
+            });
         });
-    });
+    }else{
+        return false;
+    }
 }
 
 async function update_existing_product_code(product_details){
