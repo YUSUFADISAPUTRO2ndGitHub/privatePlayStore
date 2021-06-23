@@ -80,6 +80,58 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => {
+    res.send(
+        await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code){
+    if(GroupBuy_Purchase == true){
+        var sql = `
+        UPDATE vtportal.product_management
+        SET GroupBuy_Purchase = '${true}' 
+        , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
+        , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
+        WHERE Product_Code = '${Product_Code}';
+        `;
+        return new Promise(async resolve => {
+            await con.query(sql, async function (err, result) {
+                if (err) {
+                    await console.log(err);
+                    resolve(false);
+                }else{
+                    resolve(true);
+                }
+            });
+        });
+    }else if(GroupBuy_Purchase ==  false){
+        var sql = `
+        UPDATE vtportal.product_management
+        SET GroupBuy_Purchase = '${false}' 
+        , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
+        , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
+        WHERE Product_Code = '${Product_Code}';
+        `;
+        return new Promise(async resolve => {
+            await con.query(sql, async function (err, result) {
+                if (err) {
+                    await console.log(err);
+                    resolve(false);
+                }else{
+                    resolve(true);
+                }
+            });
+        });
+    }else{
+        return new Promise(async resolve => {
+            resolve(false);
+        });
+    }
+}
+
 app.post('/update-product-name-price-quantity',  async (req, res) => {
     res.send(
         await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code).then(async value => {
