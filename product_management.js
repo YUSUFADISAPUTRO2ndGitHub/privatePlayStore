@@ -988,9 +988,11 @@ async function check_existing_product_code(product_code, product_datas){
 
 async function update_existing_product_code(product_details){
     console.log("update_existing_product_code");
-    if(product_details.Product_Code != undefined){
+    if(product_details.Product_Code != undefined && product_details.Creator != undefined && product_details.Creator != 'NULL'){
         if(product_details.Product_Code != 'NULL'){
-            var sql = `update vtportal.product_management 
+            var sql
+            if(product_details.Picture_1 != 'NULL' && product_details.Picture_1 != undefined){
+                sql = `update vtportal.product_management 
                 set Name = '${product_details.Name}',
                 Specification = '${product_details.Specification}',
                 Description = '${product_details.Description}',
@@ -1022,13 +1024,54 @@ async function update_existing_product_code(product_details){
                 Stock_Quantity = '${product_details.Stock_Quantity}'
                 where Product_Code = '${product_details.Product_Code}'
                 ;`;
+            }else{
+                sql = `update vtportal.product_management 
+                set Name = '${product_details.Name}',
+                Specification = '${product_details.Specification}',
+                Description = '${product_details.Description}',
+                Sell_Price = '${product_details.Sell_Price}',
+                Unit = '${product_details.Unit}',
+                Category = '${product_details.Category}',
+                Subcategory = '${product_details.Subcategory}',
+                Color = '${product_details.Color}',
+                Brand = '${product_details.Brand}',
+                GroupBuy_Purchase = '${product_details.GroupBuy_Purchase}',
+                GroupBuy_SellPrice = '${product_details.GroupBuy_SellPrice}',
+                GroupBuy_SellQuantity = '${product_details.GroupBuy_SellQuantity}',
+                In_Store_Price = '${product_details.In_Store_Price}',
+                Last_Updated = CURRENT_TIMESTAMP(),
+                Start_Date = CURRENT_TIMESTAMP(),
+                Remark = 'newly updated',
+                Status = 'pending',
+                Creator = '${product_details.Creator}',
+                Create_Date = CURRENT_TIMESTAMP(),
+                Modifier = '${product_details.Modifier}',
+                Update_date = CURRENT_TIMESTAMP(),
+                Delete_Mark = '0',
+                Weight_KG = '${product_details.Weight_KG}',
+                Dimension_CM_CUBIC = '${product_details.Dimension_CM_CUBIC}',
+                Tax = '${product_details.Tax}',
+                Stock_Quantity = '${product_details.Stock_Quantity}'
+                where Product_Code = '${product_details.Product_Code}'
+                ;`;
+            }
             return new Promise(async resolve => {
                 await con.query(sql, async function (err, result) {
-                    if (err) await console.log(err);
-                    resolve(true);
+                    if (err) {
+                        await console.log(err);
+                        resolve(false);
+                    }else{
+                        resolve(true);
+                    }
                 });
             });
+        }else{
+            console.log("product_details.Product_Code != 'NULL'");
+            resolve(false);
         }
+    }else{
+        console.log("product_details.Product_Code != undefined && product_details.Creator != undefined && product_details.Creator != 'NULL'");
+        resolve(false);
     }
 }
 
