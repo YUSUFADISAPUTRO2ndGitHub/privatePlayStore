@@ -1174,7 +1174,6 @@ async function update_customer_direct_from_customer(customer_data){
     SET Customer_Code = '${customer_data.Customer_Code}',
         First_Name = '${customer_data.First_Name}',
         Last_Name = '${customer_data.Last_Name}',
-        User_Password = '${customer_data.User_Password}',
         Birthday = '${customer_data.Birthday}',
         Last_Login = CURRENT_TIMESTAMP(),
         Email = '${customer_data.Email}',
