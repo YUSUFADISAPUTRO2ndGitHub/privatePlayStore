@@ -97,6 +97,8 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
                 SET GroupBuy_Purchase = '${true}' 
                 , GroupBuy_SellPrice = '${GroupBuy_SellPrice}'
                 , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
+                , Last_Updated = CURRENT_TIMESTAMP()
+                , Update_date = CURRENT_TIMESTAMP()
                 WHERE Product_Code = '${Product_Code}';
                 `;
                 return new Promise(async resolve => {
@@ -160,6 +162,8 @@ async function update_product_name_price_quantity(Name, Sell_Price, Stock_Quanti
             SET Name = '${Name}' 
             , Sell_Price = '${Sell_Price}'
             , Stock_Quantity = '${Stock_Quantity}'
+            , Last_Updated = CURRENT_TIMESTAMP()
+            , Update_date = CURRENT_TIMESTAMP()
             WHERE Product_Code = '${Product_Code}';
             `;
             return new Promise(async resolve => {
