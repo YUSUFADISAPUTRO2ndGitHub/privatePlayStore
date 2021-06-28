@@ -91,7 +91,7 @@ app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => 
 async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code, Customer_Code){
     if(await check_existing_customer_code(Customer_Code)){
         if((GroupBuy_SellPrice*1) >= 500 && (GroupBuy_SellQuantity*1) >= 5){
-            if(GroupBuy_Purchase == true){
+            if(GroupBuy_Purchase == "true"){
                 var sql = `
                 UPDATE vtportal.product_management
                 SET GroupBuy_Purchase = '${true}' 
@@ -101,6 +101,7 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
                 , Update_date = CURRENT_TIMESTAMP()
                 WHERE Product_Code = '${Product_Code}';
                 `;
+                console.log(sql);
                 return new Promise(async resolve => {
                     await con.query(sql, async function (err, result) {
                         if (err) {
@@ -111,7 +112,7 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
                         }
                     });
                 });
-            }else if(GroupBuy_Purchase ==  false){
+            }else if(GroupBuy_Purchase ==  "false"){
                 var sql = `
                 UPDATE vtportal.product_management
                 SET GroupBuy_Purchase = '${false}' 
@@ -119,6 +120,7 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
                 , GroupBuy_SellQuantity = '${GroupBuy_SellQuantity}'
                 WHERE Product_Code = '${Product_Code}';
                 `;
+                console.log(sql);
                 return new Promise(async resolve => {
                     await con.query(sql, async function (err, result) {
                         if (err) {
@@ -131,16 +133,19 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
                 });
             }else{
                 return new Promise(async resolve => {
+                    console.log("GroupBuy_Purchase " + GroupBuy_Purchase);
                     resolve(false);
                 });
             }
         }else{
             return new Promise(async resolve => {
+                console.log("(GroupBuy_SellPrice*1) >= 500 && (GroupBuy_SellQuantity*1) >= 5");
                 resolve(false);
             });
         }
     }else{
         return new Promise(async resolve => {
+            console.log("check_existing_customer_code(Customer_Code) " + await check_existing_customer_code(Customer_Code));
             resolve(false);
         });
     }
@@ -1196,6 +1201,11 @@ async function read_excel(){
         resolve(product_datas);
     });
 }
+
+app.get('/download-sample-product-management-excel', (req, res) => {
+    const file = `./Product Details Sample.xlsx`;
+    res.download(file); // Set disposition and send it.
+})
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
