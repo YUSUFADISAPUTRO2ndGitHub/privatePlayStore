@@ -532,11 +532,19 @@ function update_last_login(email, encrypted_password){
 app.post('/password-generator',  async (req, res) => {
     var password = req.query.Password;
     if(password != undefined){
-        res.send(
-            await encrypt_password(password).then(async value => {
-                return await value;
-            })
-        );
+        if(password.length > 5 && (password.includes("+") 
+        || password.includes("%")
+        || password.includes("#")
+        || password.includes("@")
+        || password.includes("-"))){
+            res.send(
+                await encrypt_password(password).then(async value => {
+                    return await value;
+                })
+            );
+        }else{
+            res.send(false);
+        }
     }else{
         res.send(false);
     }
@@ -1298,7 +1306,7 @@ async function customer_code_generator(){
     var h = today.getHours();
     var m = today.getMinutes();
     var s = today.getSeconds();
-    var customer_code = Date.now() + "SU" + h + "YU" + m + "YU" + s + "AD" + Math.floor((Math.random() * 999) + 9999);;
+    var customer_code = Date.now() + "YU" + h + "SU" + m + "FA" + s + "DI" + Math.floor((Math.random() * 999) + 9999);
     return new Promise(async resolve => {
         resolve(customer_code);
     });
