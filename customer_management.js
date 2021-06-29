@@ -382,6 +382,67 @@ From SOLD.CO.ID
     }
 }
 
+//verify-OTP
+app.post('/verify-otp',  async (req, res) => {
+    var Email = req.query.Email;
+    var User_Password = req.query.User_Password;
+    var otp = req.query.otp;
+    if(User_Password != undefined && Email != undefined && otp != undefined){
+        var user_data_found = await check_user_data_email_and_password(Email, User_Password, otp).then(async value => {
+            return await value;
+        });
+        if(user_data_found.status == true && user_data_found.data.Email.toUpperCase() == Email.toUpperCase()){
+            res.send(true);
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+async function check_user_data_email_and_password(Email, User_Password, otp){
+    var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(User_Password) like '%${User_Password.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+            }else{
+                if(result != undefined && result[0] != undefined){
+                    console.log("==========================================");
+                    console.log("otp from user " + otp);
+                    console.log("otps recorded " + otps);
+                    var i = 0;
+                    var counter = 0;
+                    for(i; i < otps.length; i ++){
+                        if(otps[i] == otp){
+                            otps.splice(i, 1);
+                            console.log("==========================================");
+                            console.log("otp found");
+                            console.log("otps recorded " + otps);
+                            resolve({
+                                data: result[0],
+                                status: true
+                            });
+                        }else{
+                            counter++;
+                        }
+                    }
+                    if(counter == otps.length){
+                        console.log("==========================================");
+                        console.log("otp not found");
+                        console.log("otps recorded " + otps);
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
+
 //customer forgot password
 app.post('/customer-forgot-password-request',  async (req, res) => {
     var Email = req.query.Email;

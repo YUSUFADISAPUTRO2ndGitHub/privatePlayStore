@@ -593,6 +593,13 @@ app.post('/get-product-details',  async (req, res) => {
             collected_results = collected_results.concat(await get_product_details_based_on_product_name(product_names[i]).then(async value => {
                 return await value;
             }));
+        }//get_product_details_based_on_product_brand(product_name)
+        var i = 0;
+        for(i; i < product_names.length; i ++){
+            console.log("Brand " + product_names[i])
+            collected_results = collected_results.concat(await get_product_details_based_on_product_brand(product_names[i]).then(async value => {
+                return await value;
+            }));
         }
         res.send(collected_results);
     }else if(category != undefined || category != null){
@@ -795,6 +802,26 @@ async function get_product_details_based_on_product_name(product_name){
             if (err) {
                 await console.log(err);
                 await get_product_details_based_on_product_name(product_name).then(async value => {
+                    resolve(value);
+                });
+            }else{
+                if(result != undefined && result[0] != undefined){
+                    resolve(result);
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
+
+async function get_product_details_based_on_product_brand(product_name){
+    var sql = `select * from vtportal.product_management where upper(Brand) like '%${product_name.toUpperCase()}%';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                await get_product_details_based_on_product_brand(product_name).then(async value => {
                     resolve(value);
                 });
             }else{
