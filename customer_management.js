@@ -593,11 +593,7 @@ function update_last_login(email, encrypted_password){
 app.post('/password-generator',  async (req, res) => {
     var password = req.query.Password;
     if(password != undefined){
-        if(password.length > 5 && (password.includes("+") 
-        || password.includes("%")
-        || password.includes("#")
-        || password.includes("@")
-        || password.includes("-"))){
+        if(password.length > 5){
             res.send(
                 await encrypt_password(password).then(async value => {
                     return await value;
