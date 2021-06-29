@@ -354,7 +354,7 @@ var otps= [];
 async function send_OTP(Email){
     var automated_email = 'automated.email.sold.co.id@gmail.com';
     if(Email.length > 0){
-        var OTP = Math.floor((Math.random() * 999999) + 99999);
+        var OTP = Math.floor((Math.random() * 999999) + 99999) + "YA";
         await otps.push(OTP);
         console.log("===========================");
         console.log(otps);
