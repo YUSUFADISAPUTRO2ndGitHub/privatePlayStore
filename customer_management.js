@@ -991,7 +991,8 @@ async function create_new_customer_direct_from_customer(customer_data){
         extra_column_1,
         extra_column_2,
         extra_column_3,
-        ktp
+        ktp,
+        user_license_agreement_status
         )
         values
         ('${customer_data.Customer_Code}',
@@ -1020,7 +1021,8 @@ async function create_new_customer_direct_from_customer(customer_data){
         '${customer_data.account_number}',
         '${customer_data.referral_customer_code}',
         '3%',
-        '${customer_data.ktp}'
+        '${customer_data.ktp}',
+        'true'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1062,7 +1064,8 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         extra_column_3,
         ktp,
         Nama_Perusahaan,
-        customer_type_status
+        customer_type_status,
+        user_license_agreement_status
         )
         values
         ('${customer_data.Customer_Code}',
@@ -1094,7 +1097,8 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         '7.5%',
         '${customer_data.ktp}',
         '${customer_data.Nama_Perusahaan}',
-        '${customer_data.User_Type}'
+        '${customer_data.User_Type}',
+        'true'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
