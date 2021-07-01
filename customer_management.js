@@ -538,25 +538,61 @@ async function check_user_data_before_agreeing_to_reset_password(PrimaryContactN
 app.post('/customer-login-request',  async (req, res) => {
     var email = req.query.Email;
     var password = req.query.Password;
+    var otp = req.query.otp;
     if(password != undefined && email != undefined){
-        var encrypted_password = await encrypt_password(password).then(async value => {
-            return await value;
-        });
-        var login_data = await get_user_credentials(email, encrypted_password).then(async value => {
-            return await value;
-        });
-        if(login_data.status == true){
-            await update_last_login(email, encrypted_password).then(async value => {
+        if(otp != undefined){
+            if(verify_OTP_function(Password, Email, otp).then(async value => {
                 return await value;
-            });
-            res.send(login_data.data.Customer_Code);
+            })){
+                var encrypted_password = await encrypt_password(password).then(async value => {
+                    return await value;
+                });
+                var login_data = await get_user_credentials(email, encrypted_password).then(async value => {
+                    return await value;
+                });
+                if(login_data.status == true){
+                    await update_last_login(email, encrypted_password).then(async value => {
+                        return await value;
+                    });
+                    res.send(login_data.data.Customer_Code);
+                }else{
+                    res.send(false);
+                }
+            }else{
+                console.log("otp is not verified " + otp);
+                res.send(false);
+            }
         }else{
+            console.log("no OTP is given " + otp);
             res.send(false);
         }
     }else{
+        console.log("email and password not provided");
         res.send(false);
     }
 })
+
+async function verify_OTP_function(User_Password, Email, otp){
+    var encrypted_password = await encrypt_password(User_Password).then(async value => {
+        return await value;
+    });
+    var options = {
+        'method': 'POST',
+        'url': `http://localhost:3002/verify-otp?User_Password=${encrypted_password}&Email=${Email}&otp=${otp}`,
+        'headers': {
+        }
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
 
 function get_user_credentials(email, encrypted_password){
     var sql = `select * from vtportal.customer_management where Email = '${email}' and User_Password = '${encrypted_password}' and Delete_Mark != '1' limit 1;`;

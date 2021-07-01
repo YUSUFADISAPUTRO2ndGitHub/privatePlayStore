@@ -7,6 +7,7 @@ const xlsx = require('node-xlsx');
 var request = require('request');
 var mysql = require('mysql');
 const e = require('express');
+const { CONNREFUSED } = require('dns');
 const app = express();
 const port = 3001;
 app.use(cors(), express.json(), busboy())
@@ -81,12 +82,41 @@ const get_latest_recorded_token = async () => {
 }
 
 app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => {
-    res.send(
-        await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(req.query.GroupBuy_Purchase, req.query.GroupBuy_SellPrice, req.query.GroupBuy_SellQuantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
+    if(req.query.Password != undefined && req.query.Email != undefined){
+        if(await customer_login_request(req.query.Password, req.query.Email).then(async value => {
             return await value;
-        })
-    );
+        }) != false){
+            res.send(
+                await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(req.query.GroupBuy_Purchase, req.query.GroupBuy_SellPrice, req.query.GroupBuy_SellQuantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
+                    return await value;
+                })
+            );
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
 })
+
+function customer_login_request(Password, Email){
+    var options = {
+        'method': 'POST',
+        'url': 'http://147.139.168.202:3002/customer-login-request?Password=' + Password + '&Email=' + Email,
+        'headers': {
+        }
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(false);
+            }else{
+                resolve((response.body));
+            }
+        });
+    });
+}
 
 async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code, Customer_Code){
     if(await check_existing_customer_code(Customer_Code)){
@@ -152,11 +182,21 @@ async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(Grou
 }
 
 app.post('/update-product-name-price-quantity',  async (req, res) => {
-    res.send(
-        await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
+    if(req.query.Password != undefined && req.query.Email != undefined){
+        if(await customer_login_request(req.query.Password, req.query.Email).then(async value => {
             return await value;
-        })
-    );
+        }) != false){
+            res.send(
+                await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
+                    return await value;
+                })
+            );
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
 })
 
 async function update_product_name_price_quantity(Name, Sell_Price, Stock_Quantity, Product_Code, Customer_Code){

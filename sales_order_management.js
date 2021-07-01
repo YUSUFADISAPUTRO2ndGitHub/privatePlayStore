@@ -892,6 +892,12 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
                         status: true,
                         order_number: Order_Number
                     });
+                }else{
+                    res.send({
+                        status: false,
+                        reason: "this order is invalid",
+                        subreason: "fail to access mysql"
+                    });
                 }
             }else{
                 res.send({
@@ -906,9 +912,33 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
                 reason: "Customer Validation or product Validation fail"
             });
         }
+    }else{
+        res.send({
+            status: false,
+            reason: "param undefined"
+        });
     }
     
 })
+
+function customer_login_request(Password, Email){
+    var options = {
+        'method': 'POST',
+        'url': 'http://147.139.168.202:3002/customer-login-request?Password=' + Password + '&Email=' + Email,
+        'headers': {
+        }
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(false);
+            }else{
+                resolve(JSON.parse(response.body));
+            }
+        });
+    });
+}
 
 async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number){
     return new Promise(async resolve => {
