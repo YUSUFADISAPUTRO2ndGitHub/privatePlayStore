@@ -387,7 +387,9 @@ app.post('/verify-otp',  async (req, res) => {
     var Email = req.query.Email;
     var User_Password = req.query.User_Password;
     var otp = req.query.otp;
-    if(User_Password != undefined && Email != undefined && otp != undefined){
+    if(User_Password != undefined && Email != undefined && otp != undefined
+        && User_Password.length > 0 && Email.length > 0 && otp.length > 0
+        ){
         var user_data_found = await check_user_data_email_and_password(Email, User_Password, otp).then(async value => {
             return await value;
         });
@@ -539,9 +541,9 @@ app.post('/customer-login-request',  async (req, res) => {
     var email = req.query.Email;
     var password = req.query.Password;
     var otp = req.query.otp;
-    if(password != undefined && email != undefined){
-        if(otp != undefined){
-            if(verify_OTP_function(password, email, otp).then(async value => {
+    if(password != undefined && email != undefined && password.length > 0 && email.length > 0){
+        if(otp != undefined && otp.length > 0){
+            if(await verify_OTP_function(password, email, otp).then(async value => {
                 return await value;
             })){
                 var encrypted_password = await encrypt_password(password).then(async value => {
@@ -559,6 +561,7 @@ app.post('/customer-login-request',  async (req, res) => {
                     res.send(false);
                 }
             }else{
+                console.log("list OTP NOw: " + otps);
                 console.log("otp is not verified " + otp);
                 res.send(false);
             }
@@ -588,7 +591,9 @@ async function verify_OTP_function(User_Password, Email, otp){
                 console.log(error);
                 resolve(false);
             }else{
-                resolve(true);
+                console.log("======================================== Verify OTP");
+                console.log(JSON.parse(response.body));
+                resolve(JSON.parse(response.body));
             }
         });
     });
@@ -619,8 +624,12 @@ function update_last_login(email, encrypted_password){
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
         });
     });
 }

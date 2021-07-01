@@ -120,6 +120,9 @@ function customer_login_request(Password, Email){
 
 async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code, Customer_Code){
     if(await check_existing_customer_code(Customer_Code)){
+        console.log("================================================= edit group buy from user");
+        console.log((GroupBuy_SellPrice*1));
+        console.log((GroupBuy_SellQuantity*1));
         if((GroupBuy_SellPrice*1) >= 500 && (GroupBuy_SellQuantity*1) >= 5){
             if(GroupBuy_Purchase == "true"){
                 var sql = `
@@ -200,33 +203,35 @@ app.post('/update-product-name-price-quantity',  async (req, res) => {
 })
 
 async function update_product_name_price_quantity(Name, Sell_Price, Stock_Quantity, Product_Code, Customer_Code){
-    if(await check_existing_customer_code(Customer_Code)){
-        if((Sell_Price*1) >= 1000 && (Stock_Quantity*1) >= 10){
-            var sql = `
-            UPDATE vtportal.product_management
-            SET Name = '${Name}' 
-            , Sell_Price = '${Sell_Price}'
-            , Stock_Quantity = '${Stock_Quantity}'
-            , Last_Updated = CURRENT_TIMESTAMP()
-            , Update_date = CURRENT_TIMESTAMP()
-            WHERE Product_Code = '${Product_Code}';
-            `;
-            return new Promise(async resolve => {
-                await con.query(sql, async function (err, result) {
-                    if (err) {
-                        await console.log(err);
-                        resolve(false);
-                    }else{
-                        resolve(true);
-                    }
-                });
-            });
+    return new Promise(async resolve => {
+        if(await check_existing_customer_code(Customer_Code)){
+            if((Sell_Price*1) >= 1000 && (Stock_Quantity*1) >= 10){
+                var sql = `
+                UPDATE vtportal.product_management
+                SET Name = '${Name}' 
+                , Sell_Price = '${Sell_Price}'
+                , Stock_Quantity = '${Stock_Quantity}'
+                , Last_Updated = CURRENT_TIMESTAMP()
+                , Update_date = CURRENT_TIMESTAMP()
+                WHERE Product_Code = '${Product_Code}';
+                `;
+                // return new Promise(async resolve => {
+                    await con.query(sql, async function (err, result) {
+                        if (err) {
+                            await console.log(err);
+                            resolve(false);
+                        }else{
+                            resolve(true);
+                        }
+                    });
+                // });
+            }else{
+                resolve(false);
+            }
         }else{
             resolve(false);
         }
-    }else{
-        resolve(false);
-    }
+    });
 }
 
 app.post('/get-colors-option',  async (req, res) => {
