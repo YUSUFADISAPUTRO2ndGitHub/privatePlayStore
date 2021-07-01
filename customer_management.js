@@ -541,7 +541,7 @@ app.post('/customer-login-request',  async (req, res) => {
     var otp = req.query.otp;
     if(password != undefined && email != undefined){
         if(otp != undefined){
-            if(verify_OTP_function(Password, Email, otp).then(async value => {
+            if(verify_OTP_function(password, email, otp).then(async value => {
                 return await value;
             })){
                 var encrypted_password = await encrypt_password(password).then(async value => {
