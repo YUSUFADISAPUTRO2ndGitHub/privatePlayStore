@@ -121,6 +121,7 @@ function customer_login_request(Password, Email){
 async function update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(GroupBuy_Purchase, GroupBuy_SellPrice, GroupBuy_SellQuantity, Product_Code, Customer_Code){
     if(await check_existing_customer_code(Customer_Code)){
         console.log("================================================= edit group buy from user");
+        console.log((GroupBuy_Purchase));
         console.log((GroupBuy_SellPrice*1));
         console.log((GroupBuy_SellQuantity*1));
         if((GroupBuy_SellPrice*1) >= 500 && (GroupBuy_SellQuantity*1) >= 5){
@@ -395,7 +396,7 @@ app.post('/get-unpaid-sales-order-specific-for-a-product',  async (req, res) => 
 
 async function check_upaid_order_in_regards_to_product_code(Product_Code, Customer_Code){
     var sql = `
-    select count(*) as found from vtportal.sales_order_management so where Customer_Code = '${Customer_Code}' and Group_Buy_Purchase_PC = '${Product_Code}' and Payment_Status = 'waitpay';
+    select count(*) as found from vtportal.sales_order_management so where Customer_Code = '${Customer_Code}' and Group_Buy_Purchase_PC = '${Product_Code}' and Delete_Mark = '0';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {

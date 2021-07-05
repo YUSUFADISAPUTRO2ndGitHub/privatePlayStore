@@ -921,25 +921,6 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
     
 })
 
-function customer_login_request(Password, Email){
-    var options = {
-        'method': 'POST',
-        'url': 'http://147.139.168.202:3002/customer-login-request?Password=' + Password + '&Email=' + Email,
-        'headers': {
-        }
-    };
-    return new Promise(async resolve => {
-        await request(options, async function (error, response) {
-            if (error) {
-                console.log(error);
-                resolve(false);
-            }else{
-                resolve(JSON.parse(response.body));
-            }
-        });
-    });
-}
-
 async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number){
     return new Promise(async resolve => {
         if(
@@ -1082,6 +1063,28 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
     console.log(Product_Code);
+    if(Sales_Order_Data.Shipping_Address != undefined){
+        if(Sales_Order_Data.Shipping_Address.length > 0){
+            if(Sales_Order_Data.Shipping_Address.toUpperCase().includes("JAKARTA".toUpperCase())){
+                Sales_Order_Data.Shipping_Fee = 0;
+            }else if(
+                Sales_Order_Data.Shipping_Address.toUpperCase().includes("TANGERANG".toUpperCase())
+                || Sales_Order_Data.Shipping_Address.toUpperCase().includes("BANTEN".toUpperCase())
+            ){
+                Sales_Order_Data.Shipping_Fee = 15000;
+            }else if(
+                Sales_Order_Data.Shipping_Address.toUpperCase().includes("DEPOK".toUpperCase())
+            ){
+                Sales_Order_Data.Shipping_Fee = 20000;
+            }else if(
+                Sales_Order_Data.Shipping_Address.toUpperCase().includes("BOGOR".toUpperCase())
+            ){
+                Sales_Order_Data.Shipping_Fee = 25000;
+            }else{
+                Sales_Order_Data.Shipping_Fee = 50000;
+            }
+        }
+    }
     var sql = `
         INSERT INTO vtportal.sales_order_management 
         (
