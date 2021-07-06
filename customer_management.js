@@ -403,6 +403,30 @@ app.post('/verify-otp',  async (req, res) => {
     }
 })
 
+//verify-otp-with-unencrypted-password'
+app.post('/verify-otp-with-unencrypted-password',  async (req, res) => {
+    var Email = req.query.Email;
+    var User_Password = req.query.User_Password;
+    var otp = req.query.otp;
+    if(User_Password != undefined && Email != undefined && otp != undefined
+        && User_Password.length > 0 && Email.length > 0 && otp.length > 0
+        ){
+            var encrypted_password = await encrypt_password(User_Password).then(async value => {
+                return await value;
+            });
+            var user_data_found = await check_user_data_email_and_password(Email, encrypted_password, otp).then(async value => {
+                return await value;
+            });
+            if(user_data_found.status == true && user_data_found.data.Email.toUpperCase() == Email.toUpperCase()){
+                res.send(true);
+            }else{
+                res.send(false);
+            }
+    }else{
+        res.send(false);
+    }
+})
+
 async function check_user_data_email_and_password(Email, User_Password, otp){
     var sql = `select * from vtportal.customer_management where upper(Email) like '%${Email.toUpperCase()}%' and upper(User_Password) like '%${User_Password.toUpperCase()}%' and Delete_Mark != '1' limit 1;`;
     console.log(sql);
@@ -410,6 +434,7 @@ async function check_user_data_email_and_password(Email, User_Password, otp){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
+                resolve(false);
             }else{
                 if(result != undefined && result[0] != undefined){
                     console.log("==========================================");

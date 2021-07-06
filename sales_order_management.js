@@ -77,6 +77,27 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+async function verify_OTP_to_customer_management_function(User_Password, Email, otp){
+    var options = {
+        'method': 'POST',
+        'url': `http://localhost:3002/verify-otp-with-unencrypted-password?User_Password=${User_Password}&Email=${Email}&otp=${otp}`,
+        'headers': {
+        }
+    };
+    return new Promise(async resolve => {
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(false);
+            }else{
+                console.log("======================================== Verified OTP response from sales order management");
+                console.log(JSON.parse(response.body));
+                resolve(JSON.parse(response.body));
+            }
+        });
+    });
+}
+
 //close-group-buy-status
 app.post('/close-group-buy-status',  async (req, res) => {
     var Product_Code = req.query.Product_Code;
@@ -952,55 +973,79 @@ async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_De
 
 //create-new-sales-order-by-customer
 app.post('/create-new-sales-order-by-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
-    var Sales_Order_Data = req.body.Sales_Order_Data;
-    var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
-    if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
-        if(
-            (await check_customer_code_existance(Customer_Code).then(async value => {
-                return await value;
-            }))
-            &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
-                return await value;
-            }))
-            &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
-                return await value;
-            }))
-        ){
-            if(
-                await validation_check(Sales_Order_Data, Customer_Code).then(async value => {
-                    return await value;
-                })
-            ){
-                var Order_Number = await order_number_creation().then(async value => {
-                        return await value;
-                });
-
-                if(
-                    await create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number).then(async value => {
-                        return await value;
-                    })
-                ){
-                    res.send({
-                        status: true,
-                        order_number: Order_Number
-                    });
+    if(req.query.Email != undefined && req.query.User_Password != undefined && req.query.otp != undefined){
+        if(req.query.Email.length > 0 && req.query.User_Password.length > 0 && req.query.otp.length > 0){
+            var verification = await verify_OTP_to_customer_management_function(User_Password, Email, otp);
+            if(verification != false){
+                var Customer_Code = req.query.Customer_Code;
+                var Sales_Order_Data = req.body.Sales_Order_Data;
+                var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
+                if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
+                    if(
+                        (await check_customer_code_existance(Customer_Code).then(async value => {
+                            return await value;
+                        }))
+                        &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+                            return await value;
+                        }))
+                        &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
+                            return await value;
+                        }))
+                    ){
+                        if(
+                            await validation_check(Sales_Order_Data, Customer_Code).then(async value => {
+                                return await value;
+                            })
+                        ){
+                            var Order_Number = await order_number_creation().then(async value => {
+                                    return await value;
+                            });
+            
+                            if(
+                                await create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number).then(async value => {
+                                    return await value;
+                                })
+                            ){
+                                res.send({
+                                    status: true,
+                                    order_number: Order_Number
+                                });
+                            }
+                        }else{
+                            res.send({
+                                status: false,
+                                reason: "this order is invalid",
+                                subreason: "this maybe caused by numeric value is 0 or customer code is mismatch between order data and details"
+                            });
+                        }
+                    }else{
+                        res.send({
+                            status: false,
+                            reason: "Customer Validation or product Validation fail"
+                        });
+                    }
                 }
             }else{
                 res.send({
                     status: false,
-                    reason: "this order is invalid",
-                    subreason: "this maybe caused by numeric value is 0 or customer code is mismatch between order data and details"
+                    reason: "OTP Verification failed. YOUR OTP: " + req.query.otp,
+                    conclusion: "order is not placed"
                 });
             }
         }else{
             res.send({
                 status: false,
-                reason: "Customer Validation or product Validation fail"
+                reason: "Given email or password or otp length are < 0. YOUR OTP: " + req.query.otp,
+                conclusion: "order is not placed"
             });
         }
+    }else{
+        res.send({
+            status: false,
+            reason: "Given email or password or otp are undefined. YOUR OTP: " + req.query.otp,
+            conclusion: "order is not placed"
+        });
     }
-    
 })
 
 async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number){
