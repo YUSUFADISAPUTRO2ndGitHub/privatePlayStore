@@ -442,7 +442,7 @@ async function update_Sales_Order_Payment_status_to_cancelled(Order_Number){
         Payment_Status = 'cancelled',
         Update_date = CURRENT_TIMESTAMP(),
         Status = 'cancelled'
-        WHERE Order_Number = '${Order_Number}' and upper(Status) = 'PENDING';
+        WHERE Order_Number = '${Order_Number}' and upper(Status) = 'PENDING' and Payment_Status != 'payment';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {

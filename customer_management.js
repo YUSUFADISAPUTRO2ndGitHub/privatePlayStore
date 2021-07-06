@@ -1037,7 +1037,8 @@ async function create_new_customer_direct_from_customer(customer_data){
         extra_column_2,
         extra_column_3,
         ktp,
-        user_license_agreement_status
+        user_license_agreement_status,
+        bank_account_number
         )
         values
         ('${customer_data.Customer_Code}',
@@ -1067,7 +1068,8 @@ async function create_new_customer_direct_from_customer(customer_data){
         '${customer_data.referral_customer_code}',
         '3%',
         '${customer_data.ktp}',
-        'true'
+        'true',
+        '${customer_data.account_number}'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1110,7 +1112,9 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         ktp,
         Nama_Perusahaan,
         customer_type_status,
-        user_license_agreement_status
+        user_license_agreement_status,
+        npwp,
+        bank_account_number
         )
         values
         ('${customer_data.Customer_Code}',
@@ -1129,7 +1133,7 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         '${customer_data.Address_4}',
         '${customer_data.Address_5}',
         'approving',
-        '${customer_data.User_Type}',
+        'Supplier',
         CURRENT_TIMESTAMP(),
         'created by user',
         '${customer_data.Customer_Code}',
@@ -1142,8 +1146,10 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         '7.5%',
         '${customer_data.ktp}',
         '${customer_data.Nama_Perusahaan}',
-        '${customer_data.User_Type}',
-        'true'
+        'Supplier',
+        'true',
+        '${customer_data.npwp}',
+        '${customer_data.account_number}'
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1285,23 +1291,35 @@ app.post('/update-customer-data-by-user-themselves',  async (req, res) => {
 
 async function update_customer_direct_from_customer(customer_data){
     var sql = `UPDATE vtportal.customer_management 
-    SET Customer_Code = '${customer_data.Customer_Code}',
-        First_Name = '${customer_data.First_Name}',
-        Last_Name = '${customer_data.Last_Name}',
-        Birthday = '${customer_data.Birthday}',
-        Last_Login = CURRENT_TIMESTAMP(),
-        Email = '${customer_data.Email}',
-        Contact_Number_1 = '${customer_data.Contact_Number_1}',
-        Contact_Number_2 = '${customer_data.Contact_Number_2}',
-        Address_1 = '${customer_data.Address_1}',
-        Address_2 = '${customer_data.Address_2}',
-        Address_3 = '${customer_data.Address_3}',
-        Address_4 = '${customer_data.Address_4}',
-        Address_5 = '${customer_data.Address_5}',
-        Status = 'approving',
-        User_Type = '${customer_data.User_Type}',
-        Update_date = CURRENT_TIMESTAMP()
-        WHERE Customer_Code = '${customer_data.Customer_Code}';`;
+                SET Customer_Code = '${customer_data.Customer_Code}',
+                First_Name = '${customer_data.First_Name}',
+                Last_Name = '${customer_data.Last_Name}',
+                Birthday = '${customer_data.Birthday}',
+                Last_Login = CURRENT_TIMESTAMP(),
+                Email = '${customer_data.Email}',
+                Contact_Number_1 = '${customer_data.Contact_Number_1}',
+                Contact_Number_2 = '${customer_data.Contact_Number_2}',
+                Address_1 = '${customer_data.Address_1}',
+                Address_2 = '${customer_data.Address_2}',
+                Address_3 = '${customer_data.Address_3}',
+                Address_4 = '${customer_data.Address_4}',
+                Address_5 = '${customer_data.Address_5}',
+                Status = 'approving',
+                User_Type = '${customer_data.User_Type}',
+                Update_date = CURRENT_TIMESTAMP()`;
+    var sqlTail = ` WHERE Customer_Code = '${customer_data.Customer_Code}';`;
+    if(customer_data.account_number != undefined){
+        if(customer_data.account_number.length > 0){
+            sql = sql + `,bank_account_number = '${customer_data.account_number}'`;
+        }
+    }
+    if(customer_data.ktp != undefined){
+        if(customer_data.ktp.length > 0){
+            sql = sql + `,ktp = '${customer_data.ktp}'`;
+        }
+    }
+    sql = sql + sqlTail;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
