@@ -975,7 +975,7 @@ async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_De
 app.post('/create-new-sales-order-by-customer',  async (req, res) => {
     if(req.query.Email != undefined && req.query.User_Password != undefined && req.query.otp != undefined){
         if(req.query.Email.length > 0 && req.query.User_Password.length > 0 && req.query.otp.length > 0){
-            var verification = await verify_OTP_to_customer_management_function(User_Password, Email, otp);
+            var verification = await verify_OTP_to_customer_management_function(req.query.User_Password, req.query.Email, req.query.otp);
             if(verification != false){
                 var Customer_Code = req.query.Customer_Code;
                 var Sales_Order_Data = req.body.Sales_Order_Data;
