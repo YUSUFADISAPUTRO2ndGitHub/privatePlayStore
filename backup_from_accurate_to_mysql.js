@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "2e8f7960-1688-42d6-b260-fa910da60871";
+var refreshtoken = "4ae8d6c1-d6d6-4b4e-98c4-4492ffeafb14";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -3473,7 +3473,7 @@ async function requesting_employee_ids_from_accurate(pageFlipper) {
         await request(options, async function(error, response) {
             if (error) {
                 console.log(error);
-                resolve(await requesting_employee_ids_from_accurate(id));
+                resolve(await requesting_employee_ids_from_accurate(pageFlipper));
             };
             var credentials = JSON.parse(await response.body);
             options = {
@@ -3487,7 +3487,7 @@ async function requesting_employee_ids_from_accurate(pageFlipper) {
             await request(options, async function(error, response) {
                 if (error) {
                     console.log(error);
-                    resolve(await requesting_employee_ids_from_accurate(id));
+                    resolve(await requesting_employee_ids_from_accurate(pageFlipper));
                 };
                 if (response != undefined || response != null) {
                     var result = JSON.parse(await response.body);
