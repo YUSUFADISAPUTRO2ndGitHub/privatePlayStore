@@ -1070,6 +1070,7 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
                     resolve(false);
                 }
             }
+            await send_email_copy_of_sales_orders_for_supplier (Sales_Order_Data, Sales_Order_Detail_data, Order_Number);
             resolve(true);
         }else{
             resolve(false);
@@ -1436,6 +1437,79 @@ async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
             }
         });
     }
+}
+
+async function send_email_copy_of_sales_orders_for_supplier(Sales_Order_Data, Sales_Order_Detail_data, Order_Number){
+    // var customer_email = (
+    //     await get_customer_email_address(Sales_Order_Data.Customer_Code).then(async value => {
+    //         return await value;
+    //     })
+    // );
+    var i = 0;
+    var order_detail = [];
+    for(i; i < Sales_Order_Detail_data.length;){
+        order_detail.push(`
+Customer Code       : '${Sales_Order_Detail_data.Customer_Code}',
+Order Number        : '${Order_Number}',
+Product Code        : '${Sales_Order_Detail_data.Product_Code}',
+Product Name        : '${Sales_Order_Detail_data.Product_Name}',
+Quantity Requested  : '${Sales_Order_Detail_data.Quantity_Requested}',
+Total Price         : '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}'
+        `);
+    }
+
+    var automated_email = 'automated.email.sold.co.id@gmail.com';
+    // if(customer_email != false || customer_email.length > 0){
+        var mailOptions = {
+            from: automated_email,
+            to: 'yusuf.adisaputro@outlook.com',
+            subject: 'Copy of Supplier SO',
+            text: `
+Dear Supplier,
+
+${order_detail.toString()}
+
+Do not reply this email
+Thank you for your purchase
+不要回覆这封电子邮件
+感谢您的购买
+Jangan balas email ini
+Terima kasih atas pembelian Anda
+            `
+        };
+    
+        transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+                mailOptions = {
+                    from: automated_email,
+                    to: automated_email,
+                    subject: 'Copy of Supplier SO',
+                    text: `
+Dear Supplier,
+
+${order_detail.toString()}
+
+Do not reply this email
+Thank you for your purchase
+不要回覆这封电子邮件
+感谢您的购买
+Jangan balas email ini
+Terima kasih atas pembelian Anda
+                    ` 
+                };
+                transporter.sendMail(mailOptions, function(error, info){
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                    }
+                });
+            }
+        });
+    // }
 }
 
 app.post('/send-text-api',  async (req, res) => {
