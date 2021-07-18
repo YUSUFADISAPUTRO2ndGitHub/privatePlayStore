@@ -900,6 +900,26 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
                     return await value;
                 })
             ){
+                var i = 0;
+                for(i = 0; i < Sales_Order_Detail_data.length;){
+                    if(Sales_Order_Detail_data[i].Quantity_Requested != undefined){
+                        if((Sales_Order_Detail_data[i].Quantity_Requested * 1) > 0){
+                            console.log("========================================= checking stock for " + Sales_Order_Detail_data[i].Product_Code);
+                            if(await check_stock_of_product_code(Sales_Order_Detail_data[i].Product_Code, (Sales_Order_Detail_data[i].Quantity_Requested * 1), false).then(async value => {
+                                return await value;
+                            })){
+                                console.log("========================================= stock is ready for " + Sales_Order_Detail_data[i].Product_Code);
+                                i++;
+                            }else{
+                                console.log("========================================= stock is not ready for " + Sales_Order_Detail_data[i].Product_Code);
+                                res.send({
+                                    status: false,
+                                    reason: "quantity requested is out of stock"
+                                });
+                            }
+                        }
+                    }
+                }
                 var Order_Number = await order_number_creation().then(async value => {
                         return await value;
                 });
@@ -977,10 +997,12 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
         if(req.query.Email.length > 0 && req.query.User_Password.length > 0 && req.query.otp.length > 0){
             var verification = await verify_OTP_to_customer_management_function(req.query.User_Password, req.query.Email, req.query.otp);
             if(verification != false){
+                console.log("Verfication OTP successful ========================================= Verfication OTP successful");
                 var Customer_Code = req.query.Customer_Code;
                 var Sales_Order_Data = req.body.Sales_Order_Data;
                 var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
                 if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
+                    console.log("========================================= Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined");
                     if(
                         (await check_customer_code_existance(Customer_Code).then(async value => {
                             return await value;
@@ -992,15 +1014,38 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
                             return await value;
                         }))
                     ){
+                        console.log("========================================= check_customer_code_existance check_customer_code_existance check_sales_order_details");
                         if(
                             await validation_check(Sales_Order_Data, Customer_Code).then(async value => {
                                 return await value;
                             })
                         ){
+                            console.log("========================================= validation_check");
+                            var i = 0;
+                            for(i = 0; i < Sales_Order_Detail_data.length;){
+                                if(Sales_Order_Detail_data[i].Quantity_Requested != undefined){
+                                    if((Sales_Order_Detail_data[i].Quantity_Requested * 1) > 0){
+                                        console.log("========================================= checking stock for " + Sales_Order_Detail_data[i].Product_Code);
+                                        if(await check_stock_of_product_code(Sales_Order_Detail_data[i].Product_Code, (Sales_Order_Detail_data[i].Quantity_Requested * 1), true).then(async value => {
+                                            return await value;
+                                        })){
+                                            console.log("========================================= stock is ready for " + Sales_Order_Detail_data[i].Product_Code);
+                                            i++;
+                                        }else{
+                                            console.log("========================================= stock is not ready for " + Sales_Order_Detail_data[i].Product_Code);
+                                            res.send({
+                                                status: false,
+                                                reason: "quantity requested is out of stock"
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                            console.log("========================================= quantity stock is checked ");
                             var Order_Number = await order_number_creation().then(async value => {
                                     return await value;
                             });
-            
+                            console.log("========================================= Order_Number " + Order_Number);
                             if(
                                 await create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data, Order_Number).then(async value => {
                                     return await value;
@@ -1019,6 +1064,10 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
                             });
                         }
                     }else{
+                        console.log("Sales order failed to be made ===================================");
+                        console.log(Sales_Order_Detail_data);
+                        console.log(Sales_Order_Data);
+                        console.log("Sales order failed to be made ===================================");
                         res.send({
                             status: false,
                             reason: "Customer Validation or product Validation fail"
@@ -1058,6 +1107,9 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
             )
         ){
             await send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number);
+            // await send_email_copy_of_sales_orders_for_supplier(Sales_Order_Data, Sales_Order_Detail_data, Order_Number);
+            console.log("insert_into_sales_order_management ==================== done");
+            console.log("insert_into_sales_order_detail_management ==================== starting | " + Sales_Order_Detail_data.length);
             var i = 0;
             for(i; i < Sales_Order_Detail_data.length;){
                 if(
@@ -1070,7 +1122,6 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
                     resolve(false);
                 }
             }
-            await send_email_copy_of_sales_orders_for_supplier (Sales_Order_Data, Sales_Order_Detail_data, Order_Number);
             resolve(true);
         }else{
             resolve(false);
@@ -1079,6 +1130,7 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
 } 
 
 async function insert_into_sales_order_detail_management(Sales_Order_Detail_data, Order_Number){
+    console.log("insert_into_sales_order_detail_management ==================== inserting | " + Sales_Order_Detail_data.Product_Code);
     var sql = `
         INSERT INTO vtportal.sales_order_detail_management 
         (
@@ -1101,8 +1153,13 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            resolve(true);
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                console.log("insert_into_sales_order_detail_management ==================== inserted | " + Sales_Order_Detail_data.Product_Code);
+                resolve(true);
+            }
         });
     });
 } 
@@ -1327,20 +1384,54 @@ async function check_customer_code_existance(Customer_Code){
 
 async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data){
     return new Promise(async resolve => {
+        console.log("check_sales_order_details ===================== is called " + Sales_Order_Detail_data.length );
         var i = 0;
         var total_sales_order_quantity = 0;
         var total_sales_order_price = 0;
         for(i = 0; i < Sales_Order_Detail_data.length;){
-            total_sales_order_quantity = total_sales_order_quantity + parseFloat(Sales_Order_Detail_data[i].Quantity_Requested);
-            total_sales_order_price = total_sales_order_price + parseFloat(Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity);
-            if(
-                !(await check_product_code_existance(Sales_Order_Detail_data[i].Product_Code).then(async value => {
-                    return await value;
-                }))
-            ){
-                resolve(false);
+            if(Sales_Order_Detail_data[i] != undefined){
+                if(Sales_Order_Detail_data[i].Quantity_Requested !=undefined && Sales_Order_Detail_data[i].Quantity_Requested != null){
+                    if((Sales_Order_Detail_data[i].Quantity_Requested * 1) > 0){
+                        if(Sales_Order_Detail_data[i] != undefined){
+                            if(Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity !=undefined && Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity != null){
+                                if((Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity * 1) > 0){
+                                    total_sales_order_quantity = total_sales_order_quantity + parseFloat(Sales_Order_Detail_data[i].Quantity_Requested);
+                                    total_sales_order_price = total_sales_order_price + parseFloat(Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity);
+                                    if(
+                                        !(await check_product_code_existance(Sales_Order_Detail_data[i].Product_Code).then(async value => {
+                                            return await value;
+                                        }))
+                                    ){
+                                        resolve(false);
+                                    }else{
+                                        console.log("expected unit price is " + ((Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity*1)/(Sales_Order_Detail_data[i].Quantity_Requested*1)));
+                                        if(
+                                            (await check_price_of_product_code(Sales_Order_Detail_data[i].Product_Code, ((Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity*1)/(Sales_Order_Detail_data[i].Quantity_Requested*1))).then(async value => {
+                                                return await value;
+                                            }))
+                                        ){
+                                            i++
+                                        }else{
+                                            resolve(false);
+                                        }
+                                    }
+                                }else{
+                                    resolve(false);
+                                }
+                            }else{
+                                resolve(false);
+                            }
+                        }else{
+                            resolve(false);
+                        }
+                    }else{
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
             }else{
-                i++
+                resolve(false);
             }
         }
         if(
@@ -1355,18 +1446,129 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
 }
 
 async function check_product_code_existance(Product_Code){
+    console.log(Product_Code);
     var sql = `select * from vtportal.product_management 
-    where upper(Product_Code) = '${Product_Code.toUpperCase()}' 
+    where Product_Code = '${Product_Code}' 
     and Delete_Mark != '1' limit 1;`;
     return new Promise(async resolve => {
-        await con.query(sql, async function (err, result) {
-            if (err) await console.log(err);
-            if(result != undefined && result[0] != undefined){
-                resolve(true);
-            }else{
-                resolve(false);
-            }
-        });
+        if(Product_Code != undefined){
+            await con.query(sql, async function (err, result) {
+                if (err) await console.log(err);
+                if(result != undefined && result[0] != undefined){
+                    resolve(true);
+                }else{
+                    resolve(false);
+                }
+            });
+        }else{
+            console.log("detected undefined product code ========= " + Product_Code);
+            resolve(false);
+        }
+    });
+}
+
+async function check_price_of_product_code(Product_Code, expected_price){
+    console.log("check_price_of_product_code ==== " + Product_Code);
+    var sql = `select Sell_Price, GroupBuy_SellPrice from vtportal.product_management 
+    where Product_Code = '${Product_Code}' 
+    and Delete_Mark != '1' limit 1;`;
+    return new Promise(async resolve => {
+        if(Product_Code != undefined){
+            await con.query(sql, async function (err, result) {
+                if (err) await console.log(err);
+                if(result != undefined && result[0] != undefined){
+                    if((result[0].Sell_Price * 1) > 0){
+                        if((result[0].Sell_Price * 1) == expected_price){
+                            resolve(true);
+                        }else if((result[0].GroupBuy_SellPrice * 1) == expected_price){
+                            resolve(true);
+                        }else{
+                            console.log("price found " + result[0].GroupBuy_SellPrice + " and " + result[0].Sell_Price);
+                            resolve(false);
+                        }
+                    }else{
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
+            });
+        }else{
+            console.log("detected undefined product code ========= " + Product_Code);
+            resolve(false);
+        }
+    });
+}
+
+async function check_stock_of_product_code(Product_Code, expected_purchased, purchase_type){
+    console.log("check_stock_of_product_code ==== " + Product_Code + " and expected to be purchased " + expected_purchased);
+    var sql = `select Stock_Quantity, GroupBuy_SellQuantity from vtportal.product_management 
+    where Product_Code = '${Product_Code}' 
+    and Delete_Mark != '1' limit 1;`;
+    return new Promise(async resolve => {
+        if(Product_Code != undefined){
+            await con.query(sql, async function (err, result) {
+                if (err) {
+                    await console.log(err);
+                    resolve(false);
+                }else{
+                    if(result != undefined && result[0] != undefined){
+                        if((result[0].Stock_Quantity * 1) > 0){
+                            if(purchase_type){ // true == non groupbuy
+                                if((result[0].Stock_Quantity * 1) - expected_purchased >= 0){
+                                    var updatesql = `UPDATE vtportal.product_management 
+                                    SET Stock_Quantity = '${(result[0].Stock_Quantity * 1) - expected_purchased}' 
+                                    , Update_date = CURRENT_TIMESTAMP 
+                                    where Product_Code = '${Product_Code}' 
+                                    and Delete_Mark != '1';`;
+                                    await con.query(updatesql, async function (err, result) {
+                                        if (err) {
+                                            await console.log(err);
+                                            resolve(false);
+                                        }else{
+                                            resolve(true);
+                                        }
+                                    })
+                                }else{
+                                    console.log("detected out of stock request for product code ========= " + Product_Code);
+                                    console.log("detected stock for product code ========= " + (result[0].Stock_Quantity * 1));
+                                    console.log("requested stock for product code ========= " + expected_purchased);
+                                    resolve(false);
+                                }
+                            }else{ // false == groupbuy
+                                if((result[0].GroupBuy_SellQuantity * 1) - expected_purchased >= 0){
+                                    var updatesql = `UPDATE vtportal.product_management 
+                                    SET GroupBuy_SellQuantity = '${(result[0].GroupBuy_SellQuantity * 1) - expected_purchased}' 
+                                    , Update_date = CURRENT_TIMESTAMP 
+                                    where Product_Code = '${Product_Code}' 
+                                    and Delete_Mark != '1';`;
+                                    await con.query(updatesql, async function (err, result) {
+                                        if (err) {
+                                            await console.log(err);
+                                            resolve(false);
+                                        }else{
+                                            resolve(true);
+                                        }
+                                    })
+                                }else{
+                                    console.log("detected out of stock request for product code ========= " + Product_Code);
+                                    console.log("detected stock for product code ========= " + (result[0].GroupBuy_SellQuantity * 1));
+                                    console.log("requested stock for product code ========= " + expected_purchased);
+                                    resolve(false);
+                                }
+                            }
+                        }else{
+                            resolve(false);
+                        }
+                    }else{
+                        resolve(false);
+                    }
+                }
+            });
+        }else{
+            console.log("detected undefined product code ========= " + Product_Code);
+            resolve(false);
+        }
     });
 }
 
@@ -1445,19 +1647,20 @@ async function send_email_copy_of_sales_orders_for_supplier(Sales_Order_Data, Sa
     //         return await value;
     //     })
     // );
-    var i = 0;
-    var order_detail = [];
-    for(i; i < Sales_Order_Detail_data.length;){
-        order_detail.push(`
-Customer Code       : '${Sales_Order_Detail_data.Customer_Code}',
-Order Number        : '${Order_Number}',
-Product Code        : '${Sales_Order_Detail_data.Product_Code}',
-Product Name        : '${Sales_Order_Detail_data.Product_Name}',
-Quantity Requested  : '${Sales_Order_Detail_data.Quantity_Requested}',
-Total Price         : '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}'
-        `);
-    }
-
+    console.log("============================================= send_email_copy_of_sales_orders_for_supplier");
+//     var i = 0;
+//     var order_detail = [];
+//     for(i; i < Sales_Order_Detail_data.length;){
+//         order_detail.push(`
+// Customer Code       : '${Sales_Order_Detail_data[i].Customer_Code}',
+// Order Number        : '${Order_Number}',
+// Product Code        : '${Sales_Order_Detail_data[i].Product_Code}',
+// Product Name        : '${Sales_Order_Detail_data[i].Product_Name}',
+// Quantity Requested  : '${Sales_Order_Detail_data[i].Quantity_Requested}',
+// Total Price         : '${Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity}'
+//         `);
+//     }
+    console.log(Sales_Order_Detail_data);
     var automated_email = 'automated.email.sold.co.id@gmail.com';
     // if(customer_email != false || customer_email.length > 0){
         var mailOptions = {
@@ -1467,7 +1670,7 @@ Total Price         : '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}'
             text: `
 Dear Supplier,
 
-${order_detail.toString()}
+${Sales_Order_Detail_data.toString()}
 
 Do not reply this email
 Thank you for your purchase
@@ -1477,11 +1680,13 @@ Jangan balas email ini
 Terima kasih atas pembelian Anda
             `
         };
-    
+        console.log(mailOptions);
         transporter.sendMail(mailOptions, function(error, info){
             if (error) {
+                console.log("============================================= send_email_copy_of_sales_orders_for_supplier ERROR");
                 console.log(error);
             } else {
+                console.log("============================================= send_email_copy_of_sales_orders_for_supplier");
                 console.log('Email sent: ' + info.response);
                 mailOptions = {
                     from: automated_email,
@@ -1490,7 +1695,7 @@ Terima kasih atas pembelian Anda
                     text: `
 Dear Supplier,
 
-${order_detail.toString()}
+${Sales_Order_Detail_data.toString()}
 
 Do not reply this email
 Thank you for your purchase
@@ -1504,6 +1709,7 @@ Terima kasih atas pembelian Anda
                     if (error) {
                         console.log(error);
                     } else {
+                        console.log("============================================= send_email_copy_of_sales_orders_for_supplier");
                         console.log('Email sent: ' + info.response);
                     }
                 });
