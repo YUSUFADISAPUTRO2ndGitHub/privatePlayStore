@@ -1516,19 +1516,20 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
                         if((result[0].Stock_Quantity * 1) > 0){
                             if(purchase_type){ // true == non groupbuy
                                 if((result[0].Stock_Quantity * 1) - expected_purchased >= 0){
-                                    var updatesql = `UPDATE vtportal.product_management 
-                                    SET Stock_Quantity = '${(result[0].Stock_Quantity * 1) - expected_purchased}' 
-                                    , Update_date = CURRENT_TIMESTAMP 
-                                    where Product_Code = '${Product_Code}' 
-                                    and Delete_Mark != '1';`;
-                                    await con.query(updatesql, async function (err, result) {
-                                        if (err) {
-                                            await console.log(err);
-                                            resolve(false);
-                                        }else{
-                                            resolve(true);
-                                        }
-                                    })
+                                    // var updatesql = `UPDATE vtportal.product_management 
+                                    // SET Stock_Quantity = '${(result[0].Stock_Quantity * 1) - expected_purchased}' 
+                                    // , Update_date = CURRENT_TIMESTAMP 
+                                    // where Product_Code = '${Product_Code}' 
+                                    // and Delete_Mark != '1';`;
+                                    // await con.query(updatesql, async function (err, result) {
+                                    //     if (err) {
+                                    //         await console.log(err);
+                                    //         resolve(false);
+                                    //     }else{
+                                    //         resolve(true);
+                                    //     }
+                                    // })
+                                    resolve(true);
                                 }else{
                                     console.log("detected out of stock request for product code ========= " + Product_Code);
                                     console.log("detected stock for product code ========= " + (result[0].Stock_Quantity * 1));
@@ -1537,19 +1538,20 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
                                 }
                             }else{ // false == groupbuy
                                 if((result[0].GroupBuy_SellQuantity * 1) - expected_purchased >= 0){
-                                    var updatesql = `UPDATE vtportal.product_management 
-                                    SET GroupBuy_SellQuantity = '${(result[0].GroupBuy_SellQuantity * 1) - expected_purchased}' 
-                                    , Update_date = CURRENT_TIMESTAMP 
-                                    where Product_Code = '${Product_Code}' 
-                                    and Delete_Mark != '1';`;
-                                    await con.query(updatesql, async function (err, result) {
-                                        if (err) {
-                                            await console.log(err);
-                                            resolve(false);
-                                        }else{
-                                            resolve(true);
-                                        }
-                                    })
+                                    // var updatesql = `UPDATE vtportal.product_management 
+                                    // SET GroupBuy_SellQuantity = '${(result[0].GroupBuy_SellQuantity * 1) - expected_purchased}' 
+                                    // , Update_date = CURRENT_TIMESTAMP 
+                                    // where Product_Code = '${Product_Code}' 
+                                    // and Delete_Mark != '1';`;
+                                    // await con.query(updatesql, async function (err, result) {
+                                    //     if (err) {
+                                    //         await console.log(err);
+                                    //         resolve(false);
+                                    //     }else{
+                                    //         resolve(true);
+                                    //     }
+                                    // })
+                                    resolve(true);
                                 }else{
                                     console.log("detected out of stock request for product code ========= " + Product_Code);
                                     console.log("detected stock for product code ========= " + (result[0].GroupBuy_SellQuantity * 1));
