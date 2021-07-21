@@ -79,6 +79,65 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//get-saved-user-shopping
+app.post('/get-saved-user-shopping',  async (req, res) => {
+    res.send(
+        get_saved_user_shopping_cart(req.query.Customer_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_saved_user_shopping_cart(Customer_Code){
+    var sql = `
+    select saved_user_shopping_cart from vtportal.customer_management 
+    WHERE Customer_Code='${Customer_Code}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result[0].saved_user_shopping_cart);
+            }
+        });
+    });
+}
+
+//save-user-shopping-cart
+app.post('/save-user-shopping-cart',  async (req, res) => {
+    if(
+        save_user_shopping_cart(req.query.Customer_Code, req.query.cart).then(async value => {
+            return await value;
+        })
+    ){
+        res.send(
+            {
+                status: true
+            }
+        );
+    }
+})
+
+async function save_user_shopping_cart(Customer_Code, cart){
+    var sql = `
+    UPDATE vtportal.customer_management
+    SET saved_user_shopping_cart= '${cart}'
+    WHERE Customer_Code='${Customer_Code}';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
 //get-total-commission-of-all-months-gross
 app.post('/get-total-commission-of-all-months-gross',  async (req, res) => {
     res.send(
