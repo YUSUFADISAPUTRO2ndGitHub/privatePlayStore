@@ -81,57 +81,202 @@ const get_latest_recorded_token = async () => {
     })
 }
 
-app.post('/get-courier-data',  async (req, res) => {
-    if(req.query.Courier != undefined 
-        && req.query.Courier_Code != undefined){
-            if(req.query.Get_All_Province != undefined){
+app.post('/get-shipping-option-data',  async (req, res) => {
+    if(req.query.Get_Shipping_Fee != undefined){
+        if(req.query.Courier != undefined 
+            && req.query.Courier_Code != undefined
+            && req.query.Province != undefined
+            && req.query.City != undefined
+            && req.query.District != undefined
+            && req.query.Sub_District != undefined){
                 res.send(
-                    await get_courier_all_Provinces(req.query.Courier, req.query.Courier_Code, "").then(async value => {
-                            return await value;
-                    })
-                );
-            }else if(req.query.Province != undefined){
-                res.send(
-                    await get_courier_all_Cities(req.query.Courier, req.query.Courier_Code, req.query.Province).then(async value => {
-                            return await value;
-                    })
-                );
-            }else if(req.query.City != undefined){
-                res.send(
-                    await get_courier_all_Districts(req.query.Courier, req.query.Courier_Code, req.query.City).then(async value => {
-                            return await value;
-                    })
-                );
-            }else if(req.query.District != undefined){
-                res.send(
-                    await get_courier_all_Sub_Districts(req.query.Courier, req.query.Courier_Code, req.query.District).then(async value => {
-                            return await value;
-                    })
-                );
-            }else{
-                res.send(
-                    await get_courier_all_data(req.query.Courier, req.query.Courier_Code).then(async value => {
+                    await get_shipping_options(req.query.Courier
+                        , req.query.Courier_Code
+                        , req.query.Province
+                        , req.query.City
+                        , req.query.District
+                        , req.query.Sub_District
+                        ).then(async value => {
                             return await value;
                     })
                 );
             }
     }else{
-        res.send({
-            status: false,
-            reason: "you did not provide Courier_Code and Courier"
-        });
+            res.send({
+                status: false,
+                reason: "you did not provide Courier_Code and Courier"
+            });
     }
 })
+
+app.post('/get-courier-data',  async (req, res) => {
+    if(req.query.Get_All_Couriers != undefined){
+        res.send(
+            await get_couriers().then(async value => {
+                    return await value;
+            })
+        );
+    }else if(req.query.Get_Shipping_Fee != undefined){
+        if(req.query.Courier != undefined 
+            && req.query.Courier_Code != undefined
+            && req.query.Province != undefined
+            && req.query.City != undefined
+            && req.query.District != undefined
+            && req.query.Sub_District != undefined
+            && req.query.delivery_time_in_days != undefined
+            && req.query.Courier_Price_Code != undefined
+            ){
+                res.send(
+                    await get_shipping_fee(req.query.Courier
+                        , req.query.Courier_Code
+                        , req.query.Province
+                        , req.query.City
+                        , req.query.District
+                        , req.query.Sub_District
+                        , req.query.delivery_time_in_days
+                        , req.query.Courier_Price_Code
+                        ).then(async value => {
+                            return await value;
+                    })
+                );
+            }
+    }else{
+        if(req.query.Courier != undefined 
+            && req.query.Courier_Code != undefined){
+                if(req.query.Get_All_Province != undefined){
+                    res.send(
+                        await get_courier_all_Provinces(req.query.Courier, req.query.Courier_Code, "").then(async value => {
+                                return await value;
+                        })
+                    );
+                }else if(req.query.Province != undefined){
+                    res.send(
+                        await get_courier_all_Cities(req.query.Courier, req.query.Courier_Code, req.query.Province).then(async value => {
+                                return await value;
+                        })
+                    );
+                }else if(req.query.City != undefined){
+                    res.send(
+                        await get_courier_all_Districts(req.query.Courier, req.query.Courier_Code, req.query.City).then(async value => {
+                                return await value;
+                        })
+                    );
+                }else if(req.query.District != undefined){
+                    res.send(
+                        await get_courier_all_Sub_Districts(req.query.Courier, req.query.Courier_Code, req.query.District).then(async value => {
+                                return await value;
+                        })
+                    );
+                }else{
+                    res.send(
+                        await get_courier_all_data(req.query.Courier, req.query.Courier_Code).then(async value => {
+                                return await value;
+                        })
+                    );
+                }
+        }else{
+            res.send({
+                status: false,
+                reason: "you did not provide Courier_Code and Courier"
+            });
+        }
+    }
+})
+
+async function get_shipping_fee(Courier
+    , Courier_Code
+    , Province
+    , City
+    , District
+    , Sub_District
+    , delivery_time_in_days
+    , Courier_Price_Code
+    ){
+        var sql = "";
+        sql = `
+            select Courier_Price_Code, delivery_time_in_days, Courier_Price_Per_Kg from vtportal.courier_and_national_area_management where 
+                upper(Courier) = '${Courier.toUpperCase()}'
+                and upper(Courier_Code) = '${Courier_Code.toUpperCase()}'
+                and upper(Province) = '${Province.toUpperCase()}'
+                and upper(City) = '${City.toUpperCase()}'
+                and upper(District) = '${District.toUpperCase()}'
+                and upper(Sub_District) = '${Sub_District.toUpperCase()}'
+                and upper(delivery_time_in_days) = '${delivery_time_in_days.toUpperCase()}'
+                and upper(Courier_Price_Code) = '${Courier_Price_Code.toUpperCase()}'
+            ;
+        `;
+        console.log(sql);
+        return new Promise(async resolve => {
+            await con.query(sql, async function (err, result) {
+                if (err) {
+                    await console.log(err);
+                    resolve(false);
+                }else{
+                    resolve(result);
+                }
+            });
+        });
+
+}
+
+async function get_shipping_options(Courier
+    , Courier_Code
+    , Province
+    , City
+    , District
+    , Sub_District
+    ){
+        var sql = "";
+        sql = `
+            select Courier_Price_Code, delivery_time_in_days, Courier_Price_Per_Kg from vtportal.courier_and_national_area_management where 
+                upper(Courier) like '%${Courier.toUpperCase()}%'
+                and upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%'
+                and upper(Province) like '%${Province.toUpperCase()}%'
+                and upper(City) like '%${City.toUpperCase()}%'
+                and upper(District) like '%${District.toUpperCase()}%'
+                and upper(Sub_District) like '%${Sub_District.toUpperCase()}%'
+            ;
+        `;
+        console.log(sql);
+        return new Promise(async resolve => {
+            await con.query(sql, async function (err, result) {
+                if (err) {
+                    await console.log(err);
+                    resolve(false);
+                }else{
+                    resolve(result);
+                }
+            });
+        });
+}
+
+async function get_couriers(){
+    var sql = "";
+    sql = `
+        select Distinct Courier, Courier_Code from vtportal.courier_and_national_area_management;
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
 
 async function get_courier_all_Sub_Districts(Courier, Courier_Code, District){
     var sql = "";
     if(Courier != undefined){
         sql = `
-            select Distinct District from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
+            select Distinct Sub_District from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
         `;
     }else{
         sql = `
-            select Distinct District from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
+            select Distinct Sub_District from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
         `;
     }
     console.log(sql);
@@ -253,13 +398,13 @@ app.post('/add-new-courier-information',  async (req, res) => {
         && Courier_Data != undefined){
             if(req.query.Courier_Price_Per_Kg != undefined){
                 res.send(
-                    await add_new_courier(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, "0", Courier_Data).then(async value => {
+                    await add_new_courier(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, req.query.Courier_Price_Per_Kg, Courier_Data).then(async value => {
                             return await value;
                     })
                 );
             }else{
                 res.send(
-                    await add_new_courier(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, req.query.Courier_Price_Per_Kg, Courier_Data).then(async value => {
+                    await add_new_courier(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, "0", Courier_Data).then(async value => {
                             return await value;
                     })
                 );
@@ -320,13 +465,13 @@ app.post('/update-courier-information',  async (req, res) => {
         && req.query.Courier_Price_Code != undefined){
             if(req.query.Courier_Price_Per_Kg != undefined){
                 res.send(
-                    await update_courier_province_and_city(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, "0").then(async value => {
+                    await update_courier_province_and_city(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, req.query.Courier_Price_Per_Kg).then(async value => {
                             return await value;
                     })
                 );
             }else{
                 res.send(
-                    await update_courier_province_and_city(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, req.query.Courier_Price_Per_Kg).then(async value => {
+                    await update_courier_province_and_city(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, "0").then(async value => {
                             return await value;
                     })
                 );
