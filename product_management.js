@@ -81,6 +81,285 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+app.post('/get-courier-data',  async (req, res) => {
+    if(req.query.Courier != undefined 
+        && req.query.Courier_Code != undefined){
+            if(req.query.Get_All_Province != undefined){
+                res.send(
+                    await get_courier_all_Provinces(req.query.Courier, req.query.Courier_Code, "").then(async value => {
+                            return await value;
+                    })
+                );
+            }else if(req.query.Province != undefined){
+                res.send(
+                    await get_courier_all_Cities(req.query.Courier, req.query.Courier_Code, req.query.Province).then(async value => {
+                            return await value;
+                    })
+                );
+            }else if(req.query.City != undefined){
+                res.send(
+                    await get_courier_all_Districts(req.query.Courier, req.query.Courier_Code, req.query.City).then(async value => {
+                            return await value;
+                    })
+                );
+            }else if(req.query.District != undefined){
+                res.send(
+                    await get_courier_all_Sub_Districts(req.query.Courier, req.query.Courier_Code, req.query.District).then(async value => {
+                            return await value;
+                    })
+                );
+            }else{
+                res.send(
+                    await get_courier_all_data(req.query.Courier, req.query.Courier_Code).then(async value => {
+                            return await value;
+                    })
+                );
+            }
+    }else{
+        res.send({
+            status: false,
+            reason: "you did not provide Courier_Code and Courier"
+        });
+    }
+})
+
+async function get_courier_all_Sub_Districts(Courier, Courier_Code, District){
+    var sql = "";
+    if(Courier != undefined){
+        sql = `
+            select Distinct District from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
+        `;
+    }else{
+        sql = `
+            select Distinct District from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
+        `;
+    }
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function get_courier_all_Districts(Courier, Courier_Code, City){
+    var sql = "";
+    if(Courier != undefined){
+        sql = `
+            select Distinct District from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(City) like '%${City.toUpperCase()}%';
+        `;
+    }else{
+        sql = `
+            select Distinct District from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(City) like '%${City.toUpperCase()}%';
+        `;
+    }
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function get_courier_all_Cities(Courier, Courier_Code, Province){
+    var sql = "";
+    if(Courier != undefined){
+        sql = `
+            select Distinct City from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(Province) like '%${Province.toUpperCase()}%';
+        `;
+    }else{
+        sql = `
+            select Distinct City from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(Province) like '%${Province.toUpperCase()}%';
+        `;
+    }
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function get_courier_all_Provinces(Courier, Courier_Code, Province){
+    var sql = "";
+    if(Courier != undefined){
+        sql = `
+            select Distinct Province from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%';
+        `;
+    }else{
+        sql = `
+            select Distinct Province from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%';
+        `;
+    }
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+async function get_courier_all_data(Courier, Courier_Code){
+    var sql = "";
+    if(Courier != undefined){
+        sql = `
+            select * from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%';
+        `;
+    }else{
+        sql = `
+            select * from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%';
+        `;
+    }
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result);
+            }
+        });
+    });
+}
+
+app.post('/add-new-courier-information',  async (req, res) => {
+    var Courier_Data = req.body.Courier_Data;
+    if(req.query.Courier != undefined 
+        && req.query.Courier_Code != undefined
+        && req.query.Province != undefined
+        && req.query.City != undefined
+        && req.query.Courier_Price_Code != undefined
+        && Courier_Data != undefined){
+            if(req.query.Courier_Price_Per_Kg != undefined){
+                res.send(
+                    await add_new_courier(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, "0", Courier_Data).then(async value => {
+                            return await value;
+                    })
+                );
+            }else{
+                res.send(
+                    await add_new_courier(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, req.query.Courier_Price_Per_Kg, Courier_Data).then(async value => {
+                            return await value;
+                    })
+                );
+            }
+    }else{
+        res.send(false);
+    }
+})
+
+async function add_new_courier(Courier, Courier_Code, Province, City, Courier_Price_Code, Courier_Price_Per_Kg, Courier_Data){
+    var sql = `
+    INSERT INTO vtportal.courier_and_national_area_management (
+        Courier, 
+        Courier_Code, 
+        Province, 
+        City,
+        Courier_Price_Code,
+        Courier_Price_Per_Kg,
+        District,
+        Sub_District,
+        Zipcode,
+        Status,
+        Update_date,
+        delivery_time_in_days
+        )
+    VALUES ('${Courier}'
+        , '${Courier_Code}'
+        , '${Province}'
+        , '${City}'
+        , '${Courier_Price_Code}'
+        , '${Courier_Price_Per_Kg}'
+        , '${Courier_Data.District}'
+        , '${Courier_Data.Sub_District}'
+        , '${Courier_Data.Zipcode}'
+        , 'approving'
+        , CURRENT_TIMESTAMP
+        , '${Courier_Data.delivery_time_in_days}'
+        );
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+app.post('/update-courier-information',  async (req, res) => {
+    if(req.query.Courier != undefined 
+        && req.query.Courier_Code != undefined
+        && req.query.Province != undefined
+        && req.query.City != undefined
+        && req.query.Courier_Price_Code != undefined){
+            if(req.query.Courier_Price_Per_Kg != undefined){
+                res.send(
+                    await update_courier_province_and_city(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, "0").then(async value => {
+                            return await value;
+                    })
+                );
+            }else{
+                res.send(
+                    await update_courier_province_and_city(req.query.Courier, req.query.Courier_Code, req.query.Province, req.query.City, req.query.Courier_Price_Code, req.query.Courier_Price_Per_Kg).then(async value => {
+                            return await value;
+                    })
+                );
+            }
+    }else{
+        res.send(false);
+    }
+})
+
+async function update_courier_province_and_city(Courier, Courier_Code, Province, City, Courier_Price_Code, Courier_Price_Per_Kg){
+    var sql = `
+    UPDATE vtportal.courier_and_national_area_management
+    SET Courier = '${Courier}' 
+    , Courier_Code = '${Courier_Code}'
+    , Province = '${Province}'
+    , City = '${City}'
+    , Courier_Price_Code = '${Courier_Price_Code}'
+    , Courier_Price_Per_Kg = '${Courier_Price_Per_Kg}'
+    WHERE Courier = '${Courier}';
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
 app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => {
     if(req.query.Password != undefined && req.query.Email != undefined){
         if(await customer_login_request(req.query.Password, req.query.Email).then(async value => {

@@ -82,7 +82,7 @@ const get_latest_recorded_token = async () => {
 //get-saved-user-shopping
 app.post('/get-saved-user-shopping',  async (req, res) => {
     res.send(
-        get_saved_user_shopping_cart(req.query.Customer_Code).then(async value => {
+        await get_saved_user_shopping_cart(req.query.Customer_Code).then(async value => {
             return await value;
         })
     );
@@ -107,11 +107,16 @@ async function get_saved_user_shopping_cart(Customer_Code){
 
 //save-user-shopping-cart
 app.post('/save-user-shopping-cart',  async (req, res) => {
+    console.log('/save-user-shopping-cart');
+    console.log(await save_user_shopping_cart(req.query.Customer_Code, req.query.cart).then(async value => {
+        return await value;
+    }));
     if(
-        save_user_shopping_cart(req.query.Customer_Code, req.query.cart).then(async value => {
+        await save_user_shopping_cart(req.query.Customer_Code, req.query.cart).then(async value => {
             return await value;
         })
     ){
+        console.log('DONE /save-user-shopping-cart DONE');
         res.send(
             {
                 status: true
@@ -126,12 +131,15 @@ async function save_user_shopping_cart(Customer_Code, cart){
     SET saved_user_shopping_cart= '${cart}'
     WHERE Customer_Code='${Customer_Code}';
     `;
+    console.log('save_user_shopping_cart');
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
                 resolve(false);
             }else{
+                console.log('DONE save_user_shopping_cart DONE');
                 resolve(true);
             }
         });
