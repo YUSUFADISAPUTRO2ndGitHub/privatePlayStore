@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "4ae8d6c1-d6d6-4b4e-98c4-4492ffeafb14";
+var refreshtoken = "b0456d3a-edaf-4188-8bf3-9b3ae819848a";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -364,7 +364,7 @@ setInterval(() => {
             });
         });
     });
-}, 29000000);
+}, 35000000);
 
 /*
     backup sales return
@@ -3504,7 +3504,7 @@ async function requesting_employee_ids_from_accurate(pageFlipper) {
 }
 
 async function requesting_employee_details_based_on_id_from_accurate(id) {
-    console.log("saving data to MEM -> " + id);
+    console.log("requesting_employee_details_based_on_id_from_accurate | id " + id);
     options = {
         'method': 'GET',
         'url': 'http://localhost:5002/get-lastest-token-and-session',
@@ -3515,47 +3515,79 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_employee_details_based_on_id_from_accurate(id));
-            };
-            var credentials = JSON.parse(await response.body);
-            options = {
-                'method': 'GET',
-                'url': 'https://public.accurate.id/accurate/api/employee/detail.do?id=' + id,
-                'headers': {
-                    'Authorization': 'Bearer ' + credentials.access_token,
-                    'X-Session-ID': credentials.session_id
-                }
-            };
-            await request(options, async function(error, response) {
-                if (error) {
-                    console.log(error);
-                    resolve(await requesting_employee_details_based_on_id_from_accurate(id));
-                }
-                if (response != undefined || response != null) {
-                    result = JSON.parse(await response.body);
-                    var u = 0;
-                    if (result.d != undefined) {
-                        if (!result.d.suspended) {
-                            if (result.d.salesman) {
+            }else{
+                console.log("successfull retrieve access token ======= requesting_employee_details_based_on_id_from_accurate | id " + id);
+                var credentials = JSON.parse(await response.body);
+                options = {
+                    'method': 'GET',
+                    'url': 'https://public.accurate.id/accurate/api/employee/detail.do?id=' + id,
+                    'headers': {
+                        'Authorization': 'Bearer ' + credentials.access_token,
+                        'X-Session-ID': credentials.session_id
+                    }
+                };
+                await request(options, async function(error, response) {
+                    if (error) {
+                        console.log(error);
+                        resolve(await requesting_employee_details_based_on_id_from_accurate(id));
+                    }else{
+                        console.log("https://public.accurate.id/accurate/api/employee/detail.do?id= | id " + id);
+                        if (response != undefined || response != null) {
+                            console.log("parsing response.body ====== requesting_employee_details_based_on_id_from_accurate | id " + id);
+                            result = JSON.parse(await response.body);
+                            var u = 0;
+                            if (result.d != undefined) {
+                                if (!result.d.suspended) {
+                                    if (result.d.salesman) {
+                                        resolve({
+                                            name: result.d.name,
+                                            emp_number: result.d.number,
+                                            mobilePhone: result.d.mobilePhone,
+                                            email: result.d.email,
+                                            emp_position: result.d.position
+                                        });
+                                    } else {
+                                        resolve({
+                                            name: result.d.name,
+                                            emp_number: result.d.number,
+                                            mobilePhone: result.d.mobilePhone,
+                                            email: result.d.email,
+                                            emp_position: result.d.position
+                                        });
+                                    }
+                                }else{
+                                    console.log("requesting_employee_details_based_on_id_from_accurate | result.d.suspended = " + result.d.suspended + " for " + result.d.salesman);
+                                    resolve({
+                                        name: "",
+                                        emp_number: "",
+                                        mobilePhone: "",
+                                        email: "",
+                                        emp_position: ""
+                                    });
+                                }
+                            }else{
+                                console.log("requesting_employee_details_based_on_id_from_accurate | result.d = UNDEFINED");
                                 resolve({
-                                    name: result.d.name,
-                                    emp_number: result.d.number,
-                                    mobilePhone: result.d.mobilePhone,
-                                    email: result.d.email,
-                                    emp_position: result.d.position
-                                });
-                            } else {
-                                resolve({
-                                    name: result.d.name,
-                                    emp_number: result.d.number,
-                                    mobilePhone: result.d.mobilePhone,
-                                    email: result.d.email,
-                                    emp_position: result.d.position
+                                    name: "",
+                                    emp_number: "",
+                                    mobilePhone: "",
+                                    email: "",
+                                    emp_position: ""
                                 });
                             }
+                        }else{
+                            console.log("requesting_employee_details_based_on_id_from_accurate | response = undefined");
+                            resolve({
+                                name: "",
+                                emp_number: "",
+                                mobilePhone: "",
+                                email: "",
+                                emp_position: ""
+                            });
                         }
                     }
-                }
-            });
+                });   
+            }
         });
     });
 }
@@ -3588,7 +3620,7 @@ app.get('/get-all-product-details', async(req, res) => {
             })
         );
     }
-    console.log("=========================================================================================");
+    console.log("===============================================================");
     var current_id = 0;
     for (current_id; current_id < collected_product_details.length; current_id++) {
         if (await check_if_product_has_existed_in_MYSQL(collected_product_details[current_id].Product_Code).then(async value => {
@@ -3643,7 +3675,10 @@ const update_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         , Category = '${sorted_collected_product_with_details.Category_Name}'
         WHERE Product_Code = '${sorted_collected_product_with_details.Product_Code}';`;
         con.query(sql, function(err, result) {
-            if (err) console.log(err);
+            if (err) {
+                console.log("== FAIL UPDATE TO vtportal.product_data_accurate in update_product_in_json_to_mysql ==");
+                console.log(err);
+            }
         });
         resolve(true);
     });
@@ -3667,7 +3702,10 @@ const insert_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         , '${sorted_collected_product_with_details.Category_Name}'
         );`;
         con.query(sql, function(err, result) {
-            if (err) console.log(err);
+            if (err) {
+                console.log("== FAIL insert TO vtportal.product_data_accurate in update_product_in_json_to_mysql ==");
+                console.log(err);
+            }
         });
         resolve(true);
     });
@@ -3693,18 +3731,23 @@ async function collecting_all_products_from_accurate() {
                 }
             };
             await request(options, async function(error, response) {
-                if (error) console.log(error);
-                if (response != undefined || response != null) {
-                    var result = JSON.parse(await response.body);
-                    if (result != undefined && result.sp != undefined) {
-                        pageCount = result.sp.pageCount;
-                        if (pageCount != undefined) {
-                            resolve(pageCount);
+                if (error) {
+                    console.log(error);
+                }else {
+                    if (response != undefined || response != null) {
+                        var result = JSON.parse(await response.body);
+                        if (result != undefined && result.sp != undefined) {
+                            pageCount = result.sp.pageCount;
+                            if (pageCount != undefined) {
+                                resolve(pageCount);
+                            } else {
+                                console.log("Bad pagecount in ======= collecting_all_products_from_accurate()");
+                                resolve(await collecting_all_products_from_accurate());
+                            }
                         } else {
-                            console.log("Bad pagecount");
+                            console.log("ERROR FROM ACCURATE, NO JSON RESPONSE WHEN GETTING product LIST");
+                            resolve(await collecting_all_products_from_accurate());
                         }
-                    } else {
-                        console.log("ERROR FROM ACCURATE, NO JSON RESPONSE WHEN GETTING product LIST");
                     }
                 }
             });
@@ -3723,31 +3766,40 @@ async function requesting_product_ids_from_accurate(pageFlipper) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_product_ids_from_accurate(pageFlipper));
-            };
-            var credentials = JSON.parse(await response.body);
-            options = {
-                'method': 'GET',
-                'url': 'https://public.accurate.id/accurate/api/item/list.do?sp.page=' + pageFlipper,
-                'headers': {
-                    'Authorization': 'Bearer ' + credentials.access_token,
-                    'X-Session-ID': credentials.session_id
-                }
-            };
-            await request(options, async function(error, response) {
-                if (error) {
-                    console.log(error);
+            }else{
+                if(response != undefined){
+                    var credentials = JSON.parse(await response.body);
+                    options = {
+                        'method': 'GET',
+                        'url': 'https://public.accurate.id/accurate/api/item/list.do?sp.page=' + pageFlipper,
+                        'headers': {
+                            'Authorization': 'Bearer ' + credentials.access_token,
+                            'X-Session-ID': credentials.session_id
+                        }
+                    };
+                    await request(options, async function(error, response) {
+                        if (error) {
+                            console.log(error);
+                            resolve(await requesting_product_ids_from_accurate(pageFlipper));
+                        };
+                        if (response != undefined || response != null) {
+                            var result = JSON.parse(await response.body);
+                            var i = 0;
+                            var responseArray = [];
+                            for (i; i < result.d.length; i++) {
+                                responseArray.push(result.d[i].id);
+                            }
+                            resolve(responseArray);
+                        }else{
+                            console.log(`requesting_product_ids_from_accurate(pageFlipper) FAIL /item/list.do?sp.page == ${response}`);
+                            resolve(await requesting_product_ids_from_accurate(pageFlipper));
+                        }
+                    });
+                }else{
+                    console.log(`requesting_product_ids_from_accurate(pageFlipper) FAIL == ${response}`);
                     resolve(await requesting_product_ids_from_accurate(pageFlipper));
-                };
-                if (response != undefined || response != null) {
-                    var result = JSON.parse(await response.body);
-                    var i = 0;
-                    var responseArray = [];
-                    for (i; i < result.d.length; i++) {
-                        responseArray.push(result.d[i].id);
-                    }
-                    resolve(responseArray);
                 }
-            });
+            }   
         });
     });
 }

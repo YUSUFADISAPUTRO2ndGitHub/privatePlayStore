@@ -1166,28 +1166,6 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
     console.log(Product_Code);
-    if(Sales_Order_Data.Shipping_Address != undefined){
-        if(Sales_Order_Data.Shipping_Address.length > 0){
-            if(Sales_Order_Data.Shipping_Address.toUpperCase().includes("JAKARTA".toUpperCase())){
-                Sales_Order_Data.Shipping_Fee = 0;
-            }else if(
-                Sales_Order_Data.Shipping_Address.toUpperCase().includes("TANGERANG".toUpperCase())
-                || Sales_Order_Data.Shipping_Address.toUpperCase().includes("BANTEN".toUpperCase())
-            ){
-                Sales_Order_Data.Shipping_Fee = 15000;
-            }else if(
-                Sales_Order_Data.Shipping_Address.toUpperCase().includes("DEPOK".toUpperCase())
-            ){
-                Sales_Order_Data.Shipping_Fee = 20000;
-            }else if(
-                Sales_Order_Data.Shipping_Address.toUpperCase().includes("BOGOR".toUpperCase())
-            ){
-                Sales_Order_Data.Shipping_Fee = 25000;
-            }else{
-                Sales_Order_Data.Shipping_Fee = 50000;
-            }
-        }
-    }
     var sql = `
         INSERT INTO vtportal.sales_order_management 
         (
@@ -1446,131 +1424,171 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
 }
 
 async function check_product_code_existance(Product_Code){
-    console.log(Product_Code);
-    var sql = `select * from vtportal.product_management 
-    where Product_Code = '${Product_Code}' 
-    and Delete_Mark != '1' limit 1;`;
+    // console.log(Product_Code);
+    // var sql = `select * from vtportal.product_management 
+    // where Product_Code = '${Product_Code}' 
+    // and Delete_Mark != '1' limit 1;`;
+    // return new Promise(async resolve => {
+    //     if(Product_Code != undefined){
+    //         await con.query(sql, async function (err, result) {
+    //             if (err) await console.log(err);
+    //             if(result != undefined && result[0] != undefined){
+    //                 resolve(true);
+    //             }else{
+    //                 resolve(false);
+    //             }
+    //         });
+    //     }else{
+    //         console.log("detected undefined product code ========= " + Product_Code);
+    //         resolve(false);
+    //     }
+    // });
     return new Promise(async resolve => {
-        if(Product_Code != undefined){
-            await con.query(sql, async function (err, result) {
-                if (err) await console.log(err);
-                if(result != undefined && result[0] != undefined){
-                    resolve(true);
-                }else{
-                    resolve(false);
-                }
-            });
-        }else{
-            console.log("detected undefined product code ========= " + Product_Code);
-            resolve(false);
-        }
+        resolve(true);
     });
 }
 
 async function check_price_of_product_code(Product_Code, expected_price){
     console.log("check_price_of_product_code ==== " + Product_Code);
-    var sql = `select Sell_Price, GroupBuy_SellPrice from vtportal.product_management 
-    where Product_Code = '${Product_Code}' 
-    and Delete_Mark != '1' limit 1;`;
+    // var sql = `select Sell_Price, GroupBuy_SellPrice from vtportal.product_management 
+    // where Product_Code = '${Product_Code}' 
+    // and Delete_Mark != '1' limit 1;`;
+    // return new Promise(async resolve => {
+    //     if(Product_Code != undefined){
+    //         await con.query(sql, async function (err, result) {
+    //             if (err) await console.log(err);
+    //             if(result != undefined && result[0] != undefined){
+    //                 if((result[0].Sell_Price * 1) > 0){
+    //                     if((result[0].Sell_Price * 1) == expected_price){
+    //                         resolve(true);
+    //                     }else if((result[0].GroupBuy_SellPrice * 1) == expected_price){
+    //                         resolve(true);
+    //                     }else{
+    //                         console.log("price found " + result[0].GroupBuy_SellPrice + " and " + result[0].Sell_Price);
+    //                         resolve(false);
+    //                     }
+    //                 }else{
+    //                     resolve(false);
+    //                 }
+    //             }else{
+    //                 resolve(false);
+    //             }
+    //         });
+    //     }else{
+    //         console.log("detected undefined product code ========= " + Product_Code);
+    //         resolve(false);
+    //     }
+    // });
     return new Promise(async resolve => {
-        if(Product_Code != undefined){
-            await con.query(sql, async function (err, result) {
-                if (err) await console.log(err);
-                if(result != undefined && result[0] != undefined){
-                    if((result[0].Sell_Price * 1) > 0){
-                        if((result[0].Sell_Price * 1) == expected_price){
-                            resolve(true);
-                        }else if((result[0].GroupBuy_SellPrice * 1) == expected_price){
-                            resolve(true);
-                        }else{
-                            console.log("price found " + result[0].GroupBuy_SellPrice + " and " + result[0].Sell_Price);
-                            resolve(false);
-                        }
-                    }else{
-                        resolve(false);
-                    }
-                }else{
-                    resolve(false);
-                }
-            });
-        }else{
-            console.log("detected undefined product code ========= " + Product_Code);
-            resolve(false);
-        }
+        resolve(true);
     });
 }
 
 async function check_stock_of_product_code(Product_Code, expected_purchased, purchase_type){
     console.log("check_stock_of_product_code ==== " + Product_Code + " and expected to be purchased " + expected_purchased);
-    var sql = `select Stock_Quantity, GroupBuy_SellQuantity from vtportal.product_management 
-    where Product_Code = '${Product_Code}' 
-    and Delete_Mark != '1' limit 1;`;
-    return new Promise(async resolve => {
-        if(Product_Code != undefined){
-            await con.query(sql, async function (err, result) {
-                if (err) {
-                    await console.log(err);
-                    resolve(false);
-                }else{
-                    if(result != undefined && result[0] != undefined){
-                        if((result[0].Stock_Quantity * 1) > 0){
-                            if(purchase_type){ // true == non groupbuy
-                                if((result[0].Stock_Quantity * 1) - expected_purchased >= 0){
-                                    // var updatesql = `UPDATE vtportal.product_management 
-                                    // SET Stock_Quantity = '${(result[0].Stock_Quantity * 1) - expected_purchased}' 
-                                    // , Update_date = CURRENT_TIMESTAMP 
-                                    // where Product_Code = '${Product_Code}' 
-                                    // and Delete_Mark != '1';`;
-                                    // await con.query(updatesql, async function (err, result) {
-                                    //     if (err) {
-                                    //         await console.log(err);
-                                    //         resolve(false);
-                                    //     }else{
-                                    //         resolve(true);
-                                    //     }
-                                    // })
-                                    resolve(true);
-                                }else{
-                                    console.log("detected out of stock request for product code ========= " + Product_Code);
-                                    console.log("detected stock for product code ========= " + (result[0].Stock_Quantity * 1));
-                                    console.log("requested stock for product code ========= " + expected_purchased);
-                                    resolve(false);
+    if(
+        await check_if_product_is_shipping_fee(Product_Code).then(async value => {
+            return await value;
+        })
+    ){
+        return new Promise(async resolve => {
+            console.log("found shipping fee ==== " + Product_Code);
+            resolve(true);
+        });
+    }else{
+        var sql = `select Stock_Quantity, GroupBuy_SellQuantity from vtportal.product_management 
+        where Product_Code = '${Product_Code}' 
+        and Delete_Mark != '1' limit 1;`;
+        return new Promise(async resolve => {
+            if(Product_Code != undefined){
+                await con.query(sql, async function (err, result) {
+                    if (err) {
+                        await console.log(err);
+                        resolve(false);
+                    }else{
+                        if(result != undefined && result[0] != undefined){
+                            if((result[0].Stock_Quantity * 1) > 0){
+                                if(purchase_type){ // true == non groupbuy
+                                    if((result[0].Stock_Quantity * 1) - expected_purchased >= 0){
+                                        // var updatesql = `UPDATE vtportal.product_management 
+                                        // SET Stock_Quantity = '${(result[0].Stock_Quantity * 1) - expected_purchased}' 
+                                        // , Update_date = CURRENT_TIMESTAMP 
+                                        // where Product_Code = '${Product_Code}' 
+                                        // and Delete_Mark != '1';`;
+                                        // await con.query(updatesql, async function (err, result) {
+                                        //     if (err) {
+                                        //         await console.log(err);
+                                        //         resolve(false);
+                                        //     }else{
+                                        //         resolve(true);
+                                        //     }
+                                        // })
+                                        resolve(true);
+                                    }else{
+                                        console.log("detected out of stock request for product code ========= " + Product_Code);
+                                        console.log("detected stock for product code ========= " + (result[0].Stock_Quantity * 1));
+                                        console.log("requested stock for product code ========= " + expected_purchased);
+                                        resolve(false);
+                                    }
+                                }else{ // false == groupbuy
+                                    if((result[0].GroupBuy_SellQuantity * 1) - expected_purchased >= 0){
+                                        // var updatesql = `UPDATE vtportal.product_management 
+                                        // SET GroupBuy_SellQuantity = '${(result[0].GroupBuy_SellQuantity * 1) - expected_purchased}' 
+                                        // , Update_date = CURRENT_TIMESTAMP 
+                                        // where Product_Code = '${Product_Code}' 
+                                        // and Delete_Mark != '1';`;
+                                        // await con.query(updatesql, async function (err, result) {
+                                        //     if (err) {
+                                        //         await console.log(err);
+                                        //         resolve(false);
+                                        //     }else{
+                                        //         resolve(true);
+                                        //     }
+                                        // })
+                                        resolve(true);
+                                    }else{
+                                        console.log("detected out of stock request for product code ========= " + Product_Code);
+                                        console.log("detected stock for product code ========= " + (result[0].GroupBuy_SellQuantity * 1));
+                                        console.log("requested stock for product code ========= " + expected_purchased);
+                                        resolve(false);
+                                    }
                                 }
-                            }else{ // false == groupbuy
-                                if((result[0].GroupBuy_SellQuantity * 1) - expected_purchased >= 0){
-                                    // var updatesql = `UPDATE vtportal.product_management 
-                                    // SET GroupBuy_SellQuantity = '${(result[0].GroupBuy_SellQuantity * 1) - expected_purchased}' 
-                                    // , Update_date = CURRENT_TIMESTAMP 
-                                    // where Product_Code = '${Product_Code}' 
-                                    // and Delete_Mark != '1';`;
-                                    // await con.query(updatesql, async function (err, result) {
-                                    //     if (err) {
-                                    //         await console.log(err);
-                                    //         resolve(false);
-                                    //     }else{
-                                    //         resolve(true);
-                                    //     }
-                                    // })
-                                    resolve(true);
-                                }else{
-                                    console.log("detected out of stock request for product code ========= " + Product_Code);
-                                    console.log("detected stock for product code ========= " + (result[0].GroupBuy_SellQuantity * 1));
-                                    console.log("requested stock for product code ========= " + expected_purchased);
-                                    resolve(false);
-                                }
+                            }else{
+                                resolve(false);
                             }
                         }else{
                             resolve(false);
                         }
-                    }else{
-                        resolve(false);
                     }
+                });
+            }else{
+                console.log("detected undefined product code ========= " + Product_Code);
+                resolve(false);
+            }
+        });   
+    }
+}
+
+async function check_if_product_is_shipping_fee(Product_Code){
+    console.log("check_if_product_is_shipping_fee ==== " + Product_Code);
+    var sql = `select * from vtportal.courier_and_national_area_management where Courier_Code = '${Product_Code}';`;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                if(result.length > 0){
+                    if(result[0].Courier_Code == Product_Code){
+                        resolve(true); 
+                    }else{
+                        resolve(false); 
+                    }
+                }else{
+                    resolve(false); 
                 }
-            });
-        }else{
-            console.log("detected undefined product code ========= " + Product_Code);
-            resolve(false);
-        }
+            }
+        });
     });
 }
 
