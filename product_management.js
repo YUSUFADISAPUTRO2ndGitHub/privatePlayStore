@@ -820,8 +820,9 @@ app.post('/get-unpaid-sales-order-specific-for-a-product',  async (req, res) => 
 
 async function check_upaid_order_in_regards_to_product_code(Product_Code, Customer_Code){
     var sql = `
-    select count(*) as found from vtportal.sales_order_management so where Customer_Code = '${Customer_Code}' and Group_Buy_Purchase_PC = '${Product_Code}' and Delete_Mark = '0';
+    select count(*) as found from vtportal.sales_order_management so where Customer_Code = '${Customer_Code}' and Group_Buy_Purchase_PC = '${Product_Code}' and Delete_Mark = '0' and upper(Payment_Status) != 'PAYMENT';
     `;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {

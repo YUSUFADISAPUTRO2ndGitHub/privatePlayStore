@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "b0456d3a-edaf-4188-8bf3-9b3ae819848a";
+var refreshtoken = "89bdbdd1-c614-416a-a95c-2db611799861";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -194,7 +194,7 @@ var options = {
 request(options, function(error, response) {
     var options = {
         'method': 'GET',
-        'url': 'http://localhost:5002/get-all-sales-return-details',
+        'url': 'http://localhost:5002/get-all-employee-details', //get-all-employee-details
         'headers': {}
     };
     request(options, function(error, response) {
@@ -217,9 +217,8 @@ request(options, function(error, response) {
                 };
                 request(options, function(error, response) {
                     if (error) throw new Error(error);
-                    console.log(response.body);
-                    console.log("++=========================================================================++");
-                    console.log("Started to get customer informations");
+                    // console.log(response.body);
+                    console.log("get-all-sales-order-details === done");
                     var options = {
                         'method': 'GET',
                         'url': 'http://localhost:5002/get-all-customer-details',
@@ -227,9 +226,8 @@ request(options, function(error, response) {
                     };
                     request(options, function(error, response) {
                         if (error) throw new Error(error);
-                        console.log(response.body);
-                        console.log("++=========================================================================++");
-                        console.log("Started to get product informations");
+                        // console.log(response.body);
+                        console.log("get-all-customer-details === done");
                         var options = {
                             'method': 'GET',
                             'url': 'http://localhost:5002/get-all-product-details',
@@ -237,7 +235,8 @@ request(options, function(error, response) {
                         };
                         request(options, function(error, response) {
                             if (error) throw new Error(error);
-                            console.log(response.body);
+                            // console.log(response.body);
+                            console.log("get-all-product-details === done");
                             var options = {
                                 'method': 'GET',
                                 'url': 'http://localhost:5002/get-all-delivery-order-details',
@@ -245,15 +244,17 @@ request(options, function(error, response) {
                             };
                             request(options, function(error, response) {
                                 if (error) throw new Error(error);
-                                console.log(response.body);
+                                // console.log(response.body);
+                                console.log("get-all-delivery-order-details === done");
                                 var options = {
                                     'method': 'GET',
-                                    'url': 'http://localhost:5002/get-all-employee-details',
+                                    'url': 'http://localhost:5002/get-all-sales-return-details', //get-all-sales-return-details
                                     'headers': {}
                                 };
                                 request(options, function(error, response) {
                                     if (error) throw new Error(error);
-                                    console.log(response.body);
+                                    // console.log(response.body);
+                                    console.log("get-all-sales-return-details === done");
                                     var options = {
                                         'method': 'GET',
                                         'url': 'http://localhost:5002/get-all-purchase-order-details',
@@ -261,7 +262,8 @@ request(options, function(error, response) {
                                     };
                                     request(options, function(error, response) {
                                         if (error) throw new Error(error);
-                                        console.log(response.body);
+                                        // console.log(response.body);
+                                        console.log("get-all-purchase-order-details === done");
                                     });
                                 });
                             });
@@ -329,7 +331,8 @@ setInterval(() => {
                             };
                             request(options, function(error, response) {
                                 if (error) throw new Error(error);
-                                console.log(response.body);
+                                // console.log(response.body);
+                                console.log("get-all-product-details === done");
                                 var options = {
                                     'method': 'GET',
                                     'url': 'http://localhost:5002/get-all-delivery-order-details',
@@ -337,7 +340,8 @@ setInterval(() => {
                                 };
                                 request(options, function(error, response) {
                                     if (error) throw new Error(error);
-                                    console.log(response.body);
+                                    // console.log(response.body);
+                                    console.log("get-all-delivery-order-details === done");
                                     var options = {
                                         'method': 'GET',
                                         'url': 'http://localhost:5002/get-all-employee-details',
@@ -345,7 +349,8 @@ setInterval(() => {
                                     };
                                     request(options, function(error, response) {
                                         if (error) throw new Error(error);
-                                        console.log(response.body);
+                                        // console.log(response.body);
+                                        console.log("get-all-employee-details === done");
                                         var options = {
                                             'method': 'GET',
                                             'url': 'http://localhost:5002/get-all-purchase-order-details',
@@ -353,7 +358,8 @@ setInterval(() => {
                                         };
                                         request(options, function(error, response) {
                                             if (error) throw new Error(error);
-                                            console.log(response.body);
+                                            // console.log(response.body);
+                                            console.log("get-all-purchase-order-details === done");
                                         });
                                     });
                                 });
@@ -3369,6 +3375,28 @@ app.get('/get-all-employee-details', async(req, res) => {
             }
         }
     }
+
+    var current_id = 0;
+    for (current_id; current_id < collected_employee_details.length; current_id++) {
+        if (await check_if_employee_has_existed_in_MYSQL_old_table(collected_employee_details[current_id].emp_number).then(async value => {
+                return await value;
+            })) {
+            console.log("current_id = " + current_id);
+            if (await update_employee_in_json_to_mysql_old_table(collected_employee_details[current_id]).then(async value => {
+                    return await value;
+                })) {
+                console.log("udpate successfully in mysql");
+            }
+        } else {
+            console.log("current_id = " + current_id);
+            if (await insert_employee_in_json_to_mysql_old_table(collected_employee_details[current_id]).then(async value => {
+                    return await value;
+                })) {
+                console.log("insert successfully in mysql");
+            }
+        }
+    }
+
     res.send(
         collected_employee_details
     );
@@ -3376,7 +3404,7 @@ app.get('/get-all-employee-details', async(req, res) => {
 
 async function check_if_employee_has_existed_in_MYSQL(emp_number) {
     return new Promise(async resolve => {
-        var sql = `select count(*) as total_found from vtportal.employee_data_accurate where emp_number = '${emp_number}';`;
+        var sql = `select count(*) as total_found from vtportal.employee_data_accurate_new where emp_number = '${emp_number}';`;
         // console.log(sql);
         await con.query(sql, async function(err, result) {
             if (err) {
@@ -3411,6 +3439,59 @@ const update_employee_in_json_to_mysql = async(sorted_collected_employee_with_de
 const insert_employee_in_json_to_mysql = async(sorted_collected_employee_with_details) => {
     return new Promise(async resolve => {
         var sql = `insert into vtportal.employee_data_accurate_new (name, emp_number, mobilePhone, email, emp_position) values 
+        ('${sorted_collected_employee_with_details.name}'
+        , '${sorted_collected_employee_with_details.emp_number}'
+        , '${sorted_collected_employee_with_details.mobilePhone}'
+        , '${sorted_collected_employee_with_details.email}'
+        , '${sorted_collected_employee_with_details.emp_position}'
+        );`;
+        con.query(sql, function(err, result) {
+            if (err) console.log(err);
+        });
+        resolve(true);
+    });
+}
+
+/*
+    to insert to old table
+*/
+async function check_if_employee_has_existed_in_MYSQL_old_table(emp_number) {
+    return new Promise(async resolve => {
+        var sql = `select count(*) as total_found from vtportal.employee_data_accurate where emp_number = '${emp_number}';`;
+        // console.log(sql);
+        await con.query(sql, async function(err, result) {
+            if (err) {
+                await console.log(err);
+            } else {
+                if (result[0].total_found > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
+
+const update_employee_in_json_to_mysql_old_table = async(sorted_collected_employee_with_details) => {
+    return new Promise(async resolve => {
+        var sql = `UPDATE vtportal.employee_data_accurate SET 
+        name = '${sorted_collected_employee_with_details.name}'
+        , emp_number = '${sorted_collected_employee_with_details.emp_number}'
+        , mobilePhone = '${sorted_collected_employee_with_details.mobilePhone}'
+        , email = '${sorted_collected_employee_with_details.email}'
+        , emp_position = '${sorted_collected_employee_with_details.emp_position}'
+        WHERE emp_number = '${sorted_collected_employee_with_details.emp_number}';`;
+        con.query(sql, function(err, result) {
+            if (err) console.log(err);
+        });
+        resolve(true);
+    });
+}
+
+const insert_employee_in_json_to_mysql_old_table = async(sorted_collected_employee_with_details) => {
+    return new Promise(async resolve => {
+        var sql = `insert into vtportal.employee_data_accurate (name, emp_number, mobilePhone, email, emp_position) values 
         ('${sorted_collected_employee_with_details.name}'
         , '${sorted_collected_employee_with_details.emp_number}'
         , '${sorted_collected_employee_with_details.mobilePhone}'
@@ -3539,6 +3620,9 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
                             if (result.d != undefined) {
                                 if (!result.d.suspended) {
                                     if (result.d.salesman) {
+                                        console.log("EMPLOYEE NAME =============================================== EMPLOYEE NAME");
+                                        console.log(result.d.name);
+                                        console.log("EMPLOYEE NAME =============================================== EMPLOYEE NAME");
                                         resolve({
                                             name: result.d.name,
                                             emp_number: result.d.number,
