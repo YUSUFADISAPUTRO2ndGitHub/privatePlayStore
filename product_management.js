@@ -829,6 +829,7 @@ async function check_upaid_order_in_regards_to_product_code(Product_Code, Custom
                 await console.log(err);
                 resolve(false);
             }else{
+                console.log(result[0].found);
                 if(result[0].found > 0){
                     resolve(false);
                 }else{

@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "89bdbdd1-c614-416a-a95c-2db611799861";
+var refreshtoken = "84c3268d-f669-4e3d-903b-48357699df36";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -194,7 +194,7 @@ var options = {
 request(options, function(error, response) {
     var options = {
         'method': 'GET',
-        'url': 'http://localhost:5002/get-all-employee-details', //get-all-employee-details
+        'url': 'http://localhost:5002/get-all-product-details', //get-all-product-details
         'headers': {}
     };
     request(options, function(error, response) {
@@ -230,13 +230,13 @@ request(options, function(error, response) {
                         console.log("get-all-customer-details === done");
                         var options = {
                             'method': 'GET',
-                            'url': 'http://localhost:5002/get-all-product-details',
+                            'url': 'http://localhost:5002/get-all-employee-details',
                             'headers': {}
                         };
                         request(options, function(error, response) {
                             if (error) throw new Error(error);
                             // console.log(response.body);
-                            console.log("get-all-product-details === done");
+                            console.log("get-all-employee-details === done");
                             var options = {
                                 'method': 'GET',
                                 'url': 'http://localhost:5002/get-all-delivery-order-details',
@@ -3756,7 +3756,27 @@ const update_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         , Sell_Price = '${sorted_collected_product_with_details.Sell_Price}'
         , Quantity = '${sorted_collected_product_with_details.Quantity}'
         , Unit = '${sorted_collected_product_with_details.Unit}'
-        , Category = '${sorted_collected_product_with_details.Category_Name}'
+        , Category = '${sorted_collected_product_with_details.Category_Name}',
+        GroupBuy_Purchase = '${sorted_collected_product_with_details.GroupBuy_Purchase}',
+        Categorize_NEW = '${sorted_collected_product_with_details.Categorize_NEW}',
+        Mandarin_Name = '${sorted_collected_product_with_details.Mandarin_Name}',
+        Specification = '${sorted_collected_product_with_details.Specification}',
+        Subcategory = '${sorted_collected_product_with_details.Subcategory}',
+        Remark = '${sorted_collected_product_with_details.Remark}',
+        Description = '${sorted_collected_product_with_details.Description}',
+        Color = '${sorted_collected_product_with_details.Color}',
+        Brand = '${sorted_collected_product_with_details.Brand}',
+        Made_From = '${sorted_collected_product_with_details.Made_From}',
+        GroupBuy_SellQuantity = '${sorted_collected_product_with_details.GroupBuy_SellQuantity}',
+        GroupBuy_SellPrice = '${sorted_collected_product_with_details.GroupBuy_SellPrice}',
+        Marketing_1_Price = '${sorted_collected_product_with_details.Marketing_1_Price}',
+        Marketing_2_Price = '${sorted_collected_product_with_details.Marketing_2_Price}',
+        Sold_Price = '${sorted_collected_product_with_details.Sold_Price}',
+        Tokopedia_Price = '${sorted_collected_product_with_details.Tokopedia_Price}',
+        Shopee_Price = '${sorted_collected_product_with_details.Shopee_Price}',
+        Bekasi_Store_Price = '${sorted_collected_product_with_details.Bekasi_Store_Price}',
+        Weight_KG = '${sorted_collected_product_with_details.Weight_KG}',
+        Dimension_CM_CUBIC = '${sorted_collected_product_with_details.Dimension_CM_CUBIC}'
         WHERE Product_Code = '${sorted_collected_product_with_details.Product_Code}';`;
         con.query(sql, function(err, result) {
             if (err) {
@@ -3776,7 +3796,27 @@ const insert_product_in_json_to_mysql = async(sorted_collected_product_with_deta
             Sell_Price,
             Quantity,
             Unit,
-            Category
+            Category,
+            GroupBuy_Purchase,
+            Categorize_NEW,
+            Mandarin_Name,
+            Specification,
+            Subcategory,
+            Remark,
+            Description,
+            Color,
+            Brand,
+            Made_From,
+            GroupBuy_SellQuantity,
+            GroupBuy_SellPrice,
+            Marketing_1_Price,
+            Marketing_2_Price,
+            Sold_Price,
+            Tokopedia_Price,
+            Shopee_Price,
+            Bekasi_Store_Price,
+            Weight_KG,
+            Dimension_CM_CUBIC
         ) values 
         ('${sorted_collected_product_with_details.Product_Code}'
         , '${sorted_collected_product_with_details.Name}'
@@ -3784,6 +3824,26 @@ const insert_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         , '${sorted_collected_product_with_details.Quantity}'
         , '${sorted_collected_product_with_details.Unit}'
         , '${sorted_collected_product_with_details.Category_Name}'
+        , '${GroupBuy_Purchase}',
+        '${Categorize_NEW}',
+        '${Mandarin_Name}',
+        '${Specification}',
+        '${Subcategory}',
+        '${Remark}',
+        '${Description}',
+        '${Color}',
+        '${Brand}',
+        '${Made_From}',
+        '${GroupBuy_SellQuantity}',
+        '${GroupBuy_SellPrice}',
+        '${Marketing_1_Price}',
+        '${Marketing_2_Price}',
+        '${Sold_Price}',
+        '${Tokopedia_Price}',
+        '${Shopee_Price}',
+        '${Bekasi_Store_Price}',
+        '${Weight_KG}',
+        '${Dimension_CM_CUBIC}'
         );`;
         con.query(sql, function(err, result) {
             if (err) {
@@ -3924,16 +3984,252 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Sell_Price: result.d.unitPrice,
                             Quantity: result.d.totalUnit1Quantity,
                             Unit: result.d.unit1Name,
-                            Category_Name: result.d.itemCategory.name
+                            Category_Name: result.d.itemCategory.name,
+                            // custom fields
+                            GroupBuy_Purchase: result.d.charField1,
+                            Categorize_NEW: result.d.charField2,
+                            Mandarin_Name: result.d.charField3,
+                            Specification: result.d.charField4,
+                            Subcategory: result.d.charField5,
+                            Remark: result.d.charField6,
+                            Description: result.d.charField7,
+                            Color: result.d.charField8,
+                            Brand: result.d.charField9,
+                            Made_From: result.d.charField10,
+                            GroupBuy_SellQuantity: result.d.numericField1,
+                            GroupBuy_SellPrice: result.d.numericField2,
+                            Marketing_1_Price: result.d.numericField3,
+                            Marketing_2_Price: result.d.numericField4,
+                            Sold_Price: result.d.numericField5,
+                            Tokopedia_Price: result.d.numericField6,
+                            Shopee_Price: result.d.numericField7,
+                            Bekasi_Store_Price: result.d.numericField8,
+                            Weight_KG: result.d.numericField9,
+                            Dimension_CM_CUBIC: result.d.numericField10,
                         });
                     }else{
+                        console.log("result.d = undefined | requesting_product_details_based_on_id_from_accurate");
                         resolve(await requesting_product_details_based_on_id_from_accurate(id));
                     }
+                }else{
+                    console.log("FAILED TO GET PRODUCT DETAILS == requesting_product_details_based_on_id_from_accurate");
+                    resolve(await requesting_product_details_based_on_id_from_accurate(id));
                 }
             });
         });
     });
 }
+
+setInterval(async () => {
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
+        'headers': {}
+    };
+    request(options, function(error, response) {
+        if (error) throw new Error(error);
+        console.log("back-up-products-from-accurate-t0-product-management === done");
+    });
+}, 3.6e+6);
+
+// var options = {
+//     'method': 'GET',
+//     'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
+//     'headers': {}
+// };
+// request(options, function(error, response) {
+//     if (error) throw new Error(error);
+//     console.log("back-up-products-from-accurate-t0-product-management === done");
+// });
+
+app.get('/back-up-products-from-accurate-t0-product-management', async(req, res) => { 
+    res.send(
+        await get_products_in_product_data_accurate()
+    );
+})
+
+const get_products_in_product_data_accurate = async() => {
+    return new Promise(async resolve => {
+        var sql = `select * from vtportal.product_data_accurate ;`;
+        con.query(sql, async function(err, result) {
+            if (err) {
+                console.log("== FAIL get_products_in_product_data_accurate ==");
+                console.log(err);
+                resolve(await get_products_in_product_data_accurate());
+            }else{
+                var i = 0;
+                for(i ; i < result.length; i ++){
+                    if(
+                        await check_product_in_product_management(result[i]).then(async value => {
+                            return await value;
+                        })
+                    ){
+                        if(await update_product_in_product_management(result[i]).then(async value => {
+                            return await value;
+                        })){
+                            console.log("== SUCCESS update_product_in_product_management == " + result[i].Product_Code);
+                        }else{
+                            console.log("== FAIL update_product_in_product_management == " + result[i].Product_Code);
+                        }
+                    }else{
+                        if(await add_product_in_product_management(result[i]).then(async value => {
+                            return await value;
+                        })){
+                            console.log("== SUCCESS add_product_in_product_management == " + result[i].Product_Code);
+                        }else{
+                            console.log("== FAIL add_product_in_product_management == " + result[i].Product_Code);
+                        }
+                    }
+                }
+                resolve(true);
+            }
+        });
+    });
+}
+
+const check_product_in_product_management = async(product) => {
+    return new Promise(async resolve => {
+        if(product.Product_Code != undefined){
+                var sql = `select count(*) as found from vtportal.product_management WHERE Product_Code='${product.Product_Code}';`;
+            con.query(sql, async function(err, result) {
+                if (err) {
+                    console.log("== FAIL check_product_in_product_management ==");
+                    console.log(err);
+                    resolve(await check_product_in_product_management(product));
+                }else{
+                    if(result[0].found > 0){
+                        resolve(true);
+                    }else{
+                        resolve(false);
+                    }
+                }
+            });
+        }else{
+            resolve(false);
+        }
+    });
+}
+
+const update_product_in_product_management = async(product) => {
+    return new Promise(async resolve => {
+        if(product.Name != undefined
+            && product.Specification != undefined
+            && product.Description != undefined
+            && product.Remark != undefined
+            ){
+                var sql = `UPDATE vtportal.product_management
+            SET Name='${product.Name.replace('\'', '')}'
+            , Specification='${product.Specification.replace('\'', '')}'
+            , Description='${product.Description.replace('\'', '')}'
+            , Sell_Price='${product.Sell_Price}'
+            , Unit='${product.Unit}'
+            , Category='${product.Category}'
+            , Subcategory='${product.Subcategory}'
+            , Color='${product.Color}'
+            , Brand='${product.Brand}'
+            , GroupBuy_Purchase='${product.GroupBuy_Purchase}'
+            , GroupBuy_SellPrice='${product.GroupBuy_SellPrice}'
+            , GroupBuy_SellQuantity='${product.GroupBuy_SellQuantity}'
+            , In_Store_Price='${product.In_Store_Price}'
+            , Categorize_NEW='${product.Categorize_NEW}'
+            , Last_Updated=CURRENT_TIMESTAMP
+            , Remark='${product.Remark.replace('\'', '')}'
+            , Update_date=CURRENT_TIMESTAMP
+            , Weight_KG='${product.Weight_KG}'
+            , Dimension_CM_CUBIC='${product.Dimension_CM_CUBIC}'
+            , Stock_Quantity='${product.Quantity}'
+            , tokopedia_price='${product.tokopedia_price}'
+            , shopee_price='${product.shopee_price}'
+            WHERE Product_Code='${product.Product_Code}';
+            `;
+            con.query(sql, async function(err, result) {
+                if (err) {
+                    console.log("== FAIL update_product_in_product_management ==");
+                    console.log(err);
+                    resolve(await update_product_in_product_management());
+                }else{
+                    resolve(true);
+                }
+            });
+        }else{
+            resolve(false);
+        }
+    });
+}
+
+const add_product_in_product_management = async(product) => {
+    return new Promise(async resolve => {
+        if(product.Name != undefined
+            && product.Specification != undefined
+            && product.Description != undefined
+            && product.Remark != undefined
+            && product.Stock_Quantity != undefined
+            ){
+                var sql = `INSERT INTO vtportal.product_management
+                (
+                Product_Code,
+                Name,
+                Specification,
+                Description,
+                Sell_Price,
+                Unit,
+                Category,
+                Subcategory,
+                Color,
+                Brand,
+                GroupBuy_Purchase,
+                GroupBuy_SellPrice,
+                GroupBuy_SellQuantity,
+                In_Store_Price,
+                Categorize_NEW,
+                Last_Updated,
+                Remark,
+                Weight_KG,
+                Dimension_CM_CUBIC,
+                Stock_Quantity,
+                tokopedia_price,
+                shopee_price
+                )
+                VALUES(
+                    '${product.Product_Code}',
+                    '${product.Name.replace('\'', '')}',
+                    '${product.Specification.replace('\'', '')}',
+                    '${product.Description.replace('\'', '')}',
+                    '${product.Sell_Price}',
+                    '${product.Unit}',
+                    '${product.Category}',
+                    '${product.Subcategory}',
+                    '${product.Color}',
+                    '${product.Brand}',
+                    '${product.GroupBuy_Purchase}',
+                    '${product.GroupBuy_SellPrice}',
+                    '${product.GroupBuy_SellQuantity}',
+                    '${product.In_Store_Price}',
+                    '${product.Categorize_NEW}',
+                    '${product.Last_Updated}',
+                    '${product.Remark.replace('\'', '')}',
+                    '${product.Weight_KG}',
+                    '${product.Dimension_CM_CUBIC}',
+                    '${product.Stock_Quantity}',
+                    '${product.tokopedia_price}',
+                    '${product.shopee_price}'
+                );
+            `;
+            con.query(sql, async function(err, result) {
+                if (err) {
+                    console.log("== FAIL add_product_in_product_management ==");
+                    console.log(err);
+                    resolve(await add_product_in_product_management());
+                }else{
+                    resolve(true);
+                }
+            });
+        }else{
+            resolve(false);
+        }
+    });
+}
+
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)
