@@ -92,6 +92,57 @@ async function send_delivery_order_to_tiki(body_json){
     })
 }
 
+async function reorder_json_to_fit_tiki(json_from_ERP){
+    return new Promise(async resolve => {
+        var accepted_by_tiki = {
+            "accnum": json_from_ERP.account_number_with_tiki,
+            "paket_awb": "",
+            "paket_id": json_from_ERP.paket_id_tiki_and_sold,
+            "paket_service": json_from_ERP.chosen_paket_service,
+            "paket_weight": json_from_ERP.total_paket_weight,
+            "paket_volume_length": json_from_ERP.total_paket_volume_length,
+            "paket_volume_width": json_from_ERP.total_paket_volume_width,
+            "paket_volume_height": json_from_ERP.total_paket_volume_height,
+            "paket_insurance": json_from_ERP.type_paket_insurance,
+            "paket_value": json_from_ERP.total_price,
+            "paket_content": json_from_ERP.string_of_all_product_names,
+            "paket_cod": json_from_ERP.total_price_cod,
+            "paket_cashless": json_from_ERP.paket_cashless,
+            "paket_collect": "pickup_warehouse",
+            "consignor_name": json_from_ERP.sold_pic_name,
+            "consignor_company": json_from_ERP.registered_company_name,
+            "consignor_address1": json_from_ERP.registered_company_address,
+            "consignor_address2": "",
+            "consignor_zipcode": json_from_ERP.registered_company_zipcode,
+            "consignor_phone": json_from_ERP.sold_pic_contact_number,
+            "consignor_email": json_from_ERP.sold_pic_email,
+            "consignee_name": json_from_ERP.customer_name,
+            "consignee_company": json_from_ERP.customer_store_name,
+            "consignee_address1": json_from_ERP.customer_address,
+            "consignee_address2": "",
+            "consignee_zipcode": json_from_ERP.customer_zipcode,
+            "consignee_phone": json_from_ERP.customer_contact_number,
+            "consignee_email": json_from_ERP.customer_email,
+            "warehouse_code": json_from_ERP.sold_warehouse_code
+        }
+        resolve(await send_delivery_order_to_tiki(accepted_by_tiki).then(async value => {
+            return await value;
+        }))
+    })
+}
+
+app.post('/send_delivery_order_to_tiki',  async (req, res) => {
+    var json_from_ERP = req.body.json_from_ERP;
+    if(json_from_ERP != undefined){
+        res.send(
+            await reorder_json_to_fit_tiki(json_from_ERP).then(async value => {
+                return await value;
+            })
+        );
+    }
+})
+
+
 async function get_area_covered_by_tiki(token){
     return new Promise(async resolve => {
         var options = {
@@ -123,6 +174,34 @@ app.post('/update-tiki-datas',  async (req, res) => {
         })
     );
 })
+
+function update_tiki() {
+    var date = new Date();
+    console.log(date.getDay());
+    console.log(date.getHours());
+    if(date.getDay() === 0 && date.getHours() === 3) {
+        console.log("========================= update-tiki-datas =========================");
+        var options = {
+            'method': 'POST',
+            'url': 'http://localhost:3001/update-tiki-datas',
+            'headers': {},
+            'timeout': 12000000
+        };
+        request(options, function (error, response) {
+            if (error) {
+                console.log(error);
+                console.log("========================= fail update-tiki-datas =========================");
+            }else{
+                console.log(response.body);
+                console.log("========================= success update-tiki-datas =========================");
+            }
+        });
+    }
+}
+
+setInterval(function() {
+    update_tiki();
+},1.8e+6);
 
 async function save_area_covered_by_tiki(){
     return new Promise(async resolve => {

@@ -1186,7 +1186,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             Create_Date,
             Update_date,
             Delete_Mark,
-            Group_Buy_Purchase_PC
+            Group_Buy_Purchase_PC,
+            Payment_Status
         )
         VALUES 
         (
@@ -1207,7 +1208,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             CURRENT_TIMESTAMP(),
             CURRENT_TIMESTAMP(),
             '0',
-            '${Product_Code}'
+            '${Product_Code}',
+            'waitpay'
         );
     `;
     if(Sales_Order_Data.Payment_Method.toUpperCase() == 'BCA VA TRANSFER' || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
@@ -1502,9 +1504,8 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
         });
     }else{
         console.log("check_if_product_is_shipping_fee | found not shipping fee | Product_Code = " + Product_Code);
-        var sql = `select Stock_Quantity, GroupBuy_SellQuantity from vtportal.product_management 
-        where Product_Code = '${Product_Code}' 
-        and Delete_Mark != '1' limit 1;`;
+        var sql = `select Stock_Quantity, GroupBuy_SellQuantity from vtportal.product_management where Product_Code = '${Product_Code}' limit 1;`;
+        console.log(sql);
         return new Promise(async resolve => {
             if(Product_Code != undefined){
                 await con.query(sql, async function (err, result) {
@@ -1563,6 +1564,7 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
                             //     resolve(false);
                             // }
                         }else{
+                            console.log("ERROR == undefined == check_stock_of_product_code | " + expected_purchased);
                             resolve(false);
                         }
                     }

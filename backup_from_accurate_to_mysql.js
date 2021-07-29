@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "26f54fc2-2401-4437-8385-283d17db4526";
+var refreshtoken = "f1ba4bcc-a4d5-4b30-a22f-eafd04853844";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4020,6 +4020,16 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
     });
 }
 
+// var options = {
+//     'method': 'GET',
+//     'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
+//     'headers': {}
+// };
+// request(options, function(error, response) {
+//     if (error) throw new Error(error);
+//     console.log("back-up-products-from-accurate-t0-product-management === done");
+// });
+
 setInterval(async () => {
     var options = {
         'method': 'GET',
@@ -4147,10 +4157,11 @@ const update_product_in_product_management = async(product) => {
 
 const add_product_in_product_management = async(product) => {
     return new Promise(async resolve => {
+        // console.log(product);
         if(product.Name != undefined
             && product.Specification != undefined
             && product.Description != undefined
-            && product.Stock_Quantity != undefined
+            && product.Quantity != undefined
             ){
                 var sql = `INSERT INTO vtportal.product_management
                 (
@@ -4195,7 +4206,7 @@ const add_product_in_product_management = async(product) => {
                     '${product.Last_Updated}',
                     '${product.Weight_KG}',
                     '${product.Dimension_CM_CUBIC}',
-                    '${product.Stock_Quantity}',
+                    '${product.Quantity}',
                     '${product.tokopedia_price}',
                     '${product.shopee_price}'
                 );
@@ -4206,6 +4217,7 @@ const add_product_in_product_management = async(product) => {
                     console.log(err);
                     resolve(await add_product_in_product_management());
                 }else{
+                    console.log("== success add_product_in_product_management ==");
                     resolve(true);
                 }
             });
