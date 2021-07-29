@@ -1366,6 +1366,7 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
         var i = 0;
         var total_sales_order_quantity = 0;
         var total_sales_order_price = 0;
+        console.log(Sales_Order_Detail_data);
         for(i = 0; i < Sales_Order_Detail_data.length;){
             if(Sales_Order_Detail_data[i] != undefined){
                 if(Sales_Order_Detail_data[i].Quantity_Requested !=undefined && Sales_Order_Detail_data[i].Quantity_Requested != null){
@@ -1388,8 +1389,12 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
                                                 return await value;
                                             }))
                                         ){
+                                            console.log("check_price_of_product_code === passed");
+                                            console.log(i);
+                                            console.log(Sales_Order_Detail_data.length);
                                             i++
                                         }else{
+                                            console.log("check_price_of_product_code === failed");
                                             resolve(false);
                                         }
                                     }
@@ -1496,6 +1501,7 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
             resolve(true);
         });
     }else{
+        console.log("check_if_product_is_shipping_fee | found not shipping fee | Product_Code = " + Product_Code);
         var sql = `select Stock_Quantity, GroupBuy_SellQuantity from vtportal.product_management 
         where Product_Code = '${Product_Code}' 
         and Delete_Mark != '1' limit 1;`;
@@ -1507,7 +1513,7 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
                         resolve(false);
                     }else{
                         if(result != undefined && result[0] != undefined){
-                            if((result[0].Stock_Quantity * 1) > 0){
+                            // if((result[0].Stock_Quantity * 1) > 0){
                                 if(purchase_type){ // true == non groupbuy
                                     if((result[0].Stock_Quantity * 1) - expected_purchased >= 0){
                                         // var updatesql = `UPDATE vtportal.product_management 
@@ -1553,9 +1559,9 @@ async function check_stock_of_product_code(Product_Code, expected_purchased, pur
                                         resolve(false);
                                     }
                                 }
-                            }else{
-                                resolve(false);
-                            }
+                            // }else{
+                            //     resolve(false);
+                            // }
                         }else{
                             resolve(false);
                         }

@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "84c3268d-f669-4e3d-903b-48357699df36";
+var refreshtoken = "d64d33fb-6814-46d5-b81f-02f62006af57";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -3762,7 +3762,7 @@ const update_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         Mandarin_Name = '${sorted_collected_product_with_details.Mandarin_Name}',
         Specification = '${sorted_collected_product_with_details.Specification}',
         Subcategory = '${sorted_collected_product_with_details.Subcategory}',
-        Remark = '${sorted_collected_product_with_details.Remark}',
+        Remark = '${sorted_collected_product_with_details.Dimension_CM_CUBIC}',
         Description = '${sorted_collected_product_with_details.Description}',
         Color = '${sorted_collected_product_with_details.Color}',
         Brand = '${sorted_collected_product_with_details.Brand}',
@@ -3824,26 +3824,26 @@ const insert_product_in_json_to_mysql = async(sorted_collected_product_with_deta
         , '${sorted_collected_product_with_details.Quantity}'
         , '${sorted_collected_product_with_details.Unit}'
         , '${sorted_collected_product_with_details.Category_Name}'
-        , '${GroupBuy_Purchase}',
-        '${Categorize_NEW}',
-        '${Mandarin_Name}',
-        '${Specification}',
-        '${Subcategory}',
-        '${Remark}',
-        '${Description}',
-        '${Color}',
-        '${Brand}',
-        '${Made_From}',
-        '${GroupBuy_SellQuantity}',
-        '${GroupBuy_SellPrice}',
-        '${Marketing_1_Price}',
-        '${Marketing_2_Price}',
-        '${Sold_Price}',
-        '${Tokopedia_Price}',
-        '${Shopee_Price}',
-        '${Bekasi_Store_Price}',
-        '${Weight_KG}',
-        '${Dimension_CM_CUBIC}'
+        , '${sorted_collected_product_with_details.GroupBuy_Purchase}',
+        '${sorted_collected_product_with_details.Categorize_NEW}',
+        '${sorted_collected_product_with_details.Mandarin_Name}',
+        '${sorted_collected_product_with_details.Specification}',
+        '${sorted_collected_product_with_details.Subcategory}',
+        '${sorted_collected_product_with_details.Dimension_CM_CUBIC}',
+        '${sorted_collected_product_with_details.Description}',
+        '${sorted_collected_product_with_details.Color}',
+        '${sorted_collected_product_with_details.Brand}',
+        '${sorted_collected_product_with_details.Made_From}',
+        '${sorted_collected_product_with_details.GroupBuy_SellQuantity}',
+        '${sorted_collected_product_with_details.GroupBuy_SellPrice}',
+        '${sorted_collected_product_with_details.Marketing_1_Price}',
+        '${sorted_collected_product_with_details.Marketing_2_Price}',
+        '${sorted_collected_product_with_details.Sold_Price}',
+        '${sorted_collected_product_with_details.Tokopedia_Price}',
+        '${sorted_collected_product_with_details.Shopee_Price}',
+        '${sorted_collected_product_with_details.Bekasi_Store_Price}',
+        '${sorted_collected_product_with_details.Weight_KG}',
+        '${sorted_collected_product_with_details.Dimension_CM_CUBIC}'
         );`;
         con.query(sql, function(err, result) {
             if (err) {
@@ -3991,7 +3991,7 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Mandarin_Name: result.d.charField3,
                             Specification: result.d.charField4,
                             Subcategory: result.d.charField5,
-                            Remark: result.d.charField6,
+                            Dimension_CM_CUBIC: result.d.charField6,
                             Description: result.d.charField7,
                             Color: result.d.charField8,
                             Brand: result.d.charField9,
@@ -4005,7 +4005,7 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Shopee_Price: result.d.numericField7,
                             Bekasi_Store_Price: result.d.numericField8,
                             Weight_KG: result.d.numericField9,
-                            Dimension_CM_CUBIC: result.d.numericField10,
+                            // Dimension_CM_CUBIC: result.d.numericField10,
                         });
                     }else{
                         console.log("result.d = undefined | requesting_product_details_based_on_id_from_accurate");
@@ -4031,16 +4031,6 @@ setInterval(async () => {
         console.log("back-up-products-from-accurate-t0-product-management === done");
     });
 }, 3.6e+6);
-
-// var options = {
-//     'method': 'GET',
-//     'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
-//     'headers': {}
-// };
-// request(options, function(error, response) {
-//     if (error) throw new Error(error);
-//     console.log("back-up-products-from-accurate-t0-product-management === done");
-// });
 
 app.get('/back-up-products-from-accurate-t0-product-management', async(req, res) => { 
     res.send(

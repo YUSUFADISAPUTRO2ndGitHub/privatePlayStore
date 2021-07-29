@@ -38,7 +38,209 @@ con.on('error', function(err) {
     }
 });
 
-function handle_disconnect() {
+async function get_access_token_tiki(){
+    return new Promise(async resolve => {
+        var options = {
+            'method': 'POST',
+            'url': 'http://apis.mytiki.net:8321/user/auth',
+            'headers': {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+            "username": "SOLDIGNUSA",
+            "password": "11628528082735990090"
+            })
+        
+        };
+        request(options, function (error, response) {
+            if (error) {
+                console.log(error);
+                console.log("fail to get token from tiki == get_access_token_tiki");
+                resolve(get_access_token_tiki());
+            }else{
+                // console.log(response.body);
+                var result = JSON.parse(response.body);
+                resolve(result.response.token);
+            }
+        });
+    })
+}
+
+async function send_delivery_order_to_tiki(body_json){
+    return new Promise(async resolve => {
+        var json_to_be_sent;
+        var options = {
+            'method': 'POST',
+            'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
+            'headers': {
+              'content-type': 'application/json ',
+              'x-access-token': await get_access_token_tiki()
+            },
+            body: body_json
+          
+        };
+        request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                console.log("send_delivery_order_to_tiki(body_json) ========== send_delivery_order_to_tiki(body_json)");
+                resolve(await send_delivery_order_to_tiki(body_json));
+            }else{
+                var result = JSON.parse(response.body);
+                resolve(result);
+            }
+        });
+    })
+}
+
+async function get_area_covered_by_tiki(token){
+    return new Promise(async resolve => {
+        var options = {
+            'method': 'POST',
+            'url': 'http://apis.mytiki.net:8321/tariff/areainfo',
+            'headers': {
+              'content-type': 'application/json ',
+              'x-access-token': `${token}`
+            }
+        };
+        request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                console.log("fail get_area_covered_by_tiki | token : " + token);
+                resolve(get_area_covered_by_tiki(token)());
+            }else{
+                // console.log(response.body);
+                var result = JSON.parse(response.body);
+                resolve(result.response);
+            }
+        });
+    })
+}
+
+app.post('/update-tiki-datas',  async (req, res) => {
+    res.send(
+        await save_area_covered_by_tiki().then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function save_area_covered_by_tiki(){
+    return new Promise(async resolve => {
+        var token = await get_access_token_tiki().then(async value => {
+            return await value;
+        })
+        if(token.length > 0){
+            var areas = await get_area_covered_by_tiki(token).then(async value => {
+                return await value;
+            })
+            var object_data =  {
+                Courier: "tiki"
+            }
+            if(
+                await delete_all_existing_area_covered_by_tiki_in_database(object_data).then(async value => {
+                    return await value;
+                })
+            ){
+                var i = 0;
+                for(i; i < areas.length; i++){
+                    // (areas[i].sub_dist != null) ? console.log(areas[i].sub_dist.replace("\'", "\\'")) : console.log("===============================");
+                    var object_data =  {
+                        Courier: "tiki", 
+                        Courier_Code: "tiki",
+                        Province: (areas[i].province != null) ? areas[i].province.replace(/'/g, "\\'") : "",
+                        City: (areas[i].city_county_type != null && areas[i].city_county != null) ? areas[i].city_county_type.replace(/'/g, "\\'") + " " + areas[i].city_county.replace(/'/g, "\\'") : areas[i].city_county.replace(/'/g, "\\'"),
+                        District: (areas[i].dist != null) ? areas[i].dist.replace(/'/g, "\\'") : "",
+                        Sub_District: (areas[i].sub_dist != null) ? areas[i].sub_dist.replace(/'/g, "\\'") : "",
+                        Zipcode: (areas[i].zip_code != null) ? areas[i].zip_code.replace(/'/g, "\\'") : "",
+                        Courier_Price_Code: areas[i].tariff_code
+                    }
+                    if(
+                        await add_area_covered_by_tiki_into_database(object_data).then(async value => {
+                            return await value;
+                        })
+                    ){
+                        console.log("success added");
+                    }else{
+                        console.log("fail added | Courier_Price_Code = " + Courier_Price_Code);
+                    }
+                }   
+            }else{
+                console.log("== fail delete_all_existing_area_covered_by_tiki_in_database == fail save_area_covered_by_tiki");
+                resolve(false);
+            }
+        }else{
+            resolve(false);
+        }
+    })
+}
+
+async function add_area_covered_by_tiki_into_database(object_data){
+    var sql = "";
+    sql = `
+    INSERT INTO vtportal.courier_and_national_area_management
+    (
+        Courier
+        , Courier_Code
+        , Province
+        , City
+        , District
+        , Sub_District
+        , Zipcode
+        , Courier_Price_Code
+        , Created_Date
+        , Status
+        , Update_date
+        , Delete_Mark
+        )
+    VALUES(
+        '${object_data.Courier}'
+        ,'${object_data.Courier_Code}'
+        , '${object_data.Province}'
+        , '${object_data.City}'
+        , '${object_data.District}'
+        , '${object_data.Sub_District}'
+        , '${object_data.Zipcode}'
+        , '${object_data.Courier_Price_Code}'
+        , CURRENT_TIMESTAMP
+        , 'approving'
+        , CURRENT_TIMESTAMP
+        , '0'
+    );
+    ;
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+async function delete_all_existing_area_covered_by_tiki_in_database(object_data){
+    var sql = "";
+    sql = `
+        DELETE FROM vtportal.courier_and_national_area_management
+        WHERE upper(Courier) = '${object_data.Courier.toUpperCase()}';
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}
+
+async function handle_disconnect() {
     con = mysql.createConnection({
         host: "172.31.207.222",
         port: 3306,
@@ -83,19 +285,20 @@ const get_latest_recorded_token = async () => {
 
 app.post('/get-shipping-option-data',  async (req, res) => {
     if(req.query.Get_Shipping_Fee != undefined){
-        if(req.query.Courier != undefined 
-            && req.query.Courier_Code != undefined
-            && req.query.Province != undefined
-            && req.query.City != undefined
-            && req.query.District != undefined
-            && req.query.Sub_District != undefined){
+        if(req.query.Courier_Price_Code_orig != undefined 
+            && req.query.Courier_Price_Code_dest != undefined
+            && req.query.packing_type != undefined
+            && req.query.weight != undefined
+            && req.query.paket_value != undefined){
                 res.send(
-                    await get_shipping_options(req.query.Courier
-                        , req.query.Courier_Code
-                        , req.query.Province
-                        , req.query.City
-                        , req.query.District
-                        , req.query.Sub_District
+                    await get_shipping_options(req.query.Courier_Price_Code_orig
+                        , req.query.Courier_Price_Code_dest
+                        , req.query.packing_type
+                        , req.query.weight
+                        , req.query.length
+                        , req.query.width
+                        , req.query.height
+                        , req.query.paket_value
                         ).then(async value => {
                             return await value;
                     })
@@ -117,24 +320,21 @@ app.post('/get-courier-data',  async (req, res) => {
             })
         );
     }else if(req.query.Get_Shipping_Fee != undefined){
-        if(req.query.Courier != undefined 
-            && req.query.Courier_Code != undefined
-            && req.query.Province != undefined
-            && req.query.City != undefined
-            && req.query.District != undefined
-            && req.query.Sub_District != undefined
-            && req.query.delivery_time_in_days != undefined
-            && req.query.Courier_Price_Code != undefined
+        if(req.query.Courier_Price_Code_orig != undefined 
+            && req.query.Courier_Price_Code_dest != undefined
+            && req.query.packing_type != undefined
+            && req.query.weight != undefined
+            && req.query.paket_value != undefined
             ){
                 res.send(
-                    await get_shipping_fee(req.query.Courier
-                        , req.query.Courier_Code
-                        , req.query.Province
-                        , req.query.City
-                        , req.query.District
-                        , req.query.Sub_District
-                        , req.query.delivery_time_in_days
-                        , req.query.Courier_Price_Code
+                    await get_shipping_fee(req.query.Courier_Price_Code_orig
+                        , req.query.Courier_Price_Code_dest
+                        , req.query.packing_type
+                        , req.query.weight
+                        , req.query.length
+                        , req.query.width
+                        , req.query.height
+                        , req.query.paket_value
                         ).then(async value => {
                             return await value;
                     })
@@ -183,71 +383,105 @@ app.post('/get-courier-data',  async (req, res) => {
     }
 })
 
-async function get_shipping_fee(Courier
-    , Courier_Code
-    , Province
-    , City
-    , District
-    , Sub_District
-    , delivery_time_in_days
-    , Courier_Price_Code
+async function get_shipping_fee(Courier_Price_Code_orig
+    , Courier_Price_Code_dest
+    , packing_type
+    , weight
+    , length
+    , width
+    , height
+    , paket_value
     ){
-        var sql = "";
-        sql = `
-            select Courier_Price_Code, delivery_time_in_days, Courier_Price_Per_Kg from vtportal.courier_and_national_area_management where 
-                upper(Courier) = '${Courier.toUpperCase()}'
-                and upper(Courier_Code) = '${Courier_Code.toUpperCase()}'
-                and upper(Province) = '${Province.toUpperCase()}'
-                and upper(City) = '${City.toUpperCase()}'
-                and upper(District) = '${District.toUpperCase()}'
-                and upper(Sub_District) = '${Sub_District.toUpperCase()}'
-                and upper(delivery_time_in_days) = '${delivery_time_in_days.toUpperCase()}'
-                and upper(Courier_Price_Code) = '${Courier_Price_Code.toUpperCase()}'
-            ;
-        `;
-        console.log(sql);
         return new Promise(async resolve => {
-            await con.query(sql, async function (err, result) {
-                if (err) {
-                    await console.log(err);
-                    resolve(false);
-                }else{
-                    resolve(result);
-                }
-            });
+            resolve(
+            await get_shipping_options(Courier_Price_Code_orig
+                , Courier_Price_Code_dest
+                , packing_type
+                , weight
+                , length
+                , width
+                , height
+                , paket_value
+                ).then(async value => {
+                    return await value;
+            }));
         });
+        // var sql = "";
+        // sql = `
+        //     select Courier_Price_Code, delivery_time_in_days, Courier_Price_Per_Kg from vtportal.courier_and_national_area_management where 
+        //         upper(Courier) = '${Courier.toUpperCase()}'
+        //         and upper(Courier_Code) = '${Courier_Code.toUpperCase()}'
+        //         and upper(Province) = '${Province.toUpperCase()}'
+        //         and upper(City) = '${City.toUpperCase()}'
+        //         and upper(District) = '${District.toUpperCase()}'
+        //         and upper(Sub_District) = '${Sub_District.toUpperCase()}'
+        //         and upper(delivery_time_in_days) = '${delivery_time_in_days.toUpperCase()}'
+        //         and upper(Courier_Price_Code) = '${Courier_Price_Code.toUpperCase()}'
+        //     ;
+        // `;
+        // console.log(sql);
+        // return new Promise(async resolve => {
+        //     await con.query(sql, async function (err, result) {
+        //         if (err) {
+        //             await console.log(err);
+        //             resolve(false);
+        //         }else{
+        //             resolve(result);
+        //         }
+        //     });
+        // });
 
 }
 
-async function get_shipping_options(Courier
-    , Courier_Code
-    , Province
-    , City
-    , District
-    , Sub_District
+async function get_shipping_options(Courier_Price_Code_orig
+    , Courier_Price_Code_dest
+    , packing_type
+    , weight
+    , length
+    , width
+    , height
+    , paket_value
     ){
-        var sql = "";
-        sql = `
-            select Courier_Price_Code, delivery_time_in_days, Courier_Price_Per_Kg from vtportal.courier_and_national_area_management where 
-                upper(Courier) like '%${Courier.toUpperCase()}%'
-                and upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%'
-                and upper(Province) like '%${Province.toUpperCase()}%'
-                and upper(City) like '%${City.toUpperCase()}%'
-                and upper(District) like '%${District.toUpperCase()}%'
-                and upper(Sub_District) like '%${Sub_District.toUpperCase()}%'
-            ;
-        `;
-        console.log(sql);
         return new Promise(async resolve => {
-            await con.query(sql, async function (err, result) {
-                if (err) {
-                    await console.log(err);
-                    resolve(false);
+            var body_json = {
+                orig: Courier_Price_Code_orig,
+                dest: Courier_Price_Code_dest,
+                packing_type: packing_type,
+                weight: weight,
+                length: length,
+                width: width,
+                height: height,
+                paket_value: paket_value,
+            };
+            var options = {
+                'method': 'POST',
+                'url': 'http://apis.mytiki.net:8321/v02/tariff/product',
+                'headers': {
+                'content-type': 'application/json ',
+                'x-access-token': await get_access_token_tiki()
+                },
+                body: JSON.stringify(body_json)
+            
+            };
+            request(options, async function (error, response) {
+                if (error) {
+                    console.log(error);
+                    console.log("fail get_shipping_options ================= get_shipping_options");
+                    resolve(get_shipping_options(Courier_Price_Code_orig
+                        , Courier_Price_Code_dest
+                        , packing_type
+                        , weight
+                        , length
+                        , width
+                        , height
+                        , paket_value
+                        ));
                 }else{
-                    resolve(result);
+                    var result = JSON.parse(response.body);
+                    resolve(result.response);
                 }
             });
-        });
+        })
 }
 
 async function get_couriers(){
@@ -272,11 +506,11 @@ async function get_courier_all_Sub_Districts(Courier, Courier_Code, District){
     var sql = "";
     if(Courier != undefined){
         sql = `
-            select Distinct Sub_District from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
+            select Distinct Sub_District, Zipcode, Courier_Price_Code from vtportal.courier_and_national_area_management where upper(Courier) like '%${Courier.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
         `;
     }else{
         sql = `
-            select Distinct Sub_District from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
+            select Distinct Sub_District, Zipcode, Courier_Price_Code from vtportal.courier_and_national_area_management where upper(Courier_Code) like '%${Courier_Code.toUpperCase()}%' and upper(District) like '%${District.toUpperCase()}%';
         `;
     }
     console.log(sql);
@@ -523,7 +757,7 @@ app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => 
     }
 })
 
-function customer_login_request(Password, Email){
+async function customer_login_request(Password, Email){
     var options = {
         'method': 'POST',
         'url': 'http://147.139.168.202:3002/customer-login-request?Password=' + Password + '&Email=' + Email,
@@ -1223,8 +1457,11 @@ async function get_product_details_not_groupbuy_purchase(){
 }
 
 async function get_product_details_based_on_groupbuy_purchase(){
+    // var sql = `
+    //     select * from vtportal.product_management where GroupBuy_Purchase != 'false' and GroupBuy_Purchase != 'undefined' and GroupBuy_Purchase != 'NULL';
+    // `;
     var sql = `
-        select * from vtportal.product_management where GroupBuy_Purchase != 'false' and GroupBuy_Purchase != 'undefined' and GroupBuy_Purchase != 'NULL';
+    select * from vtportal.product_management where GroupBuy_Purchase ='true';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
