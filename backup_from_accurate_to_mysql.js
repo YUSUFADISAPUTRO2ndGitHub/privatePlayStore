@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "d64d33fb-6814-46d5-b81f-02f62006af57";
+var refreshtoken = "26f54fc2-2401-4437-8385-283d17db4526";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4105,7 +4105,6 @@ const update_product_in_product_management = async(product) => {
         if(product.Name != undefined
             && product.Specification != undefined
             && product.Description != undefined
-            && product.Remark != undefined
             ){
                 var sql = `UPDATE vtportal.product_management
             SET Name='${product.Name.replace('\'', '')}'
@@ -4123,7 +4122,6 @@ const update_product_in_product_management = async(product) => {
             , In_Store_Price='${product.In_Store_Price}'
             , Categorize_NEW='${product.Categorize_NEW}'
             , Last_Updated=CURRENT_TIMESTAMP
-            , Remark='${product.Remark.replace('\'', '')}'
             , Update_date=CURRENT_TIMESTAMP
             , Weight_KG='${product.Weight_KG}'
             , Dimension_CM_CUBIC='${product.Dimension_CM_CUBIC}'
@@ -4152,7 +4150,6 @@ const add_product_in_product_management = async(product) => {
         if(product.Name != undefined
             && product.Specification != undefined
             && product.Description != undefined
-            && product.Remark != undefined
             && product.Stock_Quantity != undefined
             ){
                 var sql = `INSERT INTO vtportal.product_management
@@ -4173,7 +4170,6 @@ const add_product_in_product_management = async(product) => {
                 In_Store_Price,
                 Categorize_NEW,
                 Last_Updated,
-                Remark,
                 Weight_KG,
                 Dimension_CM_CUBIC,
                 Stock_Quantity,
@@ -4197,7 +4193,6 @@ const add_product_in_product_management = async(product) => {
                     '${product.In_Store_Price}',
                     '${product.Categorize_NEW}',
                     '${product.Last_Updated}',
-                    '${product.Remark.replace('\'', '')}',
                     '${product.Weight_KG}',
                     '${product.Dimension_CM_CUBIC}',
                     '${product.Stock_Quantity}',
