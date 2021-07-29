@@ -1370,6 +1370,7 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
         var total_sales_order_price = 0;
         console.log(Sales_Order_Detail_data);
         for(i = 0; i < Sales_Order_Detail_data.length;){
+            console.log("for i = "+ i);
             if(Sales_Order_Detail_data[i] != undefined){
                 if(Sales_Order_Detail_data[i].Quantity_Requested !=undefined && Sales_Order_Detail_data[i].Quantity_Requested != null){
                     if((Sales_Order_Detail_data[i].Quantity_Requested * 1) > 0){
@@ -1394,28 +1395,39 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
                                             console.log("check_price_of_product_code === passed");
                                             console.log(i);
                                             console.log(Sales_Order_Detail_data.length);
-                                            i++
+                                            i++;
                                         }else{
                                             console.log("check_price_of_product_code === failed");
+                                            i = Sales_Order_Detail_data.length;
                                             resolve(false);
                                         }
                                     }
                                 }else{
+                                    console.log("(Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity * 1) > 0 === failed | " + (Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity * 1));
+                                    i = Sales_Order_Detail_data.length;
                                     resolve(false);
                                 }
                             }else{
+                                console.log("Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity !=undefined && Sales_Order_Detail_data[i].Price_Based_On_Total_Quantity != null === failed");
+                                i = Sales_Order_Detail_data.length;
                                 resolve(false);
                             }
                         }else{
+                            console.log("Sales_Order_Detail_data[i] != undefined === failed");
+                            i = Sales_Order_Detail_data.length;
                             resolve(false);
                         }
                     }else{
+                        console.log("(Sales_Order_Detail_data[i].Quantity_Requested * 1) > 0 === failed | " + (Sales_Order_Detail_data[i].Quantity_Requested * 1) > 0);
+                        i = Sales_Order_Detail_data.length;
                         resolve(false);
                     }
                 }else{
+                    i = Sales_Order_Detail_data.length;
                     resolve(false);
                 }
             }else{
+                i = Sales_Order_Detail_data.length;
                 resolve(false);
             }
         }

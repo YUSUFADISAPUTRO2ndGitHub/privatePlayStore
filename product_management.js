@@ -142,6 +142,78 @@ app.post('/send_delivery_order_to_tiki',  async (req, res) => {
     }
 })
 
+app.post('/get_actual_shipping_fee_tiki',  async (req, res) => {
+    res.send(
+        await get_actual_shipping_fee_charged_tiki(req.query.cnno).then(async value => {
+            return await value;
+        })
+    )
+})
+
+async function get_actual_shipping_fee_charged_tiki(cnno){
+    return new Promise(async resolve => {
+        var options = {
+            'method': 'POST',
+            'url': 'http://apis.mytiki.net:8321/connote/information',
+            'headers': {
+            'content-type': 'application/json ',
+            'x-access-token': await get_access_token_tiki()
+            },
+            body: `{\r\n    "cnno":"${cnno}"\r\n}`
+        
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(false);
+            }else{
+                var result = JSON.parse(response.body);
+                resolve(
+                    {
+                        accepted_weight_from_tiki: result.response[0].weight,
+                        actual_cost_for_the_shipment: result.response[0].shipment_fee,
+                        actual_insurance_fee_from_tiki: result.response[0].insurance_fee,
+                        chosen_delivery_service_from_tiki: result.response[0].product,
+                        total_package: result.response[0].pieces_no,
+                        destination: result.response[0].destination_city_name
+                    }
+                );
+            }
+        });
+    })
+}
+
+app.post('/track_shipment_tiki',  async (req, res) => {
+    res.send(
+        await get_tracking_tiki_history(req.query.cnno).then(async value => {
+            return await value;
+        })
+    )
+})
+
+async function get_tracking_tiki_history(cnno){
+    return new Promise(async resolve => {
+        var options = {
+            'method': 'POST',
+            'url': 'http://apis.mytiki.net:8321/connote/information',
+            'headers': {
+            'content-type': 'application/json ',
+            'x-access-token': await get_access_token_tiki()
+            },
+            body: `{\r\n    "cnno":"${cnno}"\r\n}`
+        
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                resolve(false);
+            }else{
+                var result = JSON.parse(response.body);
+                resolve(result.response[0].history);
+            }
+        });
+    })
+}
 
 async function get_area_covered_by_tiki(token){
     return new Promise(async resolve => {
