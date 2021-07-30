@@ -884,6 +884,36 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
     var Sales_Order_Data = req.body.Sales_Order_Data;
     var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
     if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
+        console.log(
+            `create-new-group-buy-sales-order-by-customer =========== create-new-group-buy-sales-order-by-customer`
+        );
+        console.log(
+            Customer_Code
+        );
+        console.log(
+            Sales_Order_Data.Customer_Code
+        );
+        console.log(
+            (await check_customer_code_existance(Customer_Code).then(async value => {
+                return await value;
+            }))
+        );
+        console.log(
+            (await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+                return await value;
+            }))
+        );
+        console.log(
+            (await check_customer_code_existance(Customer_Code).then(async value => {
+                return await value;
+            }))
+            &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+                return await value;
+            }))
+            &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
+                return await value;
+            }))
+        );
         if(
             (await check_customer_code_existance(Customer_Code).then(async value => {
                 return await value;
@@ -1309,6 +1339,8 @@ async function order_number_creation(){
 
 async function validation_check(Sales_Order_Data, Customer_Code){
     return new Promise(async resolve => {
+        console.log("===== validation_check ===== | Customer_Code " + Customer_Code);
+        console.log(Sales_Order_Data);
         if(
             (Sales_Order_Data.Customer_Code == Customer_Code)
             && (parseFloat(Sales_Order_Data.Total_Price) > 0)
@@ -1329,7 +1361,9 @@ async function check_payment_method(Payment_Method_Name){
     where upper(Payment_Method_Name) = '${Payment_Method_Name.toUpperCase()}' 
     and Delete_Mark != '1'
     limit 1;`;
+    console.log("===== check_payment_method ===== | sql " + sql);
     return new Promise(async resolve => {
+        console.log("===== check_payment_method ===== | Payment_Method_Name " + Payment_Method_Name);
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
@@ -1338,6 +1372,7 @@ async function check_payment_method(Payment_Method_Name){
                 if(result != undefined && result[0] != undefined){
                     resolve(true);
                 }else{
+                    console.log("fail ===== check_payment_method ===== | result " + result);
                     resolve(false);
                 }
             }
@@ -1431,6 +1466,11 @@ async function check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_da
                 resolve(false);
             }
         }
+        console.log("check_sales_order_details ========= final check");
+        console.log(total_sales_order_quantity);
+        console.log(total_sales_order_price);
+        console.log(parseFloat(Sales_Order_Data.Total_Quantity));
+        console.log(parseFloat(Sales_Order_Data.Total_Price));
         if(
             (total_sales_order_quantity == parseFloat(Sales_Order_Data.Total_Quantity))
             &&(total_sales_order_price == parseFloat(Sales_Order_Data.Total_Price))    

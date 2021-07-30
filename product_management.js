@@ -52,15 +52,33 @@ async function get_access_token_tiki(){
             })
         
         };
-        request(options, function (error, response) {
+        request(options, async function (error, response) {
             if (error) {
                 console.log(error);
                 console.log("fail to get token from tiki == get_access_token_tiki");
-                resolve(get_access_token_tiki());
+                resolve(await get_access_token_tiki());
             }else{
                 // console.log(response.body);
-                var result = JSON.parse(response.body);
-                resolve(result.response.token);
+                if(response != undefined){
+                    if(response.body != undefined){
+                        try{
+                            var result = JSON.parse(response.body);
+                            resolve(result.response.token);
+                        }catch(err) {
+                            console.log(err);
+                            console.log("fail to get token from tiki == get_access_token_tiki");
+                            resolve(await get_access_token_tiki());
+                        }
+                    }else{
+                        console.log(err);
+                        console.log("fail to get token from tiki == get_access_token_tiki");
+                        resolve(await get_access_token_tiki());
+                    }
+                }else{
+                    console.log(err);
+                    console.log("fail to get token from tiki == get_access_token_tiki");
+                    resolve(await get_access_token_tiki());
+                }
             }
         });
     })

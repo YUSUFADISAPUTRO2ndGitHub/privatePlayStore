@@ -161,7 +161,7 @@ async function get_total_commission_of_all_months(Customer_Code){
     where 
     Customer_Code in (
         select Customer_Code from vtportal.customer_management 
-        where extra_column_2 ='${Customer_Code}' 
+        where referral_customer_code ='${Customer_Code}' 
         and Delete_Mark = '0' 
         and Status = 'approving'
     ) 
@@ -193,7 +193,7 @@ async function get_total_active_customers_from_a_referral_code(Customer_Code){
     where 
     Customer_Code in (
         select Customer_Code from vtportal.customer_management 
-        where extra_column_2 ='${Customer_Code}' 
+        where referral_customer_code ='${Customer_Code}' 
         and Delete_Mark = '0' 
         and Status = 'approving'
     ) 
@@ -222,7 +222,7 @@ app.post('/get-total-customers-of-a-referral-code',  async (req, res) => {
 
 async function get_total_customers_from_a_referral_code(Customer_Code){
     var sql = `
-        select count(*) as Total_Customers from vtportal.customer_management where extra_column_2 ='${Customer_Code}'
+        select count(*) as Total_Customers from vtportal.customer_management where referral_customer_code ='${Customer_Code}'
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -360,7 +360,7 @@ async function get_today_salesorder_based_on_referral_code(referral_customer_cod
     where 
     Customer_Code in (
         select Customer_Code from vtportal.customer_management 
-        where extra_column_2 = '${referral_customer_code}' 
+        where referral_customer_code = '${referral_customer_code}' 
         and Delete_Mark = '0' and Status = 'approving'
         ) 
     and Create_Date >= CURRENT_DATE();
@@ -384,7 +384,7 @@ async function get_today_salesorder_based_on_referral_code_and_given_date(referr
     where 
     Customer_Code in (
         select Customer_Code from vtportal.customer_management 
-        where extra_column_2 = '${referral_customer_code}' 
+        where referral_customer_code = '${referral_customer_code}' 
         and Delete_Mark = '0' and Status = 'approving'
         ) 
     and Create_Date >= '${given_date}';
@@ -1125,9 +1125,9 @@ async function create_new_customer_direct_from_customer(customer_data){
         Create_Date,
         Update_date,
         Delete_Mark,
-        extra_column_1,
-        extra_column_2,
-        extra_column_3,
+        account_number,
+        referral_customer_code,
+        commission_precentage,
         ktp,
         user_license_agreement_status,
         bank_account_number
@@ -1197,10 +1197,10 @@ async function create_new_supplier_customer_direct_from_customer(customer_data){
         Create_Date,
         Update_date,
         Delete_Mark,
-        extra_column_1,
-        extra_column_2,
-        extra_column_5,
-        extra_column_3,
+        account_number,
+        referral_customer_code,
+        employee_number,
+        commission_precentage,
         ktp,
         Nama_Perusahaan,
         customer_type_status,
