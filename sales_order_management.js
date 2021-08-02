@@ -1105,6 +1105,7 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
                     }
                 }
             }else{
+                console.log("OTP Verification failed. YOUR OTP: " + req.query.otp);
                 res.send({
                     status: false,
                     reason: "OTP Verification failed. YOUR OTP: " + req.query.otp,
