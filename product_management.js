@@ -611,46 +611,90 @@ async function get_shipping_options(Courier_Price_Code_orig
     , height
     , paket_value
     ){
-        return new Promise(async resolve => {
-            var body_json = {
-                orig: Courier_Price_Code_orig,
-                dest: Courier_Price_Code_dest,
-                packing_type: packing_type,
-                weight: weight,
-                length: length,
-                width: width,
-                height: height,
-                paket_value: paket_value,
-            };
-            var options = {
-                'method': 'POST',
-                'url': 'http://apis.mytiki.net:8321/v02/tariff/product',
-                'headers': {
-                'content-type': 'application/json ',
-                'x-access-token': await get_access_token_tiki()
-                },
-                body: JSON.stringify(body_json)
-            
-            };
-            request(options, async function (error, response) {
-                if (error) {
-                    console.log(error);
-                    console.log("fail get_shipping_options ================= get_shipping_options");
-                    resolve(get_shipping_options(Courier_Price_Code_orig
-                        , Courier_Price_Code_dest
-                        , packing_type
-                        , weight
-                        , length
-                        , width
-                        , height
-                        , paket_value
-                        ));
-                }else{
-                    var result = JSON.parse(response.body);
-                    resolve(result.response);
-                }
+        console.log("get_shipping_options =================== requested | " + Courier_Price_Code_dest);
+        if(Courier_Price_Code_dest.toUpperCase().includes("VTINTL")){
+            return new Promise(async resolve => {
+                sql = `
+                    select * from vtportal.courier_and_national_area_management where Courier_Price_Code = '${Courier_Price_Code_dest}';
+                `;
+                console.log(sql);
+                await con.query(sql, async function (err, result) {
+                    if (err) {
+                        await console.log(err);
+                        resolve(false);
+                    }else{
+                        var i = 0;
+                        var response = {};
+                        var service = [];
+                        for(i ; i < result.length; i++){
+                            var volume_weight = (length*width*height/6000);
+                            if(
+                                weight >= volume_weight
+                            ){
+                                result[i].Courier_Price_Per_Kg = result[i].Courier_Price_Per_Kg * Math.ceil(weight * 1);
+                            }else{
+                                result[i].Courier_Price_Per_Kg = result[i].Courier_Price_Per_Kg * Math.ceil(volume_weight * 1);
+                            }
+                            service.push({
+                                SERVICE: result[i].Courier_Code,
+                                DESCRIPTION: result[i].Courier_Code + "-" + result[i].Province,
+                                TARIFF: Math.ceil(result[i].Courier_Price_Per_Kg).toString(),
+                                EST_DAY: result[i].delivery_time_in_days,
+                                CUT_OFF_TIME: "",
+                                EXTENDED_EST_DAY: "", 
+                            });
+
+                        }
+                        response = {
+                            service,
+                            insurance: []
+                        };
+                        resolve(response);
+                    }
+                });
             });
-        })
+        }else{
+            return new Promise(async resolve => {
+                var body_json = {
+                    orig: Courier_Price_Code_orig,
+                    dest: Courier_Price_Code_dest,
+                    packing_type: packing_type,
+                    weight: weight,
+                    length: length,
+                    width: width,
+                    height: height,
+                    paket_value: paket_value,
+                };
+                var options = {
+                    'method': 'POST',
+                    'url': 'http://apis.mytiki.net:8321/v02/tariff/product',
+                    'headers': {
+                    'content-type': 'application/json ',
+                    'x-access-token': await get_access_token_tiki()
+                    },
+                    body: JSON.stringify(body_json)
+                
+                };
+                request(options, async function (error, response) {
+                    if (error) {
+                        console.log(error);
+                        console.log("fail get_shipping_options ================= get_shipping_options");
+                        resolve(get_shipping_options(Courier_Price_Code_orig
+                            , Courier_Price_Code_dest
+                            , packing_type
+                            , weight
+                            , length
+                            , width
+                            , height
+                            , paket_value
+                            ));
+                    }else{
+                        var result = JSON.parse(response.body);
+                        resolve(result.response);
+                    }
+                });
+            })
+        }
 }
 
 async function get_couriers(){
