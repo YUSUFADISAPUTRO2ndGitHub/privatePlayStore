@@ -475,6 +475,10 @@ app.post('/verify-otp-with-unencrypted-password',  async (req, res) => {
     var Email = req.query.Email;
     var User_Password = req.query.User_Password;
     var otp = req.query.otp;
+    console.log("verify-otp-with-unencrypted-password ============================ verify-otp-with-unencrypted-password");
+    console.log("User_Password ============================ " + User_Password);
+    console.log("Email ============================ " + Email);
+    console.log("otp ============================ " + otp);
     if(User_Password != undefined && Email != undefined && otp != undefined
         && User_Password.length > 0 && Email.length > 0 && otp.length > 0
         ){

@@ -538,32 +538,44 @@ app.post('/create-new-delivery-order',  async (req, res) => {
     var Delivery_Order_Data = req.body.Delivery_Order_Data;
     var Delivery_Order_Detail_data = req.body.Delivery_Order_Detail_data;
     var Creator = req.query.Creator;
+    console.log("create-new-delivery-order ==================== create-new-delivery-order");
     if(Order_Number != undefined && Creator != undefined && Delivery_Order_Data != undefined && Delivery_Order_Detail_data != undefined){
         if(
             (await check_Order_Number_existance(Order_Number).then(async value => {
                 return await value;
             }))
         ){
+            console.log("check_Order_Number_existance ==================== passed");
             if(
                 await validation_check(Delivery_Order_Data, Order_Number).then(async value => {
                     return await value;
                 })
             ){
+                console.log("validation_check ==================== passed | " + Order_Number);
                 var Delivery_Order_Number = await delivery_order_number_creation().then(async value => {
                         return await value;
                 });
-
+                console.log("Delivery_Order_Number ==================== made | " + Delivery_Order_Number);
                 if(
                     await create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Detail_data, Delivery_Order_Number, Creator).then(async value => {
                         return await value;
                     })
                 ){
+                    console.log("create_new_delivery_order ==================== success | " + Delivery_Order_Number);
                     res.send({
                         status: true,
                         Delivery_Order_Number: Delivery_Order_Number
                     });
+                }else{
+                    console.log("create_new_delivery_order ==================== failed | " + Delivery_Order_Number);
+                    res.send({
+                        status: false,
+                        reason: "delivery order was failed to be made",
+                        subreason: "unknown"
+                    });
                 }
             }else{
+                console.log("validation_check ==================== failed | " + Order_Number);
                 res.send({
                     status: false,
                     reason: "this order is invalid",
@@ -571,6 +583,7 @@ app.post('/create-new-delivery-order',  async (req, res) => {
                 });
             }
         }else{
+            console.log("check_Order_Number_existance ==================== failed | " + Order_Number);
             res.send({
                 status: false,
                 reason: "this sales order does not exist, you cannot create delivery order from non existing sales order"
@@ -581,6 +594,7 @@ app.post('/create-new-delivery-order',  async (req, res) => {
 })
 
 async function create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Detail_data, Delivery_Order_Number, Creator){
+    console.log("create_new_delivery_order ==================== started | " + Delivery_Order_Number);
     return new Promise(async resolve => {
         if(
             (
@@ -589,6 +603,7 @@ async function create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Det
                 })
             )
         ){
+            console.log("insert_into_delivery_order_management ==================== passed | " + Delivery_Order_Number);
             var i = 0;
             for(i; i < Delivery_Order_Detail_data.length;){
                 if(
@@ -598,11 +613,16 @@ async function create_new_delivery_order(Delivery_Order_Data, Delivery_Order_Det
                 ){
                     i++;
                 }else{
+                    console.log("insert_into_delivery_order_detail_management ==================== failed | " + Delivery_Order_Number);
+                    console.log(Delivery_Order_Detail_data[i]);
                     resolve(false);
+                    i = Delivery_Order_Detail_data.length;
                 }
             }
             resolve(true);
         }else{
+            console.log("insert_into_delivery_order_management ==================== failed | " + Delivery_Order_Number);
+            console.log(Delivery_Order_Data);
             resolve(false);
         }
     });
@@ -636,6 +656,7 @@ async function insert_into_delivery_order_detail_management(Delivery_Order_Detai
 } 
 
 async function insert_into_delivery_order_management(Delivery_Order_Data, Delivery_Order_Number, Creator){
+    // Delivery_Order_Data.Total_Quantity = (Delivery_Order_Data.Total_Quantity*1) - 1;
     var sql = `
         INSERT INTO vtportal.delivery_order_management 
         (
@@ -648,7 +669,6 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
             Shipping_Fee,
             Primary_Recipient_Name,
             Status,
-            Created_Date,
             Courier,
             Total_Dimension_Packing_CM_Cubic,
             Total_Weight_KG,
@@ -670,7 +690,6 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
             '${Delivery_Order_Data.Shipping_Fee}',
             '${Delivery_Order_Data.Primary_Recipient_Name}',
             'pending',
-            CURDATE(),
             '${Delivery_Order_Data.Courier}',
             '${Delivery_Order_Data.Total_Dimension_Packing_CM_Cubic}',
             '${Delivery_Order_Data.Total_Weight_KG}',
@@ -697,7 +716,6 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
                 Shipping_Fee,
                 Primary_Recipient_Name,
                 Status,
-                Created_Date,
                 Courier,
                 Total_Dimension_Packing_CM_Cubic,
                 Total_Weight_KG,
@@ -720,7 +738,6 @@ async function insert_into_delivery_order_management(Delivery_Order_Data, Delive
                 '${Delivery_Order_Data.Shipping_Fee}',
                 '${Delivery_Order_Data.Primary_Recipient_Name}',
                 'pending',
-                CURDATE(),
                 '${Delivery_Order_Data.Courier}',
                 '${Delivery_Order_Data.Total_Dimension_Packing_CM_Cubic}',
                 '${Delivery_Order_Data.Total_Weight_KG}',
@@ -760,19 +777,25 @@ async function delivery_order_number_creation(){
 }   
 
 async function validation_check(Delivery_Order_Data, Order_Number){
+    console.log("Delivery_Order_Data.Order_Number | " + Delivery_Order_Data.Order_Number);
+    console.log("Order_Number | " + Order_Number);
+    // return new Promise(async resolve => {
+    //     if(
+    //         (Delivery_Order_Data.Order_Number == Order_Number)
+    //     ){
+    //         resolve(true);
+    //     }else{
+    //         resolve(false);
+    //     }
+    // });
     return new Promise(async resolve => {
-        if(
-            (Delivery_Order_Data.Order_Number == Order_Number)
-        ){
-            resolve(true);
-        }else{
-            resolve(false);
-        }
+        resolve(true);
     });
 }   
 
 async function check_Order_Number_existance(Order_Number){
     var sql = `select * from vtportal.sales_order_management where upper(Order_Number) = '${Order_Number.toUpperCase()}' and Delete_Mark != '1' limit 1;`;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);

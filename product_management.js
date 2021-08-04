@@ -87,6 +87,8 @@ async function get_access_token_tiki(){
 async function send_delivery_order_to_tiki(body_json){
     return new Promise(async resolve => {
         var json_to_be_sent;
+        console.log("send_delivery_order_to_tiki ========== send_delivery_order_to_tiki");
+        console.log(body_json);
         var options = {
             'method': 'POST',
             'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
@@ -112,6 +114,8 @@ async function send_delivery_order_to_tiki(body_json){
 
 async function reorder_json_to_fit_tiki(json_from_ERP){
     return new Promise(async resolve => {
+        console.log("reorder_json_to_fit_tiki ====== reorder_json_to_fit_tiki");
+        console.log(json_from_ERP);
         var accepted_by_tiki = {
             "accnum": json_from_ERP.account_number_with_tiki,
             "paket_awb": "",
@@ -627,7 +631,21 @@ async function get_shipping_options(Courier_Price_Code_orig
                         var response = {};
                         var service = [];
                         for(i ; i < result.length; i++){
+                            console.log("length ==== given by user | length: "+ length);
+                            console.log("width ==== given by user | width: "+ width);
+                            console.log("height ==== given by user | height: "+ height);
+                            if(length == undefined){
+                                length = 1;
+                            }
+                            if(width == undefined){
+                                width = 1;
+                            }
+                            if(height == undefined){
+                                height = 1;
+                            }
                             var volume_weight = (length*width*height/6000);
+                            console.log("volume_weight ==== given by user | volume_weight: "+ volume_weight);
+                            console.log("weight ==== given by user | weight: "+ weight);
                             if(
                                 weight >= volume_weight
                             ){
@@ -635,6 +653,7 @@ async function get_shipping_options(Courier_Price_Code_orig
                             }else{
                                 result[i].Courier_Price_Per_Kg = result[i].Courier_Price_Per_Kg * Math.ceil(volume_weight * 1);
                             }
+                            console.log("result[i].Courier_Price_Per_Kg | result[i].Courier_Price_Per_Kg: "+ Math.ceil(result[i].Courier_Price_Per_Kg).toString());
                             service.push({
                                 SERVICE: result[i].Courier_Code,
                                 DESCRIPTION: result[i].Courier_Code + "-" + result[i].Province,

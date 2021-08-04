@@ -1160,8 +1160,46 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
     });
 } 
 
+async function get_product_weight(Product_Code){
+    console.log("get_product_weight(Product_Code) ======== " + Product_Code);
+    var sql = `
+        select distinct Weight_KG , Dimension_CM_CUBIC from vtportal.product_management pm where Product_Code = '${Product_Code}' and Delete_Mark = '0';
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                console.log("get_product_weight(Product_Code) ======== " + Product_Code);
+                console.log(result);
+                response = {
+                    Weight_KG: result[0].Weight_KG,
+                    Dimension_CM_CUBIC: result[0].Dimension_CM_CUBIC
+                };
+                resolve(response);
+            }
+        });
+    });
+}
+
 async function insert_into_sales_order_detail_management(Sales_Order_Detail_data, Order_Number){
     console.log("insert_into_sales_order_detail_management ==================== inserting | " + Sales_Order_Detail_data.Product_Code);
+    if(!await check_if_product_is_shipping_fee(Sales_Order_Detail_data.Product_Code).then(async value => {
+        return await value;
+    })){
+        var product_specs = await get_product_weight(Sales_Order_Detail_data.Product_Code).then(async value => {
+            return await value;
+        });
+        console.log("product_specs.Weight_KG ==================== product_specs.Weight_KG | " + product_specs.Weight_KG);
+        console.log(isNaN((product_specs.Weight_KG * 1)));
+        if(isNaN((product_specs.Weight_KG * 1))){
+            product_specs.Weight_KG = 0.1*1.5;
+        }
+        var total_weight = product_specs.Weight_KG * 1 * Sales_Order_Detail_data.Quantity_Requested;
+        total_weight = total_weight.toFixed(2);
+    }
     var sql = `
         INSERT INTO vtportal.sales_order_detail_management 
         (
@@ -1170,7 +1208,9 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
             Product_Code,
             Product_Name,
             Quantity_Requested,
-            Price_Based_On_Total_Quantity
+            Price_Based_On_Total_Quantity,
+            extra_column_1,
+            extra_column_2
         )
         VALUES 
         (
@@ -1179,9 +1219,37 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
             '${Sales_Order_Detail_data.Product_Code}',
             '${Sales_Order_Detail_data.Product_Name}',
             '${Sales_Order_Detail_data.Quantity_Requested}',
-            '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}'
+            '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}',
+            'Item',
+            '${total_weight}'
         );
     `;
+    if(await check_if_product_is_shipping_fee(Sales_Order_Detail_data.Product_Code).then(async value => {
+        return await value;
+    })){
+        sql = `
+            INSERT INTO vtportal.sales_order_detail_management 
+            (
+                Customer_Code,
+                Order_Number,
+                Product_Code,
+                Product_Name,
+                Quantity_Requested,
+                Price_Based_On_Total_Quantity,
+                extra_column_1
+            )
+            VALUES 
+            (
+                '${Sales_Order_Detail_data.Customer_Code}',
+                '${Order_Number}',
+                '${Sales_Order_Detail_data.Product_Code}',
+                '${Sales_Order_Detail_data.Product_Name}',
+                '${Sales_Order_Detail_data.Quantity_Requested}',
+                '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}',
+                'Courier'
+            );
+        `;
+    }
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
@@ -1197,6 +1265,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
     console.log(Product_Code);
+    Sales_Order_Data.Total_Quantity =  (Sales_Order_Data.Total_Quantity*1) - 1;
     var sql = `
         INSERT INTO vtportal.sales_order_management 
         (
