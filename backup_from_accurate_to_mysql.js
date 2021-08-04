@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "7dabd607-bbbe-498b-aee1-dfa69711543b";
+var refreshtoken = "7e07e682-9809-401a-8761-37440ce5f55f";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4112,6 +4112,7 @@ const check_product_in_product_management = async(product) => {
 
 const update_product_in_product_management = async(product) => {
     return new Promise(async resolve => {
+        // product.Sell_Price
         if(product.Name != undefined
             && product.Specification != undefined
             && product.Description != undefined
@@ -4120,7 +4121,7 @@ const update_product_in_product_management = async(product) => {
             SET Name='${product.Name.replace('\'', '')}'
             , Specification='${product.Specification.replace('\'', '')}'
             , Description='${product.Description.replace('\'', '')}'
-            , Sell_Price='${product.Sell_Price}'
+            , Sell_Price='${product.Sold_Price}'
             , Unit='${product.Unit}'
             , Category='${product.Category}'
             , Subcategory='${product.Subcategory}'
@@ -4136,8 +4137,8 @@ const update_product_in_product_management = async(product) => {
             , Weight_KG='${product.Weight_KG}'
             , Dimension_CM_CUBIC='${product.Dimension_CM_CUBIC}'
             , Stock_Quantity='${product.Quantity}'
-            , tokopedia_price='${product.tokopedia_price}'
-            , shopee_price='${product.shopee_price}'
+            , tokopedia_price='${product.Tokopedia_Price}'
+            , shopee_price='${product.Shopee_Price}'
             WHERE Product_Code='${product.Product_Code}';
             `;
             con.query(sql, async function(err, result) {

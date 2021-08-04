@@ -87,8 +87,8 @@ async function get_access_token_tiki(){
 async function send_delivery_order_to_tiki(body_json){
     return new Promise(async resolve => {
         var json_to_be_sent;
-        console.log("send_delivery_order_to_tiki ========== send_delivery_order_to_tiki");
-        console.log(body_json);
+        // console.log("send_delivery_order_to_tiki ========== send_delivery_order_to_tiki");
+        // console.log(body_json);
         var options = {
             'method': 'POST',
             'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
@@ -96,14 +96,14 @@ async function send_delivery_order_to_tiki(body_json){
               'content-type': 'application/json ',
               'x-access-token': await get_access_token_tiki()
             },
-            body: body_json
+            body: JSON.stringify(body_json)
           
         };
-        request(options, async function (error, response) {
+        await request(options, async function (error, response) {
             if (error) {
                 console.log(error);
                 console.log("send_delivery_order_to_tiki(body_json) ========== send_delivery_order_to_tiki(body_json)");
-                resolve(await send_delivery_order_to_tiki(body_json));
+                // resolve(await send_delivery_order_to_tiki(body_json));
             }else{
                 var result = JSON.parse(response.body);
                 resolve(result);
@@ -114,8 +114,8 @@ async function send_delivery_order_to_tiki(body_json){
 
 async function reorder_json_to_fit_tiki(json_from_ERP){
     return new Promise(async resolve => {
-        console.log("reorder_json_to_fit_tiki ====== reorder_json_to_fit_tiki");
-        console.log(json_from_ERP);
+        // console.log("reorder_json_to_fit_tiki ====== reorder_json_to_fit_tiki");
+        // console.log(json_from_ERP);
         var accepted_by_tiki = {
             "accnum": json_from_ERP.account_number_with_tiki,
             "paket_awb": "",
@@ -154,8 +154,10 @@ async function reorder_json_to_fit_tiki(json_from_ERP){
 }
 
 app.post('/send_delivery_order_to_tiki',  async (req, res) => {
-    var json_from_ERP = req.body.json_from_ERP;
+    var json_from_ERP = req.body;
+    // console.log("send_delivery_order_to_tiki ================ send_delivery_order_to_tiki");
     if(json_from_ERP != undefined){
+        // console.log(json_from_ERP);
         res.send(
             await reorder_json_to_fit_tiki(json_from_ERP).then(async value => {
                 return await value;

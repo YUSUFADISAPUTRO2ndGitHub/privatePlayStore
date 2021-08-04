@@ -1227,6 +1227,16 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
     if(await check_if_product_is_shipping_fee(Sales_Order_Detail_data.Product_Code).then(async value => {
         return await value;
     })){
+        var insurance = Sales_Order_Detail_data.Product_Name.split(" ");
+        var i = 0;
+        var chosen_insurance = 0;
+        for(i; i < insurance.length; i ++){
+            if(insurance[i].toUpperCase().includes("TYPE")){
+                if((insurance[i+1]*1) > 0){
+                    chosen_insurance = 1;
+                }
+            }
+        }
         sql = `
             INSERT INTO vtportal.sales_order_detail_management 
             (
@@ -1236,7 +1246,8 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
                 Product_Name,
                 Quantity_Requested,
                 Price_Based_On_Total_Quantity,
-                extra_column_1
+                extra_column_1,
+                extra_column_2
             )
             VALUES 
             (
@@ -1246,7 +1257,8 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
                 '${Sales_Order_Detail_data.Product_Name}',
                 '${Sales_Order_Detail_data.Quantity_Requested}',
                 '${Sales_Order_Detail_data.Price_Based_On_Total_Quantity}',
-                'Courier'
+                'Courier',
+                '${chosen_insurance}'
             );
         `;
     }
@@ -1266,6 +1278,14 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
     console.log(Product_Code);
     Sales_Order_Data.Total_Quantity =  (Sales_Order_Data.Total_Quantity*1) - 1;
+    var zipcode = [];
+    if(Sales_Order_Data.Shipping_Address != undefined){
+        zipcode = Sales_Order_Data.Shipping_Address.split(" ");
+        zipcode = zipcode[zipcode.length-1]
+        if(zipcode == undefined){
+            zipcode = "";
+        }
+    } 
     var sql = `
         INSERT INTO vtportal.sales_order_management 
         (
@@ -1286,7 +1306,9 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             Update_date,
             Delete_Mark,
             Group_Buy_Purchase_PC,
-            Payment_Status
+            Payment_Status,
+            Zipcode,
+            extra_column_1
         )
         VALUES 
         (
@@ -1307,7 +1329,9 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             CURRENT_TIMESTAMP(),
             '0',
             '${Product_Code}',
-            'waitpay'
+            'waitpay',
+            '${zipcode}',
+            '${zipcode}'
         );
     `;
     if(Sales_Order_Data.Payment_Method.toUpperCase() == 'BCA VA TRANSFER' || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
@@ -1327,6 +1351,14 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
         if (sec < 10) sec = "0" + sec;
         var final_va = "12943";
         final_va = final_va + year + "" + month + "" + date + ""  + hour + "" + minu + "" + sec;
+        var zipcode = [];
+        if(Sales_Order_Data.Shipping_Address != undefined){
+            zipcode = Sales_Order_Data.Shipping_Address.split(" ");
+            zipcode = zipcode[zipcode.length-1]
+            if(zipcode == undefined){
+                zipcode = "";
+            }
+        } 
         var sql = `
             INSERT INTO vtportal.sales_order_management 
             (
@@ -1348,7 +1380,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 Create_Date,
                 Update_date,
                 Delete_Mark,
-                Group_Buy_Purchase_PC
+                Group_Buy_Purchase_PC,
+                Zipcode
             )
             VALUES 
             (
@@ -1370,7 +1403,8 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 CURRENT_TIMESTAMP(),
                 CURRENT_TIMESTAMP(),
                 '0',
-                '${Product_Code}'
+                '${Product_Code}',
+                '${zipcode}'
             );
         `;
     }
