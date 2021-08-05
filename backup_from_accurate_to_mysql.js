@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "7e07e682-9809-401a-8761-37440ce5f55f";
+var refreshtoken = "dee900a1-ceb6-493e-b23c-1e895dc35ff1";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4117,6 +4117,14 @@ const update_product_in_product_management = async(product) => {
             && product.Specification != undefined
             && product.Description != undefined
             ){
+                if(product.GroupBuy_Purchase != undefined){
+                    if(product.GroupBuy_Purchase.toUpperCase().includes("YES")){
+                        product.GroupBuy_Purchase = "true";
+                    }else if(product.GroupBuy_Purchase.toUpperCase().includes("NO")){
+                        product.GroupBuy_Purchase = "false";
+                    }
+                }
+
                 var sql = `UPDATE vtportal.product_management
             SET Name='${product.Name.replace('\'', '')}'
             , Specification='${product.Specification.replace('\'', '')}'
