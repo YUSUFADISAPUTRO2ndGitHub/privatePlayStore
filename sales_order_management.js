@@ -77,6 +77,39 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+//check-delivery-order-information
+app.post('/check-delivery-order-information',  async (req, res) => {
+    var Order_Number = req.query.Order_Number;
+    if(Order_Number != undefined){
+        res.send(
+            (await get_delivery_information(Order_Number).then(async value => {
+                return await value;
+            }))
+        );
+    }else{
+        res.send({
+            status: false,
+            reason: "Order_Number is incomplete"
+        });
+    }
+})
+
+async function get_delivery_information(Order_Number){
+    var sql = `
+        select Delivery_Order_Number, Status, Shipping_Number from vtportal.delivery_order_management dom where Order_Number = '${Order_Number}'
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result[0]);
+            }
+        });
+    });
+} 
+
 async function verify_OTP_to_customer_management_function(User_Password, Email, otp){
     var options = {
         'method': 'POST',
