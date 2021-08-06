@@ -953,15 +953,6 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                             && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
                             && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
                             && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
-                            // && (customer_data.ktp != undefined || customer_data.ktp.length != 0)
-                            && (
-                                customer_data.Email.toLowerCase().includes('@gmail.com') 
-                                || customer_data.Email.toLowerCase().includes('@outlook.com') 
-                                || customer_data.Email.toLowerCase().includes('@hotmail.com') 
-                                || customer_data.Email.toLowerCase().includes('@yahoo.com') 
-                                || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
-                                || customer_data.Email.toLowerCase().includes('@aol.com')
-                            )
                             ){
                                 if(
                                     (await check_existing_customer_code(customer_data).then(async value => {
@@ -981,16 +972,6 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                                     }));
                                 }
                         }else{
-                            console.log(
-                                (
-                                    customer_data.Email.toLowerCase().includes('@gmail.com') 
-                                    || customer_data.Email.toLowerCase().includes('@outlook.com') 
-                                    || customer_data.Email.toLowerCase().includes('@hotmail.com') 
-                                    || customer_data.Email.toLowerCase().includes('@yahoo.com') 
-                                    || customer_data.Email.toLowerCase().includes('@yahoo.co.id') 
-                                    || customer_data.Email.toLowerCase().includes('@aol.com')
-                                )
-                            );
                             console.log("===============================================");
                             console.log("Email ending is false");
                             res.send(false);

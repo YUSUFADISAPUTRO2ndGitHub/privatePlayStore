@@ -1196,7 +1196,7 @@ async function create_new_sales_order(Sales_Order_Data, Sales_Order_Detail_data,
 async function get_product_weight(Product_Code){
     console.log("get_product_weight(Product_Code) ======== " + Product_Code);
     var sql = `
-        select distinct Weight_KG , Dimension_CM_CUBIC from vtportal.product_management pm where Product_Code = '${Product_Code}' and Delete_Mark = '0';
+        select distinct Weight_KG , Dimension_CM_CUBIC from vtportal.product_management pm where Product_Code = '${Product_Code}';
     `;
     console.log(sql);
     return new Promise(async resolve => {
@@ -1207,11 +1207,22 @@ async function get_product_weight(Product_Code){
             }else{
                 console.log("get_product_weight(Product_Code) ======== " + Product_Code);
                 console.log(result);
-                response = {
-                    Weight_KG: result[0].Weight_KG,
-                    Dimension_CM_CUBIC: result[0].Dimension_CM_CUBIC
-                };
-                resolve(response);
+                if(result.length > 0){
+                    if(isNaN(result[0].Weight_KG)){
+                        result[0].Weight_KG = 0.1*1.5;
+                    }
+                    if(isNaN(result[0].Dimension_CM_CUBIC)){
+                        result[0].Dimension_CM_CUBIC = 0.1*1.5;
+                    }
+                    response = {
+                        Weight_KG: result[0].Weight_KG,
+                        Dimension_CM_CUBIC: result[0].Dimension_CM_CUBIC
+                    };
+                    resolve(response);
+                }else{
+                    console.log("get_product_weight(Product_Code) ======== " + result);
+                    resolve(false);
+                }
             }
         });
     });
