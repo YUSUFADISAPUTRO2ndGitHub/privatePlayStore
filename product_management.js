@@ -1592,7 +1592,7 @@ app.post('/get-product-details',  async (req, res) => {
 async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Category_Based_On_Category){
     var sql = `
     select Subcategory, Picture_1 from vtportal.product_management where Delete_Mark != '1' and Subcategory != 'undefined' and upper(Subcategory) != 'NULL'
-    and Category = '${Get_ALL_Sub_Category_Based_On_Category}' group by Subcategory;
+    and Category = '${Get_ALL_Sub_Category_Based_On_Category}' and (Picture_1 != 'NULL' or Picture_1 != null) group by Subcategory;
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1612,7 +1612,7 @@ async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Catego
 
 async function get_all_product_category(){
     var sql = `
-    select Category from vtportal.product_management where Delete_Mark != '1' and Category != 'undefined' and upper(Category) != 'NULL' group by Category;
+    select Category from vtportal.product_management where Delete_Mark != '1' and Category != 'undefined' and upper(Category) != 'NULL' and (Picture_1 != 'NULL' or Picture_1 != null) group by Category;
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1632,7 +1632,7 @@ async function get_all_product_category(){
 
 async function get_product_details_not_new_items(){
     var sql = `
-        select * from vtportal.product_management where Categorize_NEW = 'false' and Categorize_NEW = 'undefined' and Categorize_NEW = 'NULL';
+        select * from vtportal.product_management where Categorize_NEW = 'false' and Categorize_NEW = 'undefined' and Categorize_NEW = 'NULL' and (Picture_1 != 'NULL' or Picture_1 != null);
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1652,7 +1652,7 @@ async function get_product_details_not_new_items(){
 
 async function get_product_details_based_on_new_items(){
     var sql = `
-        select * from vtportal.product_management where Categorize_NEW != 'false' and Categorize_NEW != 'undefined' and Categorize_NEW != 'NULL';
+        select * from vtportal.product_management where Categorize_NEW != 'false' and Categorize_NEW != 'undefined' and Categorize_NEW != 'NULL' and (Picture_1 != 'NULL' or Picture_1 != null);
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1672,7 +1672,7 @@ async function get_product_details_based_on_new_items(){
 
 async function get_product_details_not_groupbuy_purchase(){
     var sql = `
-        select * from vtportal.product_management where GroupBuy_Purchase = 'false' and GroupBuy_Purchase = 'undefined' and GroupBuy_Purchase = 'NULL';
+        select * from vtportal.product_management where GroupBuy_Purchase = 'false' and GroupBuy_Purchase = 'undefined' and GroupBuy_Purchase = 'NULL' and (Picture_1 != 'NULL' or Picture_1 != null);
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1695,7 +1695,7 @@ async function get_product_details_based_on_groupbuy_purchase(){
     //     select * from vtportal.product_management where GroupBuy_Purchase != 'false' and GroupBuy_Purchase != 'undefined' and GroupBuy_Purchase != 'NULL';
     // `;
     var sql = `
-    select * from vtportal.product_management where GroupBuy_Purchase ='true';
+    select * from vtportal.product_management where GroupBuy_Purchase ='true' and (Picture_1 != 'NULL' or Picture_1 != null);
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1715,7 +1715,7 @@ async function get_product_details_based_on_groupbuy_purchase(){
 
 async function get_product_details_based_on_product_code(product_code){
     console.log(product_code);
-    var sql = `select * from vtportal.product_management where Product_Code = '${product_code}' limit 1;`;
+    var sql = `select * from vtportal.product_management where Product_Code = '${product_code}' and (Picture_1 != 'NULL' or Picture_1 != null) limit 1;`;
     console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1739,7 +1739,7 @@ async function get_product_details_based_on_product_code(product_code){
 }
 
 async function get_product_details_based_on_product_name(product_name){
-    var sql = `select * from vtportal.product_management where upper(Name) like '%${product_name.toUpperCase()}%';`;
+    var sql = `select * from vtportal.product_management where upper(Name) like '%${product_name.toUpperCase()}%' and (Picture_1 != 'NULL' or Picture_1 != null);`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
@@ -1759,7 +1759,7 @@ async function get_product_details_based_on_product_name(product_name){
 }
 
 async function get_product_details_based_on_product_brand(product_name){
-    var sql = `select * from vtportal.product_management where upper(Brand) like '%${product_name.toUpperCase()}%';`;
+    var sql = `select * from vtportal.product_management where upper(Brand) like '%${product_name.toUpperCase()}%' and (Picture_1 != 'NULL' or Picture_1 != null);`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
@@ -1779,7 +1779,7 @@ async function get_product_details_based_on_product_brand(product_name){
 }
 
 async function get_product_details_based_on_category(category){
-    var sql = `select * from vtportal.product_management where upper(Category) like '%${category.toUpperCase()}%';`;
+    var sql = `select * from vtportal.product_management where upper(Category) like '%${category.toUpperCase()}%' and (Picture_1 != 'NULL' or Picture_1 != null);`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -1793,7 +1793,7 @@ async function get_product_details_based_on_category(category){
 }
 
 async function get_product_details_based_on_subcategory(subcategory){
-    var sql = `select * from vtportal.product_management where upper(Subcategory) like '%${subcategory.toUpperCase()}%';`;
+    var sql = `select * from vtportal.product_management where upper(Subcategory) like '%${subcategory.toUpperCase()}%' and (Picture_1 != 'NULL' or Picture_1 != null);`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
@@ -1807,7 +1807,7 @@ async function get_product_details_based_on_subcategory(subcategory){
 }
 
 async function get_all_products(){
-    var sql = `select * from vtportal.product_management where Delete_Mark != '1';`;
+    var sql = `select * from vtportal.product_management where Delete_Mark != '1' and (Picture_1 != 'NULL' or Picture_1 != null);`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);

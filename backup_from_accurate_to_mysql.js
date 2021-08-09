@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "dee900a1-ceb6-493e-b23c-1e895dc35ff1";
+var refreshtoken = "d224ba42-11d6-452f-9900-e80433fe2677";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4020,27 +4020,17 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
     });
 }
 
-// var options = {
-//     'method': 'GET',
-//     'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
-//     'headers': {}
-// };
-// request(options, function(error, response) {
-//     if (error) throw new Error(error);
-//     console.log("back-up-products-from-accurate-t0-product-management === done");
-// });
-
-setInterval(async () => {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
-        'headers': {}
-    };
-    request(options, function(error, response) {
-        if (error) throw new Error(error);
-        console.log("back-up-products-from-accurate-t0-product-management === done");
-    });
-}, 3.6e+6);
+// setInterval(async () => {
+//     var options = {
+//         'method': 'GET',
+//         'url': 'http://localhost:5002/back-up-products-from-accurate-t0-product-management',
+//         'headers': {}
+//     };
+//     request(options, function(error, response) {
+//         if (error) throw new Error(error);
+//         console.log("back-up-products-from-accurate-t0-product-management === done");
+//     });
+// }, 3.6e+6);
 
 app.get('/back-up-products-from-accurate-t0-product-management', async(req, res) => { 
     res.send(
