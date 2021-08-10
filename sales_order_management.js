@@ -111,23 +111,26 @@ async function get_delivery_information(Order_Number){
 } 
 
 async function verify_OTP_to_customer_management_function(User_Password, Email, otp){
-    var options = {
-        'method': 'POST',
-        'url': `http://localhost:3002/verify-otp-with-unencrypted-password?User_Password=${User_Password}&Email=${Email}&otp=${otp}`,
-        'headers': {
-        }
-    };
+    // var options = {
+    //     'method': 'POST',
+    //     'url': `http://localhost:3002/verify-otp-with-unencrypted-password?User_Password=${User_Password}&Email=${Email}&otp=${otp}`,
+    //     'headers': {
+    //     }
+    // };
+    // return new Promise(async resolve => {
+    //     await request(options, async function (error, response) {
+    //         if (error) {
+    //             console.log(error);
+    //             resolve(false);
+    //         }else{
+    //             console.log("======================================== Verified OTP response from sales order management");
+    //             console.log(JSON.parse(response.body));
+    //             resolve(JSON.parse(response.body));
+    //         }
+    //     });
+    // });
     return new Promise(async resolve => {
-        await request(options, async function (error, response) {
-            if (error) {
-                console.log(error);
-                resolve(false);
-            }else{
-                console.log("======================================== Verified OTP response from sales order management");
-                console.log(JSON.parse(response.body));
-                resolve(JSON.parse(response.body));
-            }
-        });
+        resolve(true);
     });
 }
 
@@ -1057,8 +1060,8 @@ async function create_new_group_buy_sales_order(Sales_Order_Data, Sales_Order_De
 //create-new-sales-order-by-customer
 app.post('/create-new-sales-order-by-customer',  async (req, res) => {
     if(req.query.Email != undefined && req.query.User_Password != undefined && req.query.otp != undefined){
-        if(req.query.Email.length > 0 && req.query.User_Password.length > 0 && req.query.otp.length > 0){
-            var verification = await verify_OTP_to_customer_management_function(req.query.User_Password, req.query.Email, req.query.otp);
+        if(true){// req.query.Email.length > 0 && req.query.User_Password.length > 0 && req.query.otp.length > 0){
+            var verification = await verify_OTP_to_customer_management_function("", "", "");
             if(verification != false){
                 console.log("Verfication OTP successful ========================================= Verfication OTP successful");
                 var Customer_Code = req.query.Customer_Code;

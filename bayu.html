@@ -1,96 +1,355 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 
-    <style>
-        h1{
-            padding: 10px;
-        }
-        .card-area{
-            display: flex;
-            flex-direction: row;
-        }
-        .product-list-card, .information-detail-list-card, .chosen-payment-card, .shipping-address-card{
-            width: 50%;
-            margin: 10px;
-            border: none;
-            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-        }
-        .chosen-payment-card{
-            width: 90%;
-        }
-        .card-img-top{
-            max-width: 50%;
-        }
-    </style>
-  </head>
-  <body>
-    <h1>Your Order</h1>
+        <style>
+            * {box-sizing: border-box}
+            body {font-family: Verdana, sans-serif; margin:0}
+            .mySlides {display: none}
+            img {vertical-align: middle;}
 
-    <div class="card-area">
-        <div class="card product-list-card">
+            /* Slideshow container */
+            .slideshow-container {
+                max-width: 1000px;
+                position: relative;
+                margin: auto;
+            }
+
+            /* Next & previous buttons */
+            .prev, .next {
+                cursor: pointer;
+                position: absolute;
+                top: 50%;
+                width: auto;
+                padding: 16px;
+                margin-top: -22px;
+                color: white;
+                font-weight: bold;
+                font-size: 18px;
+                transition: 0.6s ease;
+                border-radius: 0 3px 3px 0;
+                user-select: none;
+            }
+
+            /* Position the "next button" to the right */
+            .next {
+                right: 0;
+                border-radius: 3px 0 0 3px;
+            }
+
+            /* On hover, add a black background color with a little bit see-through */
+            .prev:hover, .next:hover {
+                background-color: rgba(0,0,0,0.8);
+            }
+
+            /* Number text (1/3 etc) */
+            .numbertext {
+                color: #f2f2f2;
+                font-size: 12px;
+                padding: 8px 12px;
+                position: absolute;
+                top: 0;
+            }
+
+            /* The dots/bullets/indicators */
+            .dot {
+                cursor: pointer;
+                height: 15px;
+                width: 15px;
+                margin: 0 2px;
+                background-color: #bbb;
+                border-radius: 50%;
+                display: inline-block;
+                transition: background-color 0.6s ease;
+            }
+
+            .active, .dot:hover {
+                background-color: #717171;
+            }
+
+            /* On smaller screens, decrease text size */
+            @media only screen and (max-width: 300px) {
+                .prev, .next,.text {font-size: 11px}
+            }
+
+            .main-product-card{
+                width: 100%;
+                border: none;
+            }
+            .main-product-card-name{
+                text-align: center;
+            }
+            .main-product-card-attributes{
+                border: none;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            }
+            .product-image{
+                width: 100%;
+                min-height: 300px;
+                max-height: 300px;
+            }
+            .add-to-cart-button{
+                border: none;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                background-color: #217384;
+                width: 100%;
+            }
+            .main-product-card-attributes-etc{
+                margin: 1%;
+                border-radius: 10px;
+                min-width: 48%;
+                max-width: 48%;
+                min-height: 200px;
+                max-height: 200px;
+            }
+            .other-product-container-row{
+                display: flex;
+                flex-direction: row;
+            }
+            .group-buy-button{
+                background-color: darkturquoise !important;
+                width: 100%;
+                border: none;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+            }
+        </style>
+    </head>
+    <body>
+        
+        <div class="card main-product-card">
             <div class="card-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Product Name</th>
-                            <th scope="col">Quantity</th>
-                            <th scope="col">Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td>Sealant</td>
-                            <td>10</td>
-                            <td>234000</td>
-                        </tr>
-                </table>
-            </div>
-        </div>
-        <div class="card information-detail-list-card">
-            <div class="card-body">
-                <div class="card-area">
-                    <div class="card shipping-address-card">
-                        <div class="card-body">
-                            <h5 class="card-title">Shipment Address</h5>
-                            <p class="card-text">Rumah Fauzi bekasi jakarta gk jelas</p>
-                        </div>
-                    </div>
-                    <div class="card shipping-address-card">
-                        <div class="card-body">
-                            <h5 class="card-title">Shipping Number</h5>
-                            <p class="card-text">101010101011010</p>
-                        </div>
-                    </div>
+                <h5 class="card-title main-product-card-name">Card title</h5>
+                <div class="slideshow-container">
+
+                <div class="mySlides ">
+                    <div class="numbertext">1 / 3</div>
+                    <img class="product-image" src="https://www.kindpng.com/picc/m/69-699546_vector-jeep-png-svg-royalty-free-2015-jeep.png">
                 </div>
-                <div class="card chosen-payment-card">
+
+                <div class="mySlides ">
+                    <div class="numbertext">2 / 3</div>
+                    <img class="product-image" src="https://i.pinimg.com/originals/1f/68/b3/1f68b3ddc7ab8473bb3bc16c0e677726.jpg">
+                </div>
+
+                <div class="mySlides ">
+                    <div class="numbertext">3 / 3</div>
+                    <img class="product-image" src="https://www.wallpaperup.com/uploads/wallpapers/2013/07/01/112346/cbeb4201398cd439d025b4fd59ed2471-700.jpg">
+                </div>
+
+                <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+                <a class="next" onclick="plusSlides(1)">&#10095;</a>
+
+                </div>
+
+                <br>
+                <div class="card main-product-card-attributes">
                     <div class="card-body">
-                        <h5 class="card-title">Chosen Payment Method</h5>
-                        <p class="card-text">Tranfer</p>
-                        <div class="card-area">
-                            <img src="https://tapinto-production.s3.amazonaws.com/uploads/articles/17/best_crop_8beaa748f35add36f5e3_17D9D06B-D426-4D56-86C5-7A099DC9C097.jpeg" class="card-img-top" >
-                            <img src="https://tapinto-production.s3.amazonaws.com/uploads/articles/17/best_crop_8beaa748f35add36f5e3_17D9D06B-D426-4D56-86C5-7A099DC9C097.jpeg" class="card-img-top" >
-
-                        </div>
-                        
+                        <button type="button" class="btn btn-primary add-to-cart-button">add to cart</button>
                     </div>
+                </div>
+                <br>
+                <div class="card main-product-card-attributes group-buy-area">
+                    <div class="card-body">
+                        <button class="btn btn-primary group-buy-button" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                            Group Buy
+                        </button>
+                        <div class="collapse" id="collapseExample">
+                            <br>
+                            <div class="card card-body">
+                                <div class="form-group">
+                                    <label>Quantity</label>
+                                    <input type="number" class="form-control" id="quantity-to-be-purchased">
+                                    <small class="form-text text-muted">Kuantitas untuk dibeli</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Payment Method</label>
+                                    <select class="form-control" id="payment-method-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Delivery to</label>
+                                    <select class="form-control" id="delivery-selection-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Pilihan pengiriman</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Address choice</label>
+                                    <select class="form-control" id="address-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Pilihan tersimpan</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Courier</label>
+                                    <select class="form-control" id="courier-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Pilihan kurir</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Province</label>
+                                    <select class="form-control" id="province-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Provinsi</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <select class="form-control" id="city-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Kota</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>District</label>
+                                    <select class="form-control" id="district-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Kecamatan</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Sub-District</label>
+                                    <select class="form-control" id="subdistrict-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Kelurahan</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>ZipCode</label>
+                                    <select class="form-control" id="zipcode-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Postal Code</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Shipping cost options</label>
+                                    <select class="form-control" id="shipping-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Pilihan biaya pengiriman</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Insurance fee options</label>
+                                    <select class="form-control" id="insurance-chosen-to-be-purchased">
+                                        <option>1</option>
+                                    </select>
+                                    <small class="form-text text-muted">Pilihan biaya asuransi</small>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Estimated shipping cost</label>
+                                    <input type="number" class="form-control" id="estimated-shipping-fee-to-be-purchased" disabled>
+                                </div>
+                                <br>
+                                <div class="form-group">
+                                    <label>Estimated cost (not including postage)</label>
+                                    <input type="number" class="form-control" id="estimated-product-fee-to-be-purchased" disabled>
+                                </div>
+                                <br>
+                                <button class="btn btn-primary group-buy-button" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                    Buy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <!-- product names -->
+                <div class="card main-product-card-attributes">
+                    <div class="card-body">
+                        <div class="card-title">Price: <span class="main-product-card-price">0</span></div>
+                        <div class="card-title">COD Price: <span class="cod-product-card-price">0</span></div>
+                        <div class="card-title">PERIOD Price: <span class="period-product-card-price">0</span></div>
+                    </div>
+                </div>
+                <br>
+                <div class="card main-product-card-attributes">
+                    <div class="card-body">
+                        <div class="card-text main-product-card-detials">Product details</div>
+                    </div>
+                </div>
+                <br>
+                <div class="card main-product-card-attributes">
+
+                    <div class="card-body other-product-container-row">
+                        <div class="card main-product-card-attributes-etc">
+                            <div class="card-body">
+                                
+                            </div>
+                        </div>
+                        <div class="card main-product-card-attributes-etc">
+                            <div class="card-body">
+                                
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body other-product-container-row">
+                        <div class="card main-product-card-attributes-etc">
+                            <div class="card-body">
+                                
+                            </div>
+                        </div>
+                        <div class="card main-product-card-attributes-etc">
+                            <div class="card-body">
+                                
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-eMNCOe7tC1doHpGoWe/6oMVemdAVTMs2xqW4mwXrXsW0L84Iytr2wi5v2QjrP/xp" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js" integrity="sha384-cn7l7gDp0eyniUwwAZgrzD06kc/tftFf19TOAs2zVinnD/C7E91j9yyk5//jjpt/" crossorigin="anonymous"></script>
-   
-  </body>
+        <script>
+            var slideIndex = 1;
+            showSlides(slideIndex);
+            
+            function plusSlides(n) {
+                showSlides(slideIndex += n);
+            }
+            
+            function currentSlide(n) {
+                showSlides(slideIndex = n);
+            }
+            
+            function showSlides(n) {
+                var i;
+                var slides = document.getElementsByClassName("mySlides");
+                var dots = document.getElementsByClassName("dot");
+                if (n > slides.length) {slideIndex = 1}    
+                if (n < 1) {slideIndex = slides.length}
+                for (i = 0; i < slides.length; i++) {
+                    slides[i].style.display = "none";  
+                }
+                for (i = 0; i < dots.length; i++) {
+                    dots[i].className = dots[i].className.replace(" active", "");
+                }
+                slides[slideIndex-1].style.display = "block";  
+                dots[slideIndex-1].className += " active";
+            }
+        </script>
+    </body>
 </html>
