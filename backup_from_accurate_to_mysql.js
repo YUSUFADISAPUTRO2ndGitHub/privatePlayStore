@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "6eef4a81-9920-47a7-b8b7-6d8d6040f080";
+var refreshtoken = "4282e0bb-a169-4140-8cd8-27b70e90ca6f";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4237,15 +4237,11 @@ app.get('/get-all-products-in-accurate', async(req, res) => {
         page = 1;
     }
     var collected_product_ids = [];
-    var current_page = 1;
-    for (current_page; current_page <= page; current_page++) { //total_page
-        console.log("loading ids from Accurate to array : " + current_page);
-        collected_product_ids = collected_product_ids.concat(
-            await requesting_product_ids_from_accurate(current_page, page).then(async value => {
-                return await value;
-            })
-        );
-    }
+    collected_product_ids = collected_product_ids.concat(
+        await requesting_product_ids_from_accurate(page).then(async value => {
+            return await value;
+        })
+    );
     var collected_product_details = [];
     var current_id = 0;
     for (current_id; current_id < collected_product_ids.length; current_id++) {
