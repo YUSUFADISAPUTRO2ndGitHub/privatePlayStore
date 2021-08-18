@@ -937,7 +937,7 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
     if(customer_data != undefined){
         if(customer_data.Email != undefined){
             if(customer_data.Email.length > 0){
-                if(customer_data.account_number != undefined && customer_data.referral_customer_code != undefined){
+                if(customer_data.referral_customer_code != undefined){
                     if(
                         // (await check_existing_referral_code(customer_data.referral_customer_code).then(async value => {
                         //     return await value;
@@ -951,7 +951,7 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                             && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
                             && (customer_data.Email != undefined || customer_data.Email.length != 0)
                             && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
-                            && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
+                            // && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
                             && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
                             ){
                                 if(
@@ -1137,12 +1137,12 @@ async function create_new_customer_direct_from_customer(customer_data){
         CURRENT_TIMESTAMP(),
         CURRENT_TIMESTAMP(),
         '0',
-        '${customer_data.account_number}',
+        NULL,
         '${customer_data.referral_customer_code}',
         '3%',
         '${customer_data.ktp}',
         'true',
-        '${customer_data.account_number}'
+        NULL
         );`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
@@ -1359,6 +1359,7 @@ async function update_customer_direct_from_customer(customer_data){
                 SET Customer_Code = '${customer_data.Customer_Code}',
                 First_Name = '${customer_data.First_Name}',
                 Last_Name = '${customer_data.Last_Name}',
+                bank_account_number = '${customer_data.bank_account_number}',
                 Birthday = '${customer_data.Birthday}',
                 Last_Login = CURRENT_TIMESTAMP(),
                 Email = '${customer_data.Email}',
@@ -1492,10 +1493,11 @@ app.post('/get-customer-code',  async (req, res) => {
 
 async function customer_code_generator(){
     var today = new Date();
+    var y = today.getFullYear();
     var h = today.getHours();
     var m = today.getMinutes();
     var s = today.getSeconds();
-    var customer_code = Date.now() + "YU" + h + "SU" + m + "FA" + s + "DI" + Math.floor((Math.random() * 999) + 9999);
+    var customer_code = "Y" + (h + Math.floor((Math.random() * 9) + 1)) + "A" + h + "" + m + "" + (s + Math.floor((Math.random() * 9) + 1)) + "";
     return new Promise(async resolve => {
         resolve(customer_code);
     });

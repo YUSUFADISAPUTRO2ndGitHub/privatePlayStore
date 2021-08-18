@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "d224ba42-11d6-452f-9900-e80433fe2677";
+var refreshtoken = "6eef4a81-9920-47a7-b8b7-6d8d6040f080";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -4005,6 +4005,8 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Shopee_Price: result.d.numericField7,
                             Bekasi_Store_Price: result.d.numericField8,
                             Weight_KG: result.d.numericField9,
+                            itemType: result.d.itemType,
+                            accurate_special_id_for_product: result.d.id
                             // Dimension_CM_CUBIC: result.d.numericField10,
                         });
                     }else{
@@ -4225,6 +4227,83 @@ const add_product_in_product_management = async(product) => {
         }
     });
 }
+
+/*
+    API to get products in Accurate
+*/
+app.get('/get-all-products-in-accurate', async(req, res) => {
+    var page = req.query.page;
+    if(page == undefined){
+        page = 1;
+    }
+    var collected_product_ids = [];
+    var current_page = 1;
+    for (current_page; current_page <= page; current_page++) { //total_page
+        console.log("loading ids from Accurate to array : " + current_page);
+        collected_product_ids = collected_product_ids.concat(
+            await requesting_product_ids_from_accurate(current_page, page).then(async value => {
+                return await value;
+            })
+        );
+    }
+    var collected_product_details = [];
+    var current_id = 0;
+    for (current_id; current_id < collected_product_ids.length; current_id++) {
+        console.log("loading details based on id from Accurate to array : " + current_id);
+        collected_product_details.push(
+            await requesting_product_details_based_on_id_from_accurate(collected_product_ids[current_id]).then(async value => {
+                return await value;
+            })
+        );
+    }
+    res.send(
+        collected_product_details
+    );
+})
+
+app.post('/add-or-edit-a-product-in-accurate', async(req, res) => {
+    var product = req.body.product;
+    res.send(await update_andor_product_in_accurate_based_on_id(product).then(async value => {
+        return await value;
+    }))
+})
+
+async function update_andor_product_in_accurate_based_on_id(product){
+    var options = {
+        'method': 'GET',
+        'url': 'http://localhost:5002/get-lastest-token-and-session',
+        'headers': {}
+    };
+    return new Promise(async resolve => {
+        await request(options, async function(error, response) {
+            var credentials = JSON.parse(await response.body);
+            options = {
+                'method': 'POST',
+                'url': `https://public.accurate.id/accurate/api/item/save.do?itemType=${product.itemType}&name=${product.Name}&no=${product.Product_Code}&notes=${product.notes}&itemCategoryName=${product.Category_Name}&unitPrice=${product.Marketing_1_Price}&vendorPrice=${product.Buy_Price}&id=${product.accurate_special_id_for_product}&charField1=${product.GroupBuy_Purchase}&charField2=${product.Categorize_NEW}&charField3=${product.Mandarin_Name}&charField4=${product.Specification}&charField5=${product.Subcategory}&charField6=${product.Dimension_CM_CUBIC}&charField7=${product.Description}&numericField1=${product.GroupBuy_SellQuantity}&numericField2=${product.GroupBuy_SellPrice}&numericField3=${product.Marketing_1_Price}&numericField4=${product.Marketing_2_Price}&numericField5=${product.Sold_Price}&numericField6=${product.Tokopedia_Price}&numericField7=${product.Shopee_Price}&numericField8=${product.Bekasi_Store_Price}&numericField9=${product.Weight_KG}`,
+                'headers': {
+                    'Authorization': 'Bearer ' + credentials.access_token,
+                    'X-Session-ID': credentials.session_id
+                }
+            };
+            await request(options, async function (error, response) {
+                if (error) {
+                    console.log(error);
+                    resolve(
+                        {
+                            "s": false,
+                            "d": [
+                                "failing to send request via Accurate's API (POST) | https://public.accurate.id/accurate/api/item/save.do"
+                            ]
+                        }
+                    );
+                }else{
+                    resolve(JSON.parse(response.body));
+                }
+            });
+        });
+    })
+}
+
 
 
 app.listen(port, () => {
