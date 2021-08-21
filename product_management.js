@@ -38,6 +38,104 @@ con.on('error', function(err) {
     }
 });
 
+app.post('/get_user_comment',  async (req, res) => {
+    var Product_Code = req.query.Product_Code;
+    // console.log("send_delivery_order_to_tiki ================ send_delivery_order_to_tiki");
+    if(Product_Code != undefined){
+        res.send(
+            await get_user_comment(Product_Code).then(async value => {
+                    return await value;
+            })
+        );
+    }else{
+        res.send(
+            false
+        );
+    }
+})
+
+app.post('/send_user_comment',  async (req, res) => {
+    var User_Comments = req.body.User_Comments;
+    // console.log("send_delivery_order_to_tiki ================ send_delivery_order_to_tiki");
+    if(User_Comments != undefined){
+        if(
+            User_Comments.Customer_Code != undefined && User_Comments.Comment != undefined && User_Comments.Product_Code != undefined
+        ){
+            res.send(
+                await add_user_comment(User_Comments).then(async value => {
+                    return await value;
+                })
+            );
+        }else{
+            res.send(
+                false
+            );
+        }
+    }else{
+        res.send(
+            false
+        );
+    }
+})
+
+async function add_user_comment(User_Comments){
+    return new Promise(async resolve => {
+        var all_comments = await get_user_comment(Product_Code);
+        if(all_comments != undefined){
+            all_comments = JSON.parse(all_comments);
+            all_comments.push({
+                "Comment": User_Comments.Comment,
+                "Customer_Code": User_Comments.Customer_Code
+            });
+        }else{
+            all_comments = [
+                {
+                    "Comment": User_Comments.Comment,
+                    "Customer_Code": User_Comments.Customer_Code
+                }
+            ]
+        }
+        console.log(all_comments);
+        var sql = "";
+        sql = `
+            UPDATE vtportal.product_data_accurate pm 
+            set User_Comments = '${JSON.stringify(all_comments)}' 
+            where Product_Code = '${User_Comments.Product_Code}';
+        ;
+        `;
+        console.log(sql);
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    })
+}
+
+async function get_user_comment(Product_Code){
+    return new Promise(async resolve => {
+        var sql = "";
+        sql = `
+            select User_Comments from vtportal.product_data_accurate pm
+            where Product_Code = '${Product_Code}';
+        ;
+        `;
+        console.log(sql);
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(await get_user_comment(Product_Code));
+            }else{
+                resolve(result[0]);
+            }
+        });
+    })
+}
+
+
 async function get_access_token_tiki(){
     return new Promise(async resolve => {
         var options = {
