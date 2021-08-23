@@ -38,6 +38,54 @@ con.on('error', function(err) {
     }
 });
 
+app.post('/redeem-coupon',  async (req, res) => {
+    var Coupon_Discount = req.query.Coupon_Discount;
+    var Product_Code = req.query.Product_Code;
+    if(Coupon_Discount != undefined){
+        res.send(
+            await redeem_coupon(Coupon_Discount, Product_Code).then(async value => {
+                return await value;
+            })
+        );
+    }else{
+        res.send(
+            false
+        );
+    }
+})
+
+async function redeem_coupon(Coupon_Discount, Product_Code){
+    return new Promise(async resolve => {
+        var sql = "";
+        sql = `
+            select 
+            Coupon_Discount
+            , Coupon_Discount_Precentage
+            , Product_Code 
+            from vtportal.product_management pm 
+            where Product_Code = '${Product_Code}' and Coupon_Discount = '${Coupon_Discount}';
+        ;
+        `;
+        console.log(sql);
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(await redeem_coupon(Coupon_Discount, Product_Code));
+            }else{
+                if(result.length > 0){
+                    if(result[0].Coupon_Discount == 'Coupon_Discount'){
+                        resolve(result[0].Coupon_Discount_Precentage);
+                    }else{
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    })
+}
+
 app.post('/get_user_comment',  async (req, res) => {
     var Product_Code = req.query.Product_Code;
     // console.log("send_delivery_order_to_tiki ================ send_delivery_order_to_tiki");
