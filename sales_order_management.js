@@ -156,7 +156,7 @@ async function close_group_buy_status(Product_Code){
     UPDATE vtportal.product_management 
     SET GroupBuy_Purchase = 'false',
     GroupBuy_SellQuantity = '0',
-    GroupBuy_SellPrice = '0';
+    GroupBuy_SellPrice = '0' where Product_Code = '${Product_Code}';
     `;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
