@@ -64,7 +64,6 @@ async function redeem_coupon(Coupon_Discount, Product_Code){
             , Product_Code 
             from vtportal.product_management pm 
             where Product_Code = '${Product_Code}' and Coupon_Discount = '${Coupon_Discount}';
-        ;
         `;
         console.log(sql);
         await con.query(sql, async function (err, result) {
@@ -73,7 +72,9 @@ async function redeem_coupon(Coupon_Discount, Product_Code){
                 resolve(await redeem_coupon(Coupon_Discount, Product_Code));
             }else{
                 if(result.length > 0){
-                    if(result[0].Coupon_Discount == 'Coupon_Discount'){
+                    console.log(result[0].Coupon_Discount);
+                    if(result[0].Coupon_Discount == Coupon_Discount){
+                        console.log(result[0].Coupon_Discount_Precentage);
                         resolve(result[0].Coupon_Discount_Precentage);
                     }else{
                         resolve(false);
