@@ -146,7 +146,7 @@ app.post('/close-group-buy-status',  async (req, res) => {
     }else{
         res.send({
             status: false,
-            reason: "Order_Number is incomplete"
+            reason: "Product_Code is incomplete"
         });
     }
 })
@@ -182,7 +182,7 @@ app.post('/check-group-buy-quantity-so-far-gross',  async (req, res) => {
     }else{
         res.send({
             status: false,
-            reason: "Order_Number is incomplete"
+            reason: "Group_Buy_Purchase_PC is incomplete"
         });
     }
 })

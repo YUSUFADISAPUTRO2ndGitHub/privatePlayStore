@@ -56,6 +56,7 @@ app.post('/get_user_comment',  async (req, res) => {
 
 app.post('/send_user_comment',  async (req, res) => {
     var User_Comments = req.body.User_Comments;
+    console.log(User_Comments);
     // console.log("send_delivery_order_to_tiki ================ send_delivery_order_to_tiki");
     if(User_Comments != undefined){
         if(
@@ -80,9 +81,10 @@ app.post('/send_user_comment',  async (req, res) => {
 
 async function add_user_comment(User_Comments){
     return new Promise(async resolve => {
-        var all_comments = await get_user_comment(Product_Code);
-        if(all_comments != undefined){
-            all_comments = JSON.parse(all_comments);
+        var all_comments = await get_user_comment(User_Comments.Product_Code);
+        console.log(all_comments);
+        if(all_comments.User_Comments != undefined){
+            all_comments = JSON.parse(all_comments.User_Comments);
             all_comments.push({
                 "Comment": User_Comments.Comment,
                 "Customer_Code": User_Comments.Customer_Code
@@ -98,7 +100,7 @@ async function add_user_comment(User_Comments){
         console.log(all_comments);
         var sql = "";
         sql = `
-            UPDATE vtportal.product_data_accurate pm 
+            UPDATE vtportal.product_management pm 
             set User_Comments = '${JSON.stringify(all_comments)}' 
             where Product_Code = '${User_Comments.Product_Code}';
         ;
@@ -119,7 +121,7 @@ async function get_user_comment(Product_Code){
     return new Promise(async resolve => {
         var sql = "";
         sql = `
-            select User_Comments from vtportal.product_data_accurate pm
+            select User_Comments from vtportal.product_management pm
             where Product_Code = '${Product_Code}';
         ;
         `;
