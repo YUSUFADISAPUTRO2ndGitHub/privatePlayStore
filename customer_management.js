@@ -429,12 +429,17 @@ async function send_OTP(Email){
             from: automated_email,
             to: Email,
             subject: 'OTP Sold.co.id',
-            text: `
-YOUR OTP FOR SOLD.CO.ID:
-${OTP}
-Do not reply this email
-Thank You
-From SOLD.CO.ID
+            text: ``,
+            html: `
+            <div>
+                <img src="http://mobile.app.sold.co.id/www/img/kran_plastik.png" style="width: 200px;">
+                <img src="http://mobile.app.sold.co.id/www/img/kran_single.png" style="width: 200px;">
+                <img src="http://mobile.app.sold.co.id/www/img/floor_drain.png" style="width: 200px;">
+                <img src="http://mobile.app.sold.co.id/www/img/helm_proyek.png" style="width: 200px;">
+                <h5>YOUR OTP</h5>
+                <p>OTP: ${OTP}</p>
+                <p>Please copy and paste your OTP to your APP or browser. This OTP is only available for sold.co.id</p>
+            </div>
             `
         };
     
@@ -469,6 +474,45 @@ app.post('/verify-otp',  async (req, res) => {
         res.send(false);
     }
 })
+
+//verify-OTP
+app.post('/verify-email-address',  async (req, res) => {
+    var otp = req.query.otp;
+    if(otp != undefined){
+        res.send(await verify_otp_only(otp).then(async value => {
+            return await value;
+        }));
+    }else{
+        res.send(false);
+    }
+})
+
+async function verify_otp_only(otp){
+    return new Promise(async resolve => {
+        console.log("========================================== verify_otp_only");
+        console.log("otp from user " + otp);
+        console.log("otps recorded " + otps);
+        var i = 0;
+        var counter = 0;
+        for(i; i < otps.length; i ++){
+            if(otps[i] == otp){
+                otps.splice(i, 1);
+                console.log("========================================== verify_otp_only");
+                console.log("otp found");
+                console.log("otps recorded " + otps);
+                resolve(true);
+            }else{
+                counter++;
+            }
+        }
+        if(counter == otps.length){
+            console.log("========================================== verify_otp_only");
+            console.log("otp not found");
+            console.log("otps recorded " + otps);
+            resolve(false);
+        }
+    });
+}
 
 //verify-otp-with-unencrypted-password'
 app.post('/verify-otp-with-unencrypted-password',  async (req, res) => {
