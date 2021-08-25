@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "4282e0bb-a169-4140-8cd8-27b70e90ca6f";
+var refreshtoken = "e48f9a8c-329b-4172-b9df-85852425e6c9";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -186,180 +186,316 @@ app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
 /* 
     engine start
 */
-var options = {
-    'method': 'GET',
-    'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
-    'headers': {}
-};
-request(options, function(error, response) {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-all-product-details', //get-all-product-details
-        'headers': {}
-    };
-    request(options, function(error, response) {
-        var options = {
-            'method': 'GET',
-            'url': 'http://localhost:5002/get-all-sales-invoice-details',
-            'headers': {}
-        };
-        request(options, function(error, response) {
-            var options = {
-                'method': 'GET',
-                'url': 'http://localhost:5002/get-all-sales-receipt-details',
-                'headers': {}
-            };
-            request(options, function(error, response) {
-                var options = {
-                    'method': 'GET',
-                    'url': 'http://localhost:5002/get-all-sales-order-details',
-                    'headers': {}
-                };
-                request(options, function(error, response) {
-                    if (error) throw new Error(error);
-                    // console.log(response.body);
-                    console.log("get-all-sales-order-details === done");
-                    var options = {
-                        'method': 'GET',
-                        'url': 'http://localhost:5002/get-all-customer-details',
-                        'headers': {}
-                    };
-                    request(options, function(error, response) {
-                        if (error) throw new Error(error);
-                        // console.log(response.body);
-                        console.log("get-all-customer-details === done");
-                        var options = {
-                            'method': 'GET',
-                            'url': 'http://localhost:5002/get-all-employee-details',
-                            'headers': {}
-                        };
-                        request(options, function(error, response) {
-                            if (error) throw new Error(error);
-                            // console.log(response.body);
-                            console.log("get-all-employee-details === done");
-                            var options = {
-                                'method': 'GET',
-                                'url': 'http://localhost:5002/get-all-delivery-order-details',
-                                'headers': {}
-                            };
-                            request(options, function(error, response) {
-                                if (error) throw new Error(error);
-                                // console.log(response.body);
-                                console.log("get-all-delivery-order-details === done");
-                                var options = {
-                                    'method': 'GET',
-                                    'url': 'http://localhost:5002/get-all-sales-return-details', //get-all-sales-return-details
-                                    'headers': {}
-                                };
-                                request(options, function(error, response) {
-                                    if (error) throw new Error(error);
-                                    // console.log(response.body);
-                                    console.log("get-all-sales-return-details === done");
-                                    var options = {
-                                        'method': 'GET',
-                                        'url': 'http://localhost:5002/get-all-purchase-order-details',
-                                        'headers': {}
-                                    };
-                                    request(options, function(error, response) {
-                                        if (error) throw new Error(error);
-                                        // console.log(response.body);
-                                        console.log("get-all-purchase-order-details === done");
-                                    });
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
-});
+// var options = {
+//     'method': 'GET',
+//     'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
+//     'headers': {}
+// };
+// request(options, function(error, response) {
+//     var options = {
+//         'method': 'GET',
+//         'url': 'http://localhost:5002/get-all-product-details', //get-all-product-details
+//         'headers': {}
+//     };
+//     request(options, function(error, response) {
+//         var options = {
+//             'method': 'GET',
+//             'url': 'http://localhost:5002/get-all-sales-invoice-details',
+//             'headers': {}
+//         };
+//         request(options, function(error, response) {
+//             var options = {
+//                 'method': 'GET',
+//                 'url': 'http://localhost:5002/get-all-sales-receipt-details',
+//                 'headers': {}
+//             };
+//             request(options, function(error, response) {
+//                 var options = {
+//                     'method': 'GET',
+//                     'url': 'http://localhost:5002/get-all-sales-order-details',
+//                     'headers': {}
+//                 };
+//                 request(options, function(error, response) {
+//                     if (error) throw new Error(error);
+//                     // console.log(response.body);
+//                     console.log("get-all-sales-order-details === done");
+//                     var options = {
+//                         'method': 'GET',
+//                         'url': 'http://localhost:5002/get-all-customer-details',
+//                         'headers': {}
+//                     };
+//                     request(options, function(error, response) {
+//                         if (error) throw new Error(error);
+//                         // console.log(response.body);
+//                         console.log("get-all-customer-details === done");
+//                         var options = {
+//                             'method': 'GET',
+//                             'url': 'http://localhost:5002/get-all-employee-details',
+//                             'headers': {}
+//                         };
+//                         request(options, function(error, response) {
+//                             if (error) throw new Error(error);
+//                             // console.log(response.body);
+//                             console.log("get-all-employee-details === done");
+//                             var options = {
+//                                 'method': 'GET',
+//                                 'url': 'http://localhost:5002/get-all-delivery-order-details',
+//                                 'headers': {}
+//                             };
+//                             request(options, function(error, response) {
+//                                 if (error) throw new Error(error);
+//                                 // console.log(response.body);
+//                                 console.log("get-all-delivery-order-details === done");
+//                                 var options = {
+//                                     'method': 'GET',
+//                                     'url': 'http://localhost:5002/get-all-sales-return-details', //get-all-sales-return-details
+//                                     'headers': {}
+//                                 };
+//                                 request(options, function(error, response) {
+//                                     if (error) throw new Error(error);
+//                                     // console.log(response.body);
+//                                     console.log("get-all-sales-return-details === done");
+//                                     var options = {
+//                                         'method': 'GET',
+//                                         'url': 'http://localhost:5002/get-all-purchase-order-details',
+//                                         'headers': {}
+//                                     };
+//                                     request(options, function(error, response) {
+//                                         if (error) throw new Error(error);
+//                                         // console.log(response.body);
+//                                         console.log("get-all-purchase-order-details === done");
+//                                     });
+//                                 });
+//                             });
+//                         });
+//                     });
+//                 });
+//             });
+//         });
+//     });
+// });
 
 /*
     interval
 */
 
-setInterval(() => {
-    var options = {
-        'method': 'GET',
-        'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
-        'headers': {}
-    };
-    request(options, function(error, response) {
+// setInterval(() => {
+//     var options = {
+//         'method': 'GET',
+//         'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
+//         'headers': {}
+//     };
+//     request(options, function(error, response) {
+//         var options = {
+//             'method': 'GET',
+//             'url': 'http://localhost:5002/get-all-sales-return-details',
+//             'headers': {}
+//         };
+//         request(options, function(error, response) {
+//             var options = {
+//                 'method': 'GET',
+//                 'url': 'http://localhost:5002/get-all-sales-invoice-details',
+//                 'headers': {}
+//             };
+//             request(options, function(error, response) {
+//                 var options = {
+//                     'method': 'GET',
+//                     'url': 'http://localhost:5002/get-all-sales-receipt-details',
+//                     'headers': {}
+//                 };
+//                 request(options, function(error, response) {
+//                     var options = {
+//                         'method': 'GET',
+//                         'url': 'http://localhost:5002/get-all-sales-order-details',
+//                         'headers': {}
+//                     };
+//                     request(options, function(error, response) {
+//                         if (error) throw new Error(error);
+//                         console.log(response.body);
+//                         console.log("++=========================================================================++");
+//                         console.log("Started to get customer informations");
+//                         var options = {
+//                             'method': 'GET',
+//                             'url': 'http://localhost:5002/get-all-customer-details',
+//                             'headers': {}
+//                         };
+//                         request(options, function(error, response) {
+//                             if (error) throw new Error(error);
+//                             console.log(response.body);
+//                             console.log("++=========================================================================++");
+//                             console.log("Started to get product informations");
+//                             var options = {
+//                                 'method': 'GET',
+//                                 'url': 'http://localhost:5002/get-all-product-details',
+//                                 'headers': {}
+//                             };
+//                             request(options, function(error, response) {
+//                                 if (error) throw new Error(error);
+//                                 // console.log(response.body);
+//                                 console.log("get-all-product-details === done");
+//                                 var options = {
+//                                     'method': 'GET',
+//                                     'url': 'http://localhost:5002/get-all-delivery-order-details',
+//                                     'headers': {}
+//                                 };
+//                                 request(options, function(error, response) {
+//                                     if (error) throw new Error(error);
+//                                     // console.log(response.body);
+//                                     console.log("get-all-delivery-order-details === done");
+//                                     var options = {
+//                                         'method': 'GET',
+//                                         'url': 'http://localhost:5002/get-all-employee-details',
+//                                         'headers': {}
+//                                     };
+//                                     request(options, function(error, response) {
+//                                         if (error) throw new Error(error);
+//                                         // console.log(response.body);
+//                                         console.log("get-all-employee-details === done");
+//                                         var options = {
+//                                             'method': 'GET',
+//                                             'url': 'http://localhost:5002/get-all-purchase-order-details',
+//                                             'headers': {}
+//                                         };
+//                                         request(options, function(error, response) {
+//                                             if (error) throw new Error(error);
+//                                             // console.log(response.body);
+//                                             console.log("get-all-purchase-order-details === done");
+//                                         });
+//                                     });
+//                                 });
+//                             });
+//                         });
+//                     });
+//                 });
+//             });
+//         });
+//     });
+// }, 35000000);
+
+/*
+    new interval
+*/
+
+const today_time = new Date();
+let today_time_hour = today_time.getHours();
+var engine_starter = 10;
+console.log(today_time_hour);
+console.log(today_time_hour == engine_starter);
+if(
+    today_time_hour == engine_starter
+){
+    console.log(today_time_hour == engine_starter);
+    console.log("============================================================ " + synchonize_trigger().then(async value => {
+        return await value;
+    }));
+    engine_starter = 17;
+}
+setInterval(async () => {
+    today_time_hour = today_time.getHours();
+    console.log(today_time_hour);
+    console.log(today_time_hour == engine_starter);
+    if(
+        today_time_hour == engine_starter
+    ){
+        console.log(today_time_hour == engine_starter);
+        console.log("============================================================ " + synchonize_trigger().then(async value => {
+            return await value;
+        }));
+        engine_starter = 17;
+    }
+}, 3.6e+6);
+
+async function synchonize_trigger(){
+    return new Promise(async resolve => {
         var options = {
             'method': 'GET',
-            'url': 'http://localhost:5002/get-all-sales-return-details',
+            'url': 'http://localhost:5002/get-lastest-token-and-session-from-accurate',
             'headers': {}
         };
-        request(options, function(error, response) {
+        await request(options, async function(error, response) {
             var options = {
                 'method': 'GET',
-                'url': 'http://localhost:5002/get-all-sales-invoice-details',
+                'url': 'http://localhost:5002/get-all-sales-return-details',
                 'headers': {}
             };
-            request(options, function(error, response) {
+            await request(options, async function(error, response) {
                 var options = {
                     'method': 'GET',
-                    'url': 'http://localhost:5002/get-all-sales-receipt-details',
+                    'url': 'http://localhost:5002/get-all-sales-invoice-details',
                     'headers': {}
                 };
-                request(options, function(error, response) {
+                await request(options, async function(error, response) {
                     var options = {
                         'method': 'GET',
-                        'url': 'http://localhost:5002/get-all-sales-order-details',
+                        'url': 'http://localhost:5002/get-all-sales-receipt-details',
                         'headers': {}
                     };
-                    request(options, function(error, response) {
-                        if (error) throw new Error(error);
-                        console.log(response.body);
-                        console.log("++=========================================================================++");
-                        console.log("Started to get customer informations");
+                    await request(options, async function(error, response) {
                         var options = {
                             'method': 'GET',
-                            'url': 'http://localhost:5002/get-all-customer-details',
+                            'url': 'http://localhost:5002/get-all-sales-order-details',
                             'headers': {}
                         };
-                        request(options, function(error, response) {
+                        await request(options, async function(error, response) {
                             if (error) throw new Error(error);
                             console.log(response.body);
                             console.log("++=========================================================================++");
-                            console.log("Started to get product informations");
+                            console.log("Started to get customer informations");
                             var options = {
                                 'method': 'GET',
-                                'url': 'http://localhost:5002/get-all-product-details',
+                                'url': 'http://localhost:5002/get-all-customer-details',
                                 'headers': {}
                             };
-                            request(options, function(error, response) {
+                            await request(options, async function(error, response) {
                                 if (error) throw new Error(error);
-                                // console.log(response.body);
-                                console.log("get-all-product-details === done");
+                                console.log(response.body);
+                                console.log("++=========================================================================++");
+                                console.log("Started to get product informations");
                                 var options = {
                                     'method': 'GET',
-                                    'url': 'http://localhost:5002/get-all-delivery-order-details',
+                                    'url': 'http://localhost:5002/get-all-product-details',
                                     'headers': {}
                                 };
-                                request(options, function(error, response) {
+                                await request(options, async function(error, response) {
                                     if (error) throw new Error(error);
                                     // console.log(response.body);
-                                    console.log("get-all-delivery-order-details === done");
+                                    console.log("get-all-product-details === done");
                                     var options = {
                                         'method': 'GET',
-                                        'url': 'http://localhost:5002/get-all-employee-details',
+                                        'url': 'http://localhost:5002/get-all-delivery-order-details',
                                         'headers': {}
                                     };
-                                    request(options, function(error, response) {
+                                    await request(options, async function(error, response) {
                                         if (error) throw new Error(error);
                                         // console.log(response.body);
-                                        console.log("get-all-employee-details === done");
+                                        console.log("get-all-delivery-order-details === done");
                                         var options = {
                                             'method': 'GET',
-                                            'url': 'http://localhost:5002/get-all-purchase-order-details',
+                                            'url': 'http://localhost:5002/get-all-employee-details',
                                             'headers': {}
                                         };
-                                        request(options, function(error, response) {
+                                        await request(options, async function(error, response) {
                                             if (error) throw new Error(error);
                                             // console.log(response.body);
-                                            console.log("get-all-purchase-order-details === done");
+                                            console.log("get-all-employee-details === done");
+                                            var options = {
+                                                'method': 'GET',
+                                                'url': 'http://localhost:5002/get-all-purchase-order-details',
+                                                'headers': {}
+                                            };
+                                            await request(options, async function(error, response) {
+                                                if (error) throw new Error(error);
+                                                // console.log(response.body);
+                                                console.log("get-all-purchase-order-details === done");
+                                                const today = new Date();
+                                                let d = today.getDate();
+                                                let mth = today.getMonth()+1;
+                                                let y = today.getYear();
+                                                let h = today.getHours();
+                                                let m = today.getMinutes();
+                                                let s = today.getSeconds();
+                                                resolve((h + ":" + m + ":" + s + " " + d + "/" + mth + "/" + y));
+                                            });
                                         });
                                     });
                                 });
@@ -370,8 +506,7 @@ setInterval(() => {
             });
         });
     });
-}, 35000000);
-
+}
 /*
     backup sales return
 */
