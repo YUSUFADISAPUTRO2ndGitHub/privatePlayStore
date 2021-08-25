@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "c4a7909f-4065-4e94-a40c-1d6258b85077";
+var refreshtoken = "c62c4a45-fd7f-44ab-af03-8546724d75d1";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -376,7 +376,7 @@ app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
     new interval
 */
 
-const today_time = new Date();
+let today_time = new Date();
 let today_time_hour = today_time.getHours();
 var engine_starter = 18;
 console.log(today_time_hour);
@@ -385,12 +385,14 @@ if(
     today_time_hour == engine_starter
 ){
     console.log(today_time_hour == engine_starter);
+    engine_starter = engine_starter - 1;
     console.log("============================================================ " + synchonize_trigger().then(async value => {
         engine_starter = 18;
         return await value;
     }));
 }
 setInterval(async () => {
+    let today_time = new Date();
     today_time_hour = today_time.getHours();
     console.log(today_time_hour);
     console.log(today_time_hour == engine_starter);
@@ -398,6 +400,7 @@ setInterval(async () => {
         today_time_hour == engine_starter
     ){
         console.log(today_time_hour == engine_starter);
+        engine_starter = engine_starter - 1;
         console.log("============================================================ " + synchonize_trigger().then(async value => {
             engine_starter = 18;
             return await value;
