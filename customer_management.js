@@ -80,6 +80,37 @@ const get_latest_recorded_token = async () => {
 }
 
 //get-saved-user-shopping
+app.post('/check-if-email-is-registered',  async (req, res) => {
+    res.send(
+        await check_email_status(req.query.Email).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function check_email_status(Email){
+    var sql = `
+    select Email from vtportal.customer_management 
+    WHERE upper(Email)='${Email.toUpperCase()}';
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                if(result.length > 0){
+                    resolve(true);
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
+
+//get-saved-user-shopping
 app.post('/get-saved-user-shopping',  async (req, res) => {
     res.send(
         await get_saved_user_shopping_cart(req.query.Customer_Code).then(async value => {
