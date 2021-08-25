@@ -38,6 +38,40 @@ con.on('error', function(err) {
     }
 });
 
+app.post('/get-random-coupon',  async (req, res) => {
+    res.send(
+        await get_random_coupon().then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_random_coupon(){
+    return new Promise(async resolve => {
+        var sql = "";
+        sql = `
+            select 
+            *
+            from vtportal.product_management pm 
+            where Coupon_Discount != 'NOCOUPON';
+        `;
+        console.log(sql);
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(await redeem_coupon(Coupon_Discount, Product_Code));
+            }else{
+                if(result.length > 0){
+                    console.log(result[0].Coupon_Discount);
+                    resolve(result[0]);
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    })
+}
+
 app.post('/redeem-coupon',  async (req, res) => {
     var Coupon_Discount = req.query.Coupon_Discount;
     var Product_Code = req.query.Product_Code;
@@ -74,8 +108,8 @@ async function redeem_coupon(Coupon_Discount, Product_Code){
                 if(result.length > 0){
                     console.log(result[0].Coupon_Discount);
                     if(result[0].Coupon_Discount == Coupon_Discount){
-                        console.log(result[0].Coupon_Discount_Precentage);
-                        resolve(result[0].Coupon_Discount_Precentage);
+                        console.log(result[Math.floor(Math.random() * (result.length-1))].Coupon_Discount_Precentage);
+                        resolve(result[Math.floor(Math.random() * (result.length-1))].Coupon_Discount_Precentage);
                     }else{
                         resolve(false);
                     }
