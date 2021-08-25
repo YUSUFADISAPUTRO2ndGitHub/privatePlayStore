@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "e48f9a8c-329b-4172-b9df-85852425e6c9";
+var refreshtoken = "c4a7909f-4065-4e94-a40c-1d6258b85077";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -378,7 +378,7 @@ app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
 
 const today_time = new Date();
 let today_time_hour = today_time.getHours();
-var engine_starter = 10;
+var engine_starter = 18;
 console.log(today_time_hour);
 console.log(today_time_hour == engine_starter);
 if(
@@ -386,9 +386,9 @@ if(
 ){
     console.log(today_time_hour == engine_starter);
     console.log("============================================================ " + synchonize_trigger().then(async value => {
+        engine_starter = 18;
         return await value;
     }));
-    engine_starter = 17;
 }
 setInterval(async () => {
     today_time_hour = today_time.getHours();
@@ -399,11 +399,50 @@ setInterval(async () => {
     ){
         console.log(today_time_hour == engine_starter);
         console.log("============================================================ " + synchonize_trigger().then(async value => {
+            engine_starter = 18;
             return await value;
         }));
-        engine_starter = 17;
     }
 }, 3.6e+6);
+
+app.get('/get-time-status-server-accurate-backup', async(req, res) => {
+    today_time_hour = today_time.getHours();
+    res.send(
+        {
+            Time_To_GET_Back_Up_Triggered: engine_starter,
+            Current_Server_Time: today_time_hour
+        }
+    );
+})
+
+app.get('/get-sales-order-data-recorded', async(req, res) => {
+    res.send(
+        await get_recorded_sales_order_data_recorded(req.query.req_param, req.query.res_param).then(async value => {
+            return await value;
+        })
+    );
+})
+
+async function get_recorded_sales_order_data_recorded(req_param, res_param) {
+    return new Promise(async resolve => {
+        var sql = `select ${res_param} from vtportal.sales_order_list_accurate where ${req_param};`;
+        console.log(sql);
+        await con.query(sql, async function(err, result) {
+            if (err) {
+                console.log(err);
+                resolve({
+                    query: sql,
+                    error: err
+                });
+            }else{
+                resolve({
+                    query: sql,
+                    response: result
+                });
+            }
+        });
+    });
+}
 
 async function synchonize_trigger(){
     return new Promise(async resolve => {
