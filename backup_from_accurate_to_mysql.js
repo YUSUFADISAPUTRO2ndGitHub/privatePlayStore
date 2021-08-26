@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "c62c4a45-fd7f-44ab-af03-8546724d75d1";
+var refreshtoken = "e05816df-7d7c-4c91-9f54-1d9e6b051e0e";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -151,18 +151,29 @@ const get_latest_recorded_token = async() => {
 
 const get_latest_recorded_token_locally = async() => {
     return new Promise(async resolve => {
-        console.log("=================================================================");
-        console.log("getting locally saved token");
-        console.log(
-            {
-                access_token: accesstoken,
-                session_id: sessionid
+        var fs = require('fs');
+        await fs.readFile('token.txt', async function(err, data) {
+            var result = data.toString();
+            if(result == 'iJ6ndEsB7gwwObSJxFbK'){
+                console.log("=================================================================");
+                console.log("getting locally saved token");
+                console.log(
+                    {
+                        access_token: accesstoken,
+                        session_id: sessionid
+                    }
+                );
+                console.log("=================================================================");
+                resolve({
+                    access_token: accesstoken,
+                    session_id: sessionid
+                });
+            }else{
+                resolve({
+                    access_token: accesstoken,
+                    session_id: sessionid
+                });
             }
-        );
-        console.log("=================================================================");
-        resolve({
-            access_token: accesstoken,
-            session_id: sessionid
         });
     });
 }
@@ -375,10 +386,9 @@ app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
 /*
     new interval
 */
-
 let today_time = new Date();
 let today_time_hour = today_time.getHours();
-var engine_starter = 18;
+var engine_starter = 12;
 console.log(today_time_hour);
 console.log(today_time_hour == engine_starter);
 if(
@@ -394,6 +404,7 @@ if(
 setInterval(async () => {
     let today_time = new Date();
     today_time_hour = today_time.getHours();
+    console.log("Check-in time interval ============= ");
     console.log(today_time_hour);
     console.log(today_time_hour == engine_starter);
     if(
@@ -409,6 +420,7 @@ setInterval(async () => {
 }, 3.6e+6);
 
 app.get('/get-time-status-server-accurate-backup', async(req, res) => {
+    let today_time = new Date();
     today_time_hour = today_time.getHours();
     res.send(
         {
