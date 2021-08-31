@@ -270,8 +270,6 @@ async function get_access_token_tiki(){
 async function send_delivery_order_to_tiki(body_json){
     return new Promise(async resolve => {
         var json_to_be_sent;
-        // console.log("send_delivery_order_to_tiki ========== send_delivery_order_to_tiki");
-        // console.log(body_json);
         var options = {
             'method': 'POST',
             'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
@@ -282,6 +280,10 @@ async function send_delivery_order_to_tiki(body_json){
             body: JSON.stringify(body_json)
           
         };
+        console.log(" ======================================= send_delivery_order_to_tiki(body_json) ======================================= ");
+        console.log(body_json);
+        console.log(options);
+        console.log(" ======================================= send_delivery_order_to_tiki(body_json) ======================================= ");
         await request(options, async function (error, response) {
             if (error) {
                 console.log(error);
