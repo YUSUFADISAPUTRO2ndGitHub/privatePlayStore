@@ -291,6 +291,7 @@ async function send_delivery_order_to_tiki(body_json){
                 // resolve(await send_delivery_order_to_tiki(body_json));
             }else{
                 var result = JSON.parse(response.body);
+                console.log(result);
                 resolve(result);
             }
         });
@@ -377,14 +378,15 @@ async function get_actual_shipping_fee_charged_tiki(cnno){
                 resolve(false);
             }else{
                 var result = JSON.parse(response.body);
+                console.log(result);
                 resolve(
                     {
-                        accepted_weight_from_tiki: result.response[0].weight,
-                        actual_cost_for_the_shipment: result.response[0].shipment_fee,
-                        actual_insurance_fee_from_tiki: result.response[0].insurance_fee,
-                        chosen_delivery_service_from_tiki: result.response[0].product,
-                        total_package: result.response[0].pieces_no,
-                        destination: result.response[0].destination_city_name
+                        accepted_weight_from_tiki: result.response[0].weight || '',
+                        actual_cost_for_the_shipment: result.response[0].shipment_fee || '',
+                        actual_insurance_fee_from_tiki: result.response[0].insurance_fee || '',
+                        chosen_delivery_service_from_tiki: result.response[0].product || '',
+                        total_package: result.response[0].pieces_no || '',
+                        destination: result.response[0].destination_city_name || ''
                     }
                 );
             }
