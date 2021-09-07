@@ -8,6 +8,7 @@ var request = require('request');
 var mysql = require('mysql');
 const e = require('express');
 const { CONNREFUSED } = require('dns');
+const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants');
 const app = express();
 const port = 3001;
 app.use(cors(), express.json(), busboy())
@@ -37,6 +38,30 @@ con.on('error', function(err) {
         throw err;
     }
 });
+
+app.post('/get-random-free-item',  async (req, res) => {
+    let items = ['test1', 'test2', 'test3', 'test4', 'test5'];
+    let fake_items = [];
+    let i = 0;
+    for(i ; i < 200; i++){
+        fake_items.push("0");
+    }
+    let combined_fake_and_original_item = items.concat(fake_items);
+    let lucky_index = Math.floor(Math.random() * combined_fake_and_original_item.length);
+    if(
+        combined_fake_and_original_item[lucky_index] != "0"
+    ){
+        res.send({
+            status: "sorry",
+            item: combined_fake_and_original_item[lucky_index]
+        });
+    }else{
+        res.send({
+            status: "congratulation",
+            item: combined_fake_and_original_item[lucky_index]
+        });
+    }
+})
 
 app.post('/get-random-coupon',  async (req, res) => {
     res.send(
@@ -1994,7 +2019,7 @@ async function get_product_details_based_on_subcategory(subcategory){
 }
 
 async function get_all_products(){
-    var sql = `select * from vtportal.product_management where Delete_Mark != '1' and (Picture_1 != 'NULL' or Picture_1 != null);`;
+    var sql = `select * from vtportal.product_management where Delete_Mark != '1'and Sell_Price != '0' and (Picture_1 != 'NULL' or Picture_1 != null);`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
