@@ -79,6 +79,57 @@ const get_latest_recorded_token = async () => {
     })
 }
 
+app.post('/get-profile-image',  async (req, res) => {
+    res.send(
+        await get_profile_picture(req.query.Customer_Code)
+    );
+})
+
+function get_profile_picture(Customer_Code){
+    var sql = `
+    select Profile_Picture from vtportal.customer_management
+    WHERE Customer_Code = '${Customer_Code}';
+    `;
+    console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(result[0].Profile_Picture);
+            }
+        });
+    });
+}   
+
+app.post('/upload-profile-image',  async (req, res) => {
+    res.send(
+        await save_profile_picture(req.body.profile_picture, req.query.Customer_Code).then(async value => {
+            return await value;
+        })
+    );
+})
+
+function save_profile_picture(profile_picture, Customer_Code){
+    var sql = `
+        UPDATE vtportal.customer_management
+        SET Profile_Picture = '${profile_picture}'
+        WHERE Customer_Code = '${Customer_Code}';
+    `;
+    // console.log(sql);
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                resolve(true);
+            }
+        });
+    });
+}   
+
 //get-saved-user-shopping
 app.post('/check-if-email-is-registered',  async (req, res) => {
     res.send(

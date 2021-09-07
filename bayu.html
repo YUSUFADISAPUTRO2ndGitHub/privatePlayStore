@@ -1,15 +1,67 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        
-    </head>
-    <body>
-        <div>
-            <img src="http://mobile.app.sold.co.id/www/img/kran_plastik.png">
-            <img src="http://mobile.app.sold.co.id/www/img/floor_drain.png">
-            <h5>YOUR OTP</h5>
-            <p></p>
-            <p>Please copy and paste your OTP to your APP or browser. This OTP is only available for sold.co.id</p>
-        </div>
-    </body>
+<!DOCTYPE html>
+<html>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+<body>
+
+<p>Click on the "Choose File" button to upload a file:</p>
+
+<input id="inp" type='file'>
+<p id="b64"></p>
+<img id="img" height="150">
+
+<div id="saved_img" height="150"></div>
+
+    <script>
+        function readFile() {
+            if (this.files && this.files[0]) {
+                var FR= new FileReader();
+                FR.addEventListener("load", function(e) {
+                    document.getElementById("img").src       = e.target.result;
+                    document.getElementById("b64").innerHTML = e.target.result;
+                    var settings = {
+                        "url": "http://localhost:3002/upload-profile-image",
+                        "method": "POST",
+                        "timeout": 0,
+                        "headers": {
+                            "Content-Type": "application/json"
+                        },
+                        "data": JSON.stringify({
+                            "profile_picture": e.target.result
+                        }),
+                    };
+
+                    $.ajax(settings).done(function (response) {
+                        console.log(response);
+                    });
+                }); 
+                FR.readAsDataURL( this.files[0] );
+            }
+        }
+
+        document.getElementById("inp").addEventListener("change", readFile);
+
+
+
+
+
+
+
+
+        var settings = {
+            "url": "http://customers.sold.co.id/get-profile-image?Customer_Code=1626870317967YU20SU25FA17DI10304",
+            "method": "POST",
+            "timeout": 0,
+        };
+
+        $.ajax(settings).done(function (response) {
+            var image = new Image();
+
+            image.src = response;
+            image.className = 'test';
+
+            // document.body.appendChild(image);
+            $('#saved_img').append(image);
+        });
+    </script>
+</body>
 </html>
