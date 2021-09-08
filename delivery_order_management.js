@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 var request = require('request');
 var mysql = require('mysql');
+const e = require('express');
 const app = express();
 const port = 3004;
 app.use(cors(), express.json())
@@ -74,6 +75,92 @@ const get_latest_recorded_token = async () => {
             });
         });
     })
+}
+
+setInterval(async () => {
+    var status = await get_all_products_in_delivery_order_detail_management().then(async value => {
+        return await value;
+    });
+    if(status != false){
+        var all_product_codes = status;
+        var i = 0;
+        for(i; i < all_product_codes.length; i++){
+            if(check_and_update_fragility_status(all_product_codes[i].Product_Code).then(async value => {
+                return await value;
+            })){
+                console.log(`updated ` + all_product_codes[i].Product_Code);
+            }else{
+                console.log(`fail update ` + all_product_codes[i].Product_Code);
+            }
+        }
+    }
+
+}, 1000);
+
+async function check_and_update_fragility_status(Product_Code){
+    var sql = `
+        select Fragility_Status from vtportal.product_management WHERE Product_Code = '${Product_Code}' limit 1;
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                if(result != undefined){
+                    if(result[0] != undefined){
+                        if(result[0].Fragility_Status != undefined){
+                            if(result[0].Fragility_Status != 0){
+                                sql = `
+                                    UPDATE vtportal.delivery_order_detail_management
+                                    SET Fragility_Status = '${result[0].Fragility_Status}'
+                                    WHERE Product_Code = '${Product_Code}';
+                                `;
+                                await con.query(sql, async function (err, result) {
+                                    if (err) {
+                                        await console.log(err);
+                                        resolve(false);
+                                    }else{
+                                        resolve(true);
+                                    }
+                                })
+                            }else{
+                                resolve(true);
+                            }
+                        }
+                    }else{
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
+
+async function get_all_products_in_delivery_order_detail_management(){
+    var sql = `
+        select Distinct Product_Code from vtportal.delivery_order_detail_management WHERE Fragility_Status != '1';
+    `;
+    return new Promise(async resolve => {
+        await con.query(sql, async function (err, result) {
+            if (err) {
+                await console.log(err);
+                resolve(false);
+            }else{
+                if(result != undefined){
+                    if(result[0] != undefined){
+                        resolve(result);
+                    }else{
+                        resolve(false);
+                    }
+                }else{
+                    resolve(false);
+                }
+            }
+        });
+    });
 }
 
 //get-delivery-order
