@@ -10,7 +10,7 @@ const e = require('express');
 const { CONNREFUSED } = require('dns');
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants');
 const app = express();
-const port = 3001;
+const port = 3221;
 app.use(cors(), express.json(), busboy())
 
 var con = mysql.createConnection({
@@ -245,17 +245,18 @@ async function get_user_comment(Product_Code){
     })
 }
 
+
 async function get_access_token_tiki(){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/user/auth',
+            'url': 'http://apis.mytiki.net:8321/user/auth',
             'headers': {
             'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-            "username": "17465228145926986946",
-            "password": "5364a487b6972237f5460a135e5c932c8188b717"
+            "username": "SOLDIGNUSA",
+            "password": "11628528082735990090"
             })
         
         };
@@ -296,7 +297,7 @@ async function send_delivery_order_to_tiki(body_json){
         var json_to_be_sent;
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/v02/mde/manifestorder',
+            'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
             'headers': {
               'content-type': 'application/json ',
               'x-access-token': await get_access_token_tiki()
@@ -312,8 +313,7 @@ async function send_delivery_order_to_tiki(body_json){
             if (error) {
                 console.log(error);
                 console.log("send_delivery_order_to_tiki(body_json) ========== send_delivery_order_to_tiki(body_json)");
-                // resolve(await send_delivery_order_to_tiki(body_json));
-                resolve(false);
+                resolve(await send_delivery_order_to_tiki(body_json));
             }else{
                 var result = JSON.parse(response.body);
                 console.log(result);
@@ -327,11 +327,8 @@ async function reorder_json_to_fit_tiki(json_from_ERP){
     return new Promise(async resolve => {
         // // console.log("reorder_json_to_fit_tiki ====== reorder_json_to_fit_tiki");
         // // console.log(json_from_ERP);
-        // var delivery_address = await split_address(json_from_ERP.registered_company_address).then(async value => {
-        //     return await value;
-        // })
         var accepted_by_tiki = {
-            "accnum": "SDI010000101", // json_from_ERP.account_number_with_tiki,
+            "accnum": json_from_ERP.account_number_with_tiki,
             "paket_awb": "",
             "paket_id": json_from_ERP.paket_id_tiki_and_sold,
             "paket_service": json_from_ERP.chosen_paket_service,
@@ -361,112 +358,10 @@ async function reorder_json_to_fit_tiki(json_from_ERP){
             "consignee_email": json_from_ERP.customer_email,
             "warehouse_code": json_from_ERP.sold_warehouse_code
         }
-        console.log(accepted_by_tiki);
         resolve(await send_delivery_order_to_tiki(accepted_by_tiki).then(async value => {
             return await value;
         }))
     })
-}
-
-async function split_address(address){
-    return new Promise(async resolve => {
-        var address_splitted = address.split(" ");
-        console.log(address_splitted);
-        var i = 0;
-        var recorded_cut_off = 0;
-        for(i ; i < address_splitted.length; i ++){
-            console.log(!await check_exitance(address_splitted[i]).then(async value => {
-                return await value;
-            }));
-            if(!await check_exitance(address_splitted[i]).then(async value => {
-                return await value;
-            })){
-                console.log(address_splitted[i]);
-                recorded_cut_off = i;
-                i = address_splitted.length;
-            }
-        }
-        i = 0;
-        var primary_address = "";
-        for(i ; i < recorded_cut_off; i ++){
-            primary_address = primary_address + address_splitted[i] + " ";
-        }
-        i = recorded_cut_off;
-        var secondary_address = "";
-        for(i ; i < address_splitted.length; i ++){
-            secondary_address = secondary_address + address_splitted[i] + " ";
-        }
-        console.log(primary_address);
-        console.log(secondary_address);
-        resolve({
-            first_address: primary_address,
-            second_address: secondary_address
-        });
-    });
-}
-
-async function check_exitance(word){
-    var sql = "";
-    sql = `
-        select Province from vtportal.courier_and_national_area_management where Province like '%(${word})%' limit 1;
-    `;
-    console.log(sql);
-    return new Promise(async resolve => {
-        await con.query(sql, async function (err, result) {
-            if (err) {
-                await console.log(err);
-                resolve(false);
-            }else{
-                if(result[0] != undefined){
-                    sql = `
-                        select City from vtportal.courier_and_national_area_management where City like '%(${word})%' limit 1;
-                    `;
-                    await con.query(sql, async function (err, result) {
-                        if (err) {
-                            await console.log(err);
-                            resolve(false);
-                        }else{
-                            if(result[0] != undefined){
-                                sql = `
-                                    select Sub_District from vtportal.courier_and_national_area_management where Sub_District like '%(${word})%' limit 1;
-                                `;
-                                await con.query(sql, async function (err, result) {
-                                    if (err) {
-                                        await console.log(err);
-                                        resolve(false);
-                                    }else{
-                                        if(result[0] != undefined){
-                                            sql = `
-                                                select District from vtportal.courier_and_national_area_management where District like '%(${word})%' limit 1;
-                                            `;
-                                            await con.query(sql, async function (err, result) {
-                                                if (err) {
-                                                    await console.log(err);
-                                                    resolve(false);
-                                                }else{
-                                                    if(result[0] != undefined){
-                                                        resolve(false);
-                                                    }else{
-                                                        resolve(true);
-                                                    }
-                                                }
-                                            });
-                                        }else{
-                                            resolve(true);
-                                        }
-                                    }
-                                });
-                            }else{
-                                resolve(true);
-                            }
-                        }
-                    });
-                }else{
-                    resolve(true);
-                }
-            }
-        });
-    });
 }
 
 app.post('/send_delivery_order_to_tiki',  async (req, res) => {
@@ -494,7 +389,7 @@ async function get_actual_shipping_fee_charged_tiki(cnno){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/connote/information',
+            'url': 'http://apis.mytiki.net:8321/connote/information',
             'headers': {
             'content-type': 'application/json ',
             'x-access-token': await get_access_token_tiki()
@@ -536,7 +431,7 @@ async function get_tracking_tiki_history(cnno){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/connote/information',
+            'url': 'http://apis.mytiki.net:8321/connote/information',
             'headers': {
             'content-type': 'application/json ',
             'x-access-token': await get_access_token_tiki()
@@ -560,7 +455,7 @@ async function get_area_covered_by_tiki(token){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/tariff/areainfo',
+            'url': 'http://apis.mytiki.net:8321/tariff/areainfo',
             'headers': {
               'content-type': 'application/json ',
               'x-access-token': `${token}`
@@ -1005,7 +900,7 @@ async function get_shipping_options(Courier_Price_Code_orig
                 };
                 var options = {
                     'method': 'POST',
-                    'url': 'http://apix.mytiki.net/v02/tariff/product',
+                    'url': 'http://apis.mytiki.net:8321/v02/tariff/product',
                     'headers': {
                     'content-type': 'application/json ',
                     'x-access-token': await get_access_token_tiki()
@@ -1915,7 +1810,6 @@ async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Catego
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined){
                     if(result[0] != undefined){
@@ -1939,7 +1833,6 @@ async function get_all_product_category(){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined){
                     if(result[0] != undefined){
@@ -1963,7 +1856,6 @@ async function get_product_details_not_new_items(){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined){
                     if(result[0] != undefined){
@@ -1987,7 +1879,6 @@ async function get_product_details_based_on_new_items(){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined){
                     if(result[0] != undefined){
@@ -2011,7 +1902,6 @@ async function get_product_details_not_groupbuy_purchase(){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined){
                     if(result[0] != undefined){
@@ -2038,7 +1928,6 @@ async function get_product_details_based_on_groupbuy_purchase(){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined){
                     if(result[0] != undefined){
@@ -2062,7 +1951,6 @@ async function get_product_details_based_on_product_code(product_code){
         await con.query(sql, async function (err, result) {
             if (err) {
                 await console.log(err);
-                resolve(false);
             }else{
                 if(result != undefined && result[0] != undefined){
                     if(result[0].Product_Code != undefined){
@@ -2302,6 +2190,7 @@ async function check_existing_product_code(product_code, product_datas){
             await con.query(sql, async function (err, result) {
                 if (err) {
                     await console.log(err);
+                    resolve(false);
                 }else{
                     if(result != undefined && result[0] != undefined){
                         if(result[0].Product_Code != undefined){
