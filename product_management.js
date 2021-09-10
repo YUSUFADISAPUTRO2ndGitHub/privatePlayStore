@@ -1028,6 +1028,26 @@ async function get_shipping_options(Courier_Price_Code_orig
                             ));
                     }else{
                         var result = JSON.parse(response.body);
+                        var new_service = [];
+                        if(result.response != undefined){
+                            if(result.response.service != undefined){
+                                if(result.response.service.length > 0){
+                                    var i = 0;
+                                    for(i ; i < result.response.service.length; i ++){
+                                        if(result.response.service[i].SERVICE.toUpperCase() == "REG".toUpperCase()){
+                                            new_service.push(result.response.service[i]);
+                                        }else if(result.response.service[i].SERVICE.toUpperCase() == "TRC".toUpperCase()){
+                                            new_service.push(result.response.service[i]);
+                                        }else if(result.response.service[i].SERVICE.toUpperCase() == "ECO".toUpperCase()){
+                                            new_service.push(result.response.service[i]);
+                                        }
+                                    }
+                                }
+                                if(new_service.length != 0){
+                                    result.response.service = new_service;
+                                }
+                            }
+                        }
                         resolve(result.response);
                     }
                 });
