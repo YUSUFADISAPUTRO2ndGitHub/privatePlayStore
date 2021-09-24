@@ -108,6 +108,15 @@ app.post('/get-midtrans-payment',  async (req, res) => {
         })
       
     };
+    console.log(`================================== get-midtrans-payment ==================================`);
+    console.log({"customer_details": {
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email,
+        "phone": phone
+    }});
+    console.log(options);
+    console.log(`================================== get-midtrans-payment ==================================`);
     request(options, function (error, response) {
         if (error) {
             console.log(error);
@@ -1161,6 +1170,12 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
                                     status: true,
                                     order_number: Order_Number
                                 });
+                            }else{
+                                res.send({
+                                    status: false,
+                                    reason: "this order is failed to be made",
+                                    subreason: "unknown"
+                                });
                             }
                         }else{
                             res.send({
@@ -1363,154 +1378,170 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 } 
 
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
-    console.log(Product_Code);
-    Sales_Order_Data.Total_Quantity =  (Sales_Order_Data.Total_Quantity*1) - 1;
-    var zipcode = [];
-    if(Sales_Order_Data.Shipping_Address != undefined){
-        zipcode = Sales_Order_Data.Shipping_Address.split(" ");
-        zipcode = zipcode[zipcode.length-1]
-        if(zipcode == undefined){
-            zipcode = "";
-        }
-    } 
-    var sql = `
-        INSERT INTO vtportal.sales_order_management 
-        (
-            Order_Number,
-            Customer_Code,
-            Total_Price,
-            Total_Quantity,
-            Unit,
-            Shipping_Address,
-            Shipping_Contact_Number,
-            Payment_Method,
-            Shipping_Fee,
-            Primary_Recipient_Name,
-            Status,
-            Start_Date,
-            Creator,
-            Create_Date,
-            Update_date,
-            Delete_Mark,
-            Group_Buy_Purchase_PC,
-            Payment_Status,
-            Zipcode,
-            extra_column_1
-        )
-        VALUES 
-        (
-            '${Order_Number}',
-            '${Sales_Order_Data.Customer_Code}',
-            '${Sales_Order_Data.Total_Price}',
-            '${Sales_Order_Data.Total_Quantity}',
-            '${Sales_Order_Data.Unit}',
-            '${Sales_Order_Data.Shipping_Address}',
-            '${Sales_Order_Data.Shipping_Contact_Number}',
-            '${Sales_Order_Data.Payment_Method}',
-            '${Sales_Order_Data.Shipping_Fee}',
-            '${Sales_Order_Data.Primary_Recipient_Name}',
-            'pending',
-            CURRENT_TIMESTAMP(),
-            'customer',
-            CURRENT_TIMESTAMP(),
-            CURRENT_TIMESTAMP(),
-            '0',
-            '${Product_Code}',
-            'waitpay',
-            '${zipcode}',
-            '${zipcode}'
-        );
-    `;
-    if(Sales_Order_Data.Payment_Method.toUpperCase().includes('GoPay'.toUpperCase())
-    || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
-        var options = {
-            'method': 'POST',
-            'url': `http://localhost:3003/Order_Number=${Order_Number}&total_amount=${Sales_Order_Data.Total_Price}&first_name=${Sales_Order_Data.Primary_Recipient_Name}&last_name=${Sales_Order_Data.Primary_Recipient_Name}&email=&phone=${Sales_Order_Data.Shipping_Contact_Number}`,
-            'headers': {
+    return new Promise(async resolve => {
+        console.log(Product_Code);
+        Sales_Order_Data.Total_Quantity =  (Sales_Order_Data.Total_Quantity*1) - 1;
+        var zipcode = [];
+        if(Sales_Order_Data.Shipping_Address != undefined){
+            zipcode = Sales_Order_Data.Shipping_Address.split(" ");
+            zipcode = zipcode[zipcode.length-1]
+            if(zipcode == undefined){
+                zipcode = "";
             }
-        };
-        await request(options, async function (error, response) {
-            if (error) {
-                console.log(error);
-            }else{
-                console.log(response.body);
-                
-                sql = `
-                    INSERT INTO vtportal.sales_order_management 
-                    (
-                        Order_Number,
-                        Customer_Code,
-                        Total_Price,
-                        Total_Quantity,
-                        Unit,
-                        Shipping_Address,
-                        Shipping_Contact_Number,
-                        Payment_Method,
-                        Shipping_Fee,
-                        Primary_Recipient_Name,
-                        Status,
-                        Start_Date,
-                        Creator,
-                        Create_Date,
-                        Update_date,
-                        Delete_Mark,
-                        Group_Buy_Purchase_PC,
-                        Payment_Status,
-                        Zipcode,
-                        extra_column_1,
-                        midtrans_token,
-                        midtrans_redirect_url
-                    )
-                    VALUES 
-                    (
-                        '${Order_Number}',
-                        '${Sales_Order_Data.Customer_Code}',
-                        '${Sales_Order_Data.Total_Price}',
-                        '${Sales_Order_Data.Total_Quantity}',
-                        '${Sales_Order_Data.Unit}',
-                        '${Sales_Order_Data.Shipping_Address}',
-                        '${Sales_Order_Data.Shipping_Contact_Number}',
-                        '${Sales_Order_Data.Payment_Method}',
-                        '${Sales_Order_Data.Shipping_Fee}',
-                        '${Sales_Order_Data.Primary_Recipient_Name}',
-                        'pending',
-                        CURRENT_TIMESTAMP(),
-                        'customer',
-                        CURRENT_TIMESTAMP(),
-                        CURRENT_TIMESTAMP(),
-                        '0',
-                        '${Product_Code}',
-                        'waitpay',
-                        '${zipcode}',
-                        '${zipcode}',
-                        '${JSON.parse(response.body).token}',
-                        '${JSON.parse(response.body).redirect_url}'
-                    );
-                `;
-                return new Promise(async resolve => {
-                    await con.query(sql, async function (err, result) {
-                        if (err){
-                            await console.log(err);
-                            resolve(false);
-                        }else{
-                            resolve(true);
-                        }
-                    });
-                });
-            }
-        });
-    }else{
-        return new Promise(async resolve => {
-            await con.query(sql, async function (err, result) {
+        } 
+        var sql = `
+            INSERT INTO vtportal.sales_order_management 
+            (
+                Order_Number,
+                Customer_Code,
+                Total_Price,
+                Total_Quantity,
+                Unit,
+                Shipping_Address,
+                Shipping_Contact_Number,
+                Payment_Method,
+                Shipping_Fee,
+                Primary_Recipient_Name,
+                Status,
+                Start_Date,
+                Creator,
+                Create_Date,
+                Update_date,
+                Delete_Mark,
+                Group_Buy_Purchase_PC,
+                Payment_Status,
+                Zipcode,
+                extra_column_1
+            )
+            VALUES 
+            (
+                '${Order_Number}',
+                '${Sales_Order_Data.Customer_Code}',
+                '${Sales_Order_Data.Total_Price}',
+                '${Sales_Order_Data.Total_Quantity}',
+                '${Sales_Order_Data.Unit}',
+                '${Sales_Order_Data.Shipping_Address}',
+                '${Sales_Order_Data.Shipping_Contact_Number}',
+                '${Sales_Order_Data.Payment_Method}',
+                '${Sales_Order_Data.Shipping_Fee}',
+                '${Sales_Order_Data.Primary_Recipient_Name}',
+                'pending',
+                CURRENT_TIMESTAMP(),
+                'customer',
+                CURRENT_TIMESTAMP(),
+                CURRENT_TIMESTAMP(),
+                '0',
+                '${Product_Code}',
+                'waitpay',
+                '${zipcode}',
+                '${zipcode}'
+            );
+        `;
+        if(Sales_Order_Data.Payment_Method.toUpperCase().includes('GoPay'.toUpperCase())
+        || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
+            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '1626870317967YU20SU25FA17DI10304';`;
+            await con.query(get_email_address_sql, async function (err, result) {
                 if (err){
                     await console.log(err);
                     resolve(false);
                 }else{
-                    resolve(true);
+                    if(result.length > 0){
+                        if(result[0] != undefined){
+                            var options = {
+                                'method': 'POST',
+                                'url': `http://localhost:3003/get-midtrans-payment?Order_Number=${Order_Number}&total_amount=${Sales_Order_Data.Total_Price}&first_name=${Sales_Order_Data.Primary_Recipient_Name}&last_name=${Sales_Order_Data.Primary_Recipient_Name}&email=${result[0].Email}&phone=${Sales_Order_Data.Shipping_Contact_Number}`,
+                                'headers': {
+                                }
+                            };
+                            await request(options, async function (error, response) {
+                                if (error) {
+                                    console.log(error);
+                                }else{
+                                    console.log(`http://localhost:3003/get-midtrans-payment`);
+                                    console.log(response.body);
+                                    console.log(`http://localhost:3003/get-midtrans-payment`);
+                                    
+                                    sql = `
+                                        INSERT INTO vtportal.sales_order_management 
+                                        (
+                                            Order_Number,
+                                            Customer_Code,
+                                            Total_Price,
+                                            Total_Quantity,
+                                            Unit,
+                                            Shipping_Address,
+                                            Shipping_Contact_Number,
+                                            Payment_Method,
+                                            Shipping_Fee,
+                                            Primary_Recipient_Name,
+                                            Status,
+                                            Start_Date,
+                                            Creator,
+                                            Create_Date,
+                                            Update_date,
+                                            Delete_Mark,
+                                            Group_Buy_Purchase_PC,
+                                            Payment_Status,
+                                            Zipcode,
+                                            extra_column_1,
+                                            midtrans_token,
+                                            midtrans_redirect_url
+                                        )
+                                        VALUES 
+                                        (
+                                            '${Order_Number}',
+                                            '${Sales_Order_Data.Customer_Code}',
+                                            '${Sales_Order_Data.Total_Price}',
+                                            '${Sales_Order_Data.Total_Quantity}',
+                                            '${Sales_Order_Data.Unit}',
+                                            '${Sales_Order_Data.Shipping_Address}',
+                                            '${Sales_Order_Data.Shipping_Contact_Number}',
+                                            '${Sales_Order_Data.Payment_Method}',
+                                            '${Sales_Order_Data.Shipping_Fee}',
+                                            '${Sales_Order_Data.Primary_Recipient_Name}',
+                                            'pending',
+                                            CURRENT_TIMESTAMP(),
+                                            'customer',
+                                            CURRENT_TIMESTAMP(),
+                                            CURRENT_TIMESTAMP(),
+                                            '0',
+                                            '${Product_Code}',
+                                            'waitpay',
+                                            '${zipcode}',
+                                            '${zipcode}',
+                                            '${JSON.parse(response.body).token}',
+                                            '${JSON.parse(response.body).redirect_url}'
+                                        );
+                                    `;
+                                        await con.query(sql, async function (err, result) {
+                                            if (err){
+                                                await console.log(err);
+                                                resolve(false);
+                                            }else{
+                                                resolve(true);
+                                            }
+                                        });
+                                }
+                            });
+                        }else{
+                            resolve(false);
+                        }
+                    }else{
+                        resolve(false);
+                    }
                 }
             });
-        });
-    }
+        }else{
+                await con.query(sql, async function (err, result) {
+                    if (err){
+                        await console.log(err);
+                        resolve(false);
+                    }else{
+                        resolve(true);
+                    }
+                });
+        }
+    });
 } 
 
 async function order_number_creation(){
@@ -1525,7 +1556,7 @@ async function order_number_creation(){
         var h = today.getHours();
         var m = today.getMinutes();
         var s = today.getSeconds();
-        var time_stamp = d + `YU${first_digits}AD` + mth + `YU${middle_digits}AD` + y + `YU${last_digits}AD` + h + `YU${first_digits+last_digits}AD` + m + `YU${middle_digits+last_digits}AD` + s;
+        var time_stamp = d + `Y${first_digits}` + mth + y + `U${last_digits}` + h + `${first_digits+last_digits}SU` + m + `F${middle_digits+last_digits}` + s;
         resolve(time_stamp);
     });
 }   
@@ -1556,20 +1587,21 @@ async function check_payment_method(Payment_Method_Name){
     limit 1;`;
     console.log("===== check_payment_method ===== | sql " + sql);
     return new Promise(async resolve => {
-        console.log("===== check_payment_method ===== | Payment_Method_Name " + Payment_Method_Name);
-        await con.query(sql, async function (err, result) {
-            if (err) {
-                await console.log(err);
-                resolve(false);
-            }else{
-                if(result != undefined && result[0] != undefined){
-                    resolve(true);
-                }else{
-                    console.log("fail ===== check_payment_method ===== | result " + result);
-                    resolve(false);
-                }
-            }
-        });
+        resolve(true);
+        // console.log("===== check_payment_method ===== | Payment_Method_Name " + Payment_Method_Name);
+        // await con.query(sql, async function (err, result) {
+        //     if (err) {
+        //         await console.log(err);
+        //         resolve(false);
+        //     }else{
+        //         if(result != undefined && result[0] != undefined){
+        //             resolve(true);
+        //         }else{
+        //             console.log("fail ===== check_payment_method ===== | result " + result);
+        //             resolve(false);
+        //         }
+        //     }
+        // });
     });
 }
 
