@@ -245,6 +245,43 @@ async function get_user_comment(Product_Code){
     })
 }
 
+async function get_debug_mode_access_token_tiki(){
+    return new Promise(async resolve => {
+        var options = {
+                'method': 'POST',
+                'url': 'http://apis.mytiki.net:8321/user/auth',
+                'headers': {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                "username": "SOLDIGNUSA",
+                "password": "11628528082735990090"
+            })
+        
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                resolve(await get_debug_mode_access_token_tiki());
+            }else{
+                if(response != undefined){
+                    if(response.body != undefined){
+                        try{
+                            var result = JSON.parse(response.body);
+                            resolve(result.response.token);
+                        }catch(err) {
+                            resolve(await get_debug_mode_access_token_tiki());
+                        }
+                    }else{
+                        resolve(await get_debug_mode_access_token_tiki());
+                    }
+                }else{
+                    resolve(await get_debug_mode_access_token_tiki());
+                }
+            }
+        });
+    })
+}
+
 async function get_access_token_tiki(){
     return new Promise(async resolve => {
         var options = {
@@ -286,6 +323,97 @@ async function get_access_token_tiki(){
                     // console.log("fail to get token from tiki == get_access_token_tiki");
                     resolve(await get_access_token_tiki());
                 }
+            }
+        });
+    })
+}
+
+app.post('/send_delivery_order_to_tiki_with_different_pick_up',  async (req, res) => {
+    var json_from_ERP = req.body;
+    if(json_from_ERP != undefined){
+        res.send(
+            await reorder_json_for_tiki_pick_up_supplier(json_from_ERP).then(async value => {
+                return await value;
+            })
+        );
+    }
+})
+
+async function reorder_json_for_tiki_pick_up_supplier(json_from_ERP){
+    return new Promise(async resolve => {
+        console.log("reorder_json_for_tiki_pick_up_supplier ====== reorder_json_for_tiki_pick_up_supplier");
+        console.log(json_from_ERP);
+        var accepted_by_tiki = 
+        {
+            "accnum": "SDI010000101",
+            "paket_awb": "",
+            "paket_id": json_from_ERP.paket_id_tiki_and_sold,
+            "paket_service": json_from_ERP.chosen_paket_service,
+            "paket_weight": json_from_ERP.total_paket_weight,
+            "paket_volume_length": json_from_ERP.total_paket_volume_length,
+            "paket_volume_width": json_from_ERP.total_paket_volume_width,
+            "paket_volume_height": json_from_ERP.total_paket_volume_height,
+            "paket_insurance": json_from_ERP.type_paket_insurance,
+            "paket_value": json_from_ERP.total_price,
+            "paket_content": json_from_ERP.string_of_all_product_names,
+            "paket_cod": json_from_ERP.total_price_cod,
+            "paket_cashless": json_from_ERP.paket_cashless,
+            "paket_collect": "pickup_seller",
+            "pickup_pic": json_from_ERP.pickup_pic, // new
+            "pickup_company": json_from_ERP.pickup_company, // new
+            "pickup_address1": json_from_ERP.pickup_address1, // new
+            "pickup_address2": json_from_ERP.pickup_address2, // new
+            "pickup_zipcode": json_from_ERP.pickup_zipcode, // new
+            "pickup_phone": json_from_ERP.pickup_phone, // new
+            "pickup_email": json_from_ERP.pickup_email, // new
+            "pickup_latitude": "",
+            "pickup_longitude": "",
+            "consignor_name": json_from_ERP.sold_pic_name,
+            "consignor_company": json_from_ERP.registered_company_name,
+            "consignor_address1": json_from_ERP.registered_company_address,
+            "consignor_address2": "",
+            "consignor_zipcode": json_from_ERP.registered_company_zipcode,
+            "consignor_phone": json_from_ERP.sold_pic_contact_number,
+            "consignor_email": json_from_ERP.sold_pic_email,
+            "consignee_name": json_from_ERP.customer_name,
+            "consignee_company": json_from_ERP.customer_store_name,
+            "consignee_address1": json_from_ERP.customer_address,
+            "consignee_address2": "",
+            "consignee_zipcode": json_from_ERP.customer_zipcode,
+            "consignee_phone": json_from_ERP.customer_contact_number,
+            "consignee_email": json_from_ERP.customer_email,
+        };
+        console.log(accepted_by_tiki);
+        resolve(await send_delivery_order_to_tiki_with_pickup_request(accepted_by_tiki).then(async value => {
+            return await value;
+        }))
+    })
+}
+
+async function send_delivery_order_to_tiki_with_pickup_request(body_json){
+    return new Promise(async resolve => {
+        var options = {
+            'method': 'POST',
+            'url': `http://apis.mytiki.net:8321/v02/mde/manifestorder`, // 'http://apix.mytiki.net/v02/mde/manifestorder',
+            'headers': {
+              'content-type': 'application/json ',
+              'x-access-token': await get_debug_mode_access_token_tiki()
+            },
+            body: JSON.stringify(body_json)
+        };
+        console.log(" ======================================= send_delivery_order_to_tiki_with_pickup_request(body_json) ======================================= ");
+        console.log(body_json);
+        console.log(options);
+        console.log(" ======================================= send_delivery_order_to_tiki_with_pickup_request(body_json) ======================================= ");
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error);
+                console.log("send_delivery_order_to_tiki_with_pickup_request(body_json) ========== send_delivery_order_to_tiki_with_pickup_request(body_json)");
+                resolve(false);
+            }else{
+                var result = JSON.parse(response.body);
+                console.log(result);
+                resolve(result);
             }
         });
     })
