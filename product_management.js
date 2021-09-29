@@ -2204,8 +2204,8 @@ async function get_product_details_based_on_groupbuy_purchase(){
 
 async function get_product_details_based_on_product_code(product_code){
     // console.log(product_code);
-    var sql = `select * from vtportal.product_management where Product_Code = '${product_code}' and (Picture_1 != 'NULL' or Picture_1 != null) limit 1;`;
-    // console.log(sql);
+    var sql = `select * from vtportal.product_management where Product_Code like '%${product_code}%' and (Picture_1 != 'NULL' or Picture_1 != null) limit 1;`;
+    console.log(sql);
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
@@ -2215,7 +2215,7 @@ async function get_product_details_based_on_product_code(product_code){
                 if(result != undefined && result[0] != undefined){
                     if(result[0].Product_Code != undefined){
                         if(result[0].Product_Code == product_code){
-                            // console.log(product_code);
+                            console.log(product_code);
                             resolve(result[0]);
                         }else{
                             resolve(false);
