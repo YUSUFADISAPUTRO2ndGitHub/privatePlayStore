@@ -171,6 +171,7 @@ app.post('/get-saved-user-shopping',  async (req, res) => {
 })
 
 async function get_saved_user_shopping_cart(Customer_Code){
+    console.log(Customer_Code);
     var sql = `
     select saved_user_shopping_cart from vtportal.customer_management 
     WHERE Customer_Code='${Customer_Code}';
