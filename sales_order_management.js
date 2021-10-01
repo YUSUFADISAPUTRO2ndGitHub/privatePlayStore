@@ -1439,7 +1439,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
         `;
         if(Sales_Order_Data.Payment_Method.toUpperCase().includes('GoPay'.toUpperCase())
         || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
-            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '1626870317967YU20SU25FA17DI10304';`;
+            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '${Sales_Order_Data.Customer_Code}';`;
             await con.query(get_email_address_sql, async function (err, result) {
                 if (err){
                     await console.log(err);

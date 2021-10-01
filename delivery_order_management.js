@@ -723,7 +723,8 @@ async function insert_into_delivery_order_detail_management(Delivery_Order_Detai
             Delivery_Order_Number,
             Product_Code,
             Product_Name,
-            Quantity_Requested
+            Quantity_Requested,
+            supplier
         )
         VALUES 
         (
@@ -731,7 +732,8 @@ async function insert_into_delivery_order_detail_management(Delivery_Order_Detai
             '${Delivery_Order_Number}',
             '${Delivery_Order_Detail_data.Product_Code}',
             '${Delivery_Order_Detail_data.Product_Name}',
-            '${Delivery_Order_Detail_data.Quantity_Requested}'
+            '${Delivery_Order_Detail_data.Quantity_Requested}',
+            '${Delivery_Order_Detail_data.supplier}'
         );
     `;
     return new Promise(async resolve => {
@@ -744,6 +746,7 @@ async function insert_into_delivery_order_detail_management(Delivery_Order_Detai
 
 async function insert_into_delivery_order_management(Delivery_Order_Data, Delivery_Order_Number, Creator){
     // Delivery_Order_Data.Total_Quantity = (Delivery_Order_Data.Total_Quantity*1) - 1;
+    console.log(Delivery_Order_Data);
     var sql = `
         INSERT INTO vtportal.delivery_order_management 
         (

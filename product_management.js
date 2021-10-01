@@ -345,7 +345,7 @@ async function reorder_json_for_tiki_pick_up_supplier(json_from_ERP){
         console.log(json_from_ERP);
         var accepted_by_tiki = 
         {
-            "accnum": "SDI010000101",
+            "accnum": "CGK01TEST", // "SDI010000101",
             "paket_awb": "",
             "paket_id": json_from_ERP.paket_id_tiki_and_sold,
             "paket_service": json_from_ERP.chosen_paket_service,
@@ -394,15 +394,15 @@ async function send_delivery_order_to_tiki_with_pickup_request(body_json){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': `http://apis.mytiki.net:8321/v02/mde/manifestorder`, // 'http://apix.mytiki.net/v02/mde/manifestorder',
+            'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
             'headers': {
-              'content-type': 'application/json ',
-              'x-access-token': await get_debug_mode_access_token_tiki()
+                'content-type': 'application/json ',
+                'x-access-token': await get_debug_mode_access_token_tiki()
             },
             body: JSON.stringify(body_json)
+          
         };
         console.log(" ======================================= send_delivery_order_to_tiki_with_pickup_request(body_json) ======================================= ");
-        console.log(body_json);
         console.log(options);
         console.log(" ======================================= send_delivery_order_to_tiki_with_pickup_request(body_json) ======================================= ");
         await request(options, async function (error, response) {
@@ -421,6 +421,7 @@ async function send_delivery_order_to_tiki_with_pickup_request(body_json){
 
 async function send_delivery_order_to_tiki(body_json){
     return new Promise(async resolve => {
+        // console.log("You are calling the wrong API!!!!!!!!!!!!!!!!!!!!!!!");
         var json_to_be_sent;
         var options = {
             'method': 'POST',
