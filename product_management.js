@@ -2223,7 +2223,7 @@ async function get_product_details_based_on_product_code(product_code){
                 if(result != undefined && result[0] != undefined){
                     if(result[0].Product_Code != undefined){
                         if(result[0].Product_Code == product_code){
-                            console.log(product_code);
+                            console.log(result[0]);
                             resolve(result[0]);
                         }else{
                             resolve(false);

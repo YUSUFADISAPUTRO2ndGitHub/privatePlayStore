@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="area">
+
+    </div>
+    <script>
+        var uri_res  = `PEMBERITAHUAN%20%0A%0A%20%20%20%20%20%20%20%20Selamat%20Sore.%20Kami%20dari%20PT.%20Vantsing%20International%20Group%20%20supplier%20bahan-bahan%20bangunan.%20Ingin%20memberitahukan%20kepada%20para%20Customer%20(Toko)%20bahwa%20sales%20atas%20nama%20Sutrisno%20pertanggal%201%20Oktober%202021%20sudah%20tidak%20bekerja%20di%20perusahaan%20kami.%20%0A%20%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20Semua%20penagihan%20dan%20penjualan%20yang%20dilakukan%20oleh%20Sales%20tersebut%20sudah%20bukan%20merupakan%20bagian%20dari%20perusahaan%20kami%20lagi.%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20Untuk%20tagihan%20diharapkan%20agar%20dapat%20dilakukan%20transfer%20ke%20rekening%20perusahaan%20kami%20dengan%20nomer%20rekening%20BCA%208650555717%20atas%20nama%20PT%20Vantsing%20International%20Group%20atau%20melalui%20kolektor%20kami%20yang%20dilengkapi%20dengan%20Faktur%20tagihan%20%0A%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%20Demikian%20pemberitahuan%20ini%20kami%20sampaikan.%20Terimakasih%20atas%20kerjasamanya`;
+        var form = new FormData();
+        var settings = {
+            "url": "http://localhost:3001/get-all-phone-numbers",
+            "method": "POST",
+            "timeout": 0,
+            "processData": false,
+            "mimeType": "multipart/form-data",
+            "contentType": false,
+            "data": form
+        };
+
+        $.ajax(settings).done(function (response) {
+            var result = JSON.parse(response);
+            console.log(result);
+            var i = 0;
+            for(i ; i < result.length; i ++){
+                var number = "";
+                if(result[i].contact_number != undefined && result[i].contact_number != ""){
+                    if(result[i].contact_number.length > 0){
+                        var another_number = "";
+                        if(result[i].contact_number.includes(" / ")){
+                            another_number = result[i].contact_number.split(" / ");
+                            if(another_number[0].charAt(0) != '0'){
+                                number = "+62" + another_number[0];
+                            }else if(another_number[0].charAt(0) == '0'){
+                                number = another_number[0].replace(0, "+62")
+                            }
+                            if(another_number[1].charAt(0) != '0'){
+                                number = "+62" + another_number[1];
+                            }else if(another_number[1].charAt(0) == '0'){
+                                number = another_number[1].replace(0, "+62")
+                            }
+                        }else if(result[i].contact_number.includes("/")){
+                            if(result[i].contact_number.includes("/")){
+                                another_number = result[i].contact_number.split(" / ");
+                                if(another_number[0].charAt(0) != '0'){
+                                    number = "+62" + another_number[0];
+                                }else if(another_number[0].charAt(0) == '0'){
+                                    number = another_number[0].replace(0, "+62")
+                                }
+                                if(another_number[1] != undefined){
+                                    if(another_number[1].charAt(0) != '0'){
+                                        number = "+62" + another_number[1];
+                                    }else if(another_number[1].charAt(0) == '0'){
+                                        number = another_number[1].replace(0, "+62")
+                                    }
+                                }
+                            }
+                        }else{
+                            if(result[i].contact_number.charAt(0) != '0'){
+                                number = "+62" + result[i].contact_number;
+                            }else if(result[i].contact_number.charAt(0) == '0'){
+                                number = result[i].contact_number.replace(0, "+62")
+                            }
+                        }
+                    }
+                }
+                $(`.area`).append(`<a href='https://wa.me/${number}/?text=${uri_res}' target={'_blank'}>send ${number}</a><br>`);
+            }
+        });
+    </script>
+</body>
+</html>
