@@ -6,6 +6,7 @@ var request = require('request');
 var mysql = require('mysql');
 var nodemailer = require('nodemailer');
 const e = require('express');
+const { query } = require('express');
 const app = express();
 const port = 3002;
 app.use(cors(), express.json())
@@ -77,6 +78,105 @@ const get_latest_recorded_token = async () => {
             });
         });
     })
+}
+
+var generated_desktop_token = [];
+app.post('/check-token-desktop',  async (req, res) => {
+    var token = req.query.token;
+    var desktop_token = req.query.desktop_token;
+    var accepting = false;
+    if(token != undefined){
+        for(var i = 0; i < accepted_token.length; i++){
+            if(accepted_token[i] === token){
+                accepting = true;
+                break;
+            }
+        }
+        if(accepting){
+            if(desktop_token != undefined){
+                for(var i = 0; i < accepted_token.length; i++){
+                    if(desktop_token === generated_desktop_token[i]){
+                        generated_desktop_token.splice(i, 1);
+                        res.send(true);
+                    }
+                }
+            }else{
+                res.send(false);
+            }
+        }else{
+            res.send(false);
+        }
+    }else{
+        res.send(false);
+    }
+})
+
+app.post('/generate-login-code-for-desktop',  async (req, res) => {
+    var token = req.query.token;
+    var Customer_Code = req.query.Customer_Code;
+    var accepting = false;
+    if(token != undefined){
+        for(var i = 0; i < accepted_token.length; i++){
+            if(accepted_token[i] === token){
+                accepting = true;
+                break;
+            }
+        }
+        if(accepting){
+            var options = {
+                'method': 'POST',
+                'url': `http://customers.sold.co.id/get-customer-information-production-api?token=${token}&Customer_Code=${Customer_Code}`,
+                'headers': {
+                }
+            };
+            await request(options, async function (error, response) {
+                if (error) {
+                    console.log(error);
+                }else{
+                    console.log(response.body);
+                    if(response.body != undefined){
+                        var result = JSON.parse(response.body);
+                        if(result.Customer_Code != undefined){
+                            if(result.Customer_Code === Customer_Code){
+                                var generate_random = await generate_desktop_token();
+                                generated_desktop_token.push(generate_random);
+                                res.send(
+                                    generate_random
+                                );
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+})
+
+app.post('/get-available-tokens',  async (req, res) => {
+    var token = req.query.token;
+    var accepting = false;
+    if(token != undefined){
+        for(var i = 0; i < accepted_token.length; i++){
+            if(accepted_token[i] === token){
+                accepting = true;
+                break;
+            }
+        }
+        if(accepting){
+            res.send(
+                generated_desktop_token
+            );
+        }
+    }
+})
+
+async function generate_desktop_token(){
+    var current_date = new Date();
+    let h = current_date.getHours();
+    let m = current_date.getMinutes();
+    let s = current_date.getSeconds();
+    var token = (h + m + s)*51 ;
+    return token;
 }
 
 app.post('/get-profile-image',  async (req, res) => {
