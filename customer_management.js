@@ -884,6 +884,88 @@ async function encrypt_password(password){
     });
 }
 
+var accepted_token = [];
+
+app.post('/get-access-token',  async (req, res) => {
+    var id = req.query.id;
+    var approved_id = [];
+    var generated = '';
+    approved_id.push('Y19U96S25');
+    for(var i = 0; i < approved_id.length; i++){
+        if(approved_id[i] === id){
+            generated = await generate_access_token();
+            console.log(generated);
+            accepted_token.push(generated);
+            break;
+        }
+    }
+    res.send(generated);
+});
+
+async function generate_access_token(){
+    var current_date = new Date();
+    let h = current_date.getHours();
+    let m = current_date.getMinutes();
+    let s = current_date.getSeconds();
+    let d = current_date.getDay();
+    let month = current_date.getMonth();
+    let y = current_date.getFullYear();
+    m = await checkTime(m);
+    s = await checkTime(s);
+    var token = h + "Y" + m + "U" + s + "S" + d + "U" + month + "F" + y;
+    return token;
+}
+
+async function checkTime(i) {
+    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+    return i;
+}
+
+//get customer information
+app.post('/get-customer-information-production-api',  async (req, res) => {
+    var Customer_Code = req.query.Customer_Code;
+    var First_Name = req.query.First_Name;
+    var Last_Name = req.query.Last_Name;
+    var Email = req.query.Email;
+    var Status = req.query.Status;
+    var token = req.query.token;
+    var accepting = false;
+    for(var i = 0; i < accepted_token.length; i++){
+        if(accepted_token[i] === token){
+            accepting = true;
+            break;
+        }
+    }
+    if(accepting){
+        // res.send(accepting);
+        if(Customer_Code != undefined || Customer_Code != null){
+            res.send(await get_customer_details_based_on_customer_code(Customer_Code).then(async value => {
+                return await value;
+            }));
+        }else if(First_Name != undefined || First_Name != null){
+            res.send(await get_customer_details_based_on_customer_first_name(First_Name).then(async value => {
+                return await value;
+            }));
+        }else if(Last_Name != undefined || Last_Name != null){
+            res.send(await get_customer_details_based_on_customer_last_name(Last_Name).then(async value => {
+                return await value;
+            }));
+        }else if(Email != undefined || Email != null){
+            res.send(await get_customer_details_based_on_customer_email(Email).then(async value => {
+                return await value;
+            }));
+        }else if(Status != undefined || Status != null){
+            res.send(await get_customer_details_based_on_customer_status(Status).then(async value => {
+                return await value;
+            }));
+        }else{
+            res.send(await get_all_customer_details().then(async value => {
+                return await value;
+            }));
+        }
+    }
+})
+
 //get customer information
 app.post('/get-customer-information',  async (req, res) => {
     var Customer_Code = req.query.Customer_Code;
