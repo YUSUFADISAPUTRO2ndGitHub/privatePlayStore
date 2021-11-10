@@ -197,7 +197,20 @@ function get_profile_picture(Customer_Code){
                 await console.log(err);
                 resolve(false);
             }else{
-                resolve(result[0].Profile_Picture);
+                if(result != undefined){
+                    if(result.length > 0){
+                        if(result[0].Profile_Picture != undefined){
+                            resolve(result[0].Profile_Picture);
+                        }else{
+                            resolve('undefined');
+                        }
+                    }else{
+                        resolve('undefined');
+                    }
+                }else{
+                    resolve('undefined');
+                }
+                // resolve(result[0].Profile_Picture);
             }
         });
     });
@@ -1246,7 +1259,10 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
     if(customer_data != undefined){
         if(customer_data.Email != undefined){
             if(customer_data.Email.length > 0){
-                if(customer_data.referral_customer_code != undefined){
+                if(
+                    // customer_data.referral_customer_code != undefined
+                    true
+                    ){
                     if(
                         // (await check_existing_referral_code(customer_data.referral_customer_code).then(async value => {
                         //     return await value;
@@ -1255,13 +1271,13 @@ app.post('/create-new-customer-direct-from-user',  async (req, res) => {
                     ){
                         if(
                             (customer_data.Customer_Code != undefined || customer_data.Customer_Code.length != 0)
-                            && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
-                            && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
+                            // && (customer_data.First_Name != undefined || customer_data.First_Name.length >= 3)
+                            // && (customer_data.Last_Name != undefined || customer_data.Last_Name.length >= 3)
                             && (customer_data.User_Password != undefined || customer_data.User_Password.length >= 10)
                             && (customer_data.Email != undefined || customer_data.Email.length != 0)
                             && (customer_data.Contact_Number_1 != undefined || customer_data.Contact_Number_1.length != 0)
                             // && (customer_data.account_number != undefined || customer_data.account_number.length != 0)
-                            && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
+                            // && (customer_data.referral_customer_code != undefined || customer_data.referral_customer_code.length != 0)
                             ){
                                 if(
                                     (await check_existing_customer_code(customer_data).then(async value => {

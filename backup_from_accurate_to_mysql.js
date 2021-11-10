@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "e05816df-7d7c-4c91-9f54-1d9e6b051e0e";
+var refreshtoken = "43d2fa4c-ffe3-4b0a-b5c1-e59f26e3ca30";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -154,21 +154,19 @@ const get_latest_recorded_token_locally = async() => {
         var fs = require('fs');
         await fs.readFile('token.txt', async function(err, data) {
             var result = data.toString();
-            if(result == 'iJ6ndEsB7gwwObSJxFbK'){
+            if (result == 'iJ6ndEsB7gwwObSJxFbK') {
                 console.log("=================================================================");
                 console.log("getting locally saved token");
-                console.log(
-                    {
-                        access_token: accesstoken,
-                        session_id: sessionid
-                    }
-                );
+                console.log({
+                    access_token: accesstoken,
+                    session_id: sessionid
+                });
                 console.log("=================================================================");
                 resolve({
                     access_token: accesstoken,
                     session_id: sessionid
                 });
-            }else{
+            } else {
                 resolve({
                     access_token: accesstoken,
                     session_id: sessionid
@@ -386,14 +384,18 @@ app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
 /*
     new interval
 */
+// console.log("============================================================ " + synchonize_trigger().then(async value => {
+//     engine_starter = 18;
+//     return await value;
+// }));
 let today_time = new Date();
 let today_time_hour = today_time.getHours();
 var engine_starter = 12;
 console.log(today_time_hour);
 console.log(today_time_hour == engine_starter);
-if(
+if (
     today_time_hour == engine_starter
-){
+) {
     console.log(today_time_hour == engine_starter);
     engine_starter = engine_starter - 1;
     console.log("============================================================ " + synchonize_trigger().then(async value => {
@@ -401,15 +403,15 @@ if(
         return await value;
     }));
 }
-setInterval(async () => {
+setInterval(async() => {
     let today_time = new Date();
     today_time_hour = today_time.getHours();
     console.log("Check-in time interval ============= ");
     console.log(today_time_hour);
     console.log(today_time_hour == engine_starter);
-    if(
+    if (
         today_time_hour == engine_starter
-    ){
+    ) {
         console.log(today_time_hour == engine_starter);
         engine_starter = engine_starter - 1;
         console.log("============================================================ " + synchonize_trigger().then(async value => {
@@ -422,12 +424,10 @@ setInterval(async () => {
 app.get('/get-time-status-server-accurate-backup', async(req, res) => {
     let today_time = new Date();
     today_time_hour = today_time.getHours();
-    res.send(
-        {
-            Time_To_GET_Back_Up_Triggered: engine_starter,
-            Current_Server_Time: today_time_hour
-        }
-    );
+    res.send({
+        Time_To_GET_Back_Up_Triggered: engine_starter,
+        Current_Server_Time: today_time_hour
+    });
 })
 
 app.get('/get-sales-order-data-recorded', async(req, res) => {
@@ -449,7 +449,7 @@ async function get_recorded_sales_order_data_recorded(req_param, res_param) {
                     query: sql,
                     error: err
                 });
-            }else{
+            } else {
                 resolve({
                     query: sql,
                     response: result
@@ -459,7 +459,7 @@ async function get_recorded_sales_order_data_recorded(req_param, res_param) {
     });
 }
 
-async function synchonize_trigger(){
+async function synchonize_trigger() {
     return new Promise(async resolve => {
         var options = {
             'method': 'GET',
@@ -469,7 +469,7 @@ async function synchonize_trigger(){
         await request(options, async function(error, response) {
             var options = {
                 'method': 'GET',
-                'url': 'http://localhost:5002/get-all-sales-return-details',
+                'url': 'http://localhost:5002/get-all-purchase-order-details', //get-all-purchase-order-details
                 'headers': {}
             };
             await request(options, async function(error, response) {
@@ -534,16 +534,16 @@ async function synchonize_trigger(){
                                             console.log("get-all-employee-details === done");
                                             var options = {
                                                 'method': 'GET',
-                                                'url': 'http://localhost:5002/get-all-purchase-order-details',
+                                                'url': 'http://localhost:5002/get-all-sales-return-details', //
                                                 'headers': {}
                                             };
                                             await request(options, async function(error, response) {
                                                 if (error) throw new Error(error);
                                                 // console.log(response.body);
-                                                console.log("get-all-purchase-order-details === done");
+                                                console.log("get-all-sales-return-details === done");
                                                 const today = new Date();
                                                 let d = today.getDate();
-                                                let mth = today.getMonth()+1;
+                                                let mth = today.getMonth() + 1;
                                                 let y = today.getYear();
                                                 let h = today.getHours();
                                                 let m = today.getMinutes();
@@ -672,6 +672,10 @@ async function update_sales_return_details(sorted_collected_sales_return_with_de
 const delete_all_sales_return_in_json_to_mysql = async() => {
     return new Promise(async resolve => {
         var sql = `delete from vtportal.sales_return_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        var sql = `delete from vtportal.sales_return_details_accurate;`;
         await con.query(sql, async function(err, result) {
             if (err) console.log(err);
         });
@@ -896,8 +900,8 @@ async function requesting_sales_return_details_based_on_id_from_accurate(id) {
                                 if (result.d != undefined) {
                                     if (result.d.detailItem != undefined) {
                                         for (u; u < result.d.detailItem.length; u++) {
-                                            if( result.d.detailItem[u].salesOrder != undefined){
-                                                if( result.d.detailItem[u].salesOrder.number != undefined){
+                                            if (result.d.detailItem[u].salesOrder != undefined) {
+                                                if (result.d.detailItem[u].salesOrder.number != undefined) {
                                                     detailItem.push({
                                                         sales_return_number: result.d.number,
                                                         sales_order_number: result.d.detailItem[u].salesOrder.number,
@@ -908,7 +912,7 @@ async function requesting_sales_return_details_based_on_id_from_accurate(id) {
                                                         price_per_unit: "UNKNOWN",
                                                         total_price_based_on_quantity: result.d.detailItem[u].totalPrice
                                                     });
-                                                }else{
+                                                } else {
                                                     detailItem.push({
                                                         sales_return_number: result.d.number,
                                                         sales_order_number: "UNKNOWN",
@@ -920,7 +924,7 @@ async function requesting_sales_return_details_based_on_id_from_accurate(id) {
                                                         total_price_based_on_quantity: result.d.detailItem[u].totalPrice
                                                     });
                                                 }
-                                            }else{
+                                            } else {
                                                 detailItem.push({
                                                     sales_return_number: result.d.number,
                                                     sales_order_number: "UNKNOWN",
@@ -941,7 +945,7 @@ async function requesting_sales_return_details_based_on_id_from_accurate(id) {
                                             customer_name: result.d.customer.name,
                                             customer_no: result.d.customer.customerNo,
                                             customer_id: result.d.customer.id,
-                                            salesman:  result.d.customer.salesman.name,
+                                            salesman: result.d.customer.salesman.name,
                                             return_details: detailItem,
                                             approval_status: result.d.approvalStatus
                                         });
@@ -1083,6 +1087,10 @@ async function update_sales_invoice_details(sorted_collected_sales_invoice_with_
 const delete_all_sales_invoice_in_json_to_mysql = async() => {
     return new Promise(async resolve => {
         var sql = `delete from vtportal.sales_invoice_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        var sql = `delete from vtportal.sales_invoice_details_accurate;`;
         await con.query(sql, async function(err, result) {
             if (err) console.log(err);
         });
@@ -1303,8 +1311,8 @@ async function requesting_sales_invoice_details_based_on_id_from_accurate(id) {
                                 if (result.d != undefined) {
                                     if (result.d.detailItem != undefined) {
                                         for (u; u < result.d.detailItem.length; u++) {
-                                            if(result.d.detailItem[u].salesOrder != undefined){
-                                                if(result.d.detailItem[u].salesOrder.number != undefined){
+                                            if (result.d.detailItem[u].salesOrder != undefined) {
+                                                if (result.d.detailItem[u].salesOrder.number != undefined) {
                                                     detailItem.push({
                                                         invoice_number: result.d.number,
                                                         so_number: result.d.detailItem[u].salesOrder.number,
@@ -1314,11 +1322,11 @@ async function requesting_sales_invoice_details_based_on_id_from_accurate(id) {
                                                         price_per_unit: "UNKNOWN",
                                                         total_price_based_on_quantity: result.d.detailItem[u].totalPrice
                                                     });
-                                                }else{
+                                                } else {
                                                     console.log("=============================================");
                                                     console.log("INVOICE DOES NOT HAVE SALES ORDER NUMBER| INV : " + result.d.number);
                                                 }
-                                            }else{
+                                            } else {
                                                 console.log("=============================================");
                                                 console.log("INVOICE DOES NOT HAVE SALES ORDER NUMBER| INV : " + result.d.number);
                                             }
@@ -1482,6 +1490,10 @@ async function update_sales_receipt_details(sorted_collected_sales_receipt_with_
 const delete_all_sales_receipt_in_json_to_mysql = async() => {
     return new Promise(async resolve => {
         var sql = `delete from vtportal.sales_receipt_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        var sql = `delete from vtportal.sales_receipt_details_accurate;`;
         await con.query(sql, async function(err, result) {
             if (err) console.log(err);
         });
@@ -1887,6 +1899,10 @@ async function update_sales_order_details(sorted_collected_sales_order_with_deta
 const delete_all_sales_order_in_json_to_mysql = async() => {
     return new Promise(async resolve => {
         var sql = `delete from vtportal.sales_order_list_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        var sql = `delete from vtportal.sales_order_details_accurate;`;
         await con.query(sql, async function(err, result) {
             if (err) console.log(err);
         });
@@ -2739,6 +2755,8 @@ app.get('/get-all-purchase-order-details', async(req, res) => {
         })
     }
     console.log("=========================================================================================");
+    await delete_all_purchase_order_in_json_to_mysql();
+    console.log("=========================================================================================");
     var current_id = 0;
     for (current_id; current_id < sorted_collected_purchase_order_with_details.length; current_id++) {
         if (await check_if_purchase_order_has_existed_in_MYSQL(sorted_collected_purchase_order_with_details[current_id].purchase_order_number).then(async value => {
@@ -2763,6 +2781,21 @@ app.get('/get-all-purchase-order-details', async(req, res) => {
         sorted_collected_purchase_order_with_details
     );
 })
+
+const delete_all_purchase_order_in_json_to_mysql = async() => {
+    return new Promise(async resolve => {
+        var sql = `delete from vtportal.purchase_order_list_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        var sql = `delete from vtportal.purchase_order_details_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        console.log("clear successful");
+        resolve(true);
+    });
+}
 
 async function check_if_purchase_order_has_existed_in_MYSQL(po_number) {
     return new Promise(async resolve => {
@@ -2805,7 +2838,17 @@ const update_purchase_order_in_json_to_mysql = async(sorted_collected_purchase_o
         , total_amount = '${sorted_collected_purchase_order_with_details.total_amount}'
         , status = '232314'
         , deleted = 'DEV'
+        , contract_number = '${sorted_collected_purchase_order_with_details.contract_number}'
         WHERE po_number = '${sorted_collected_purchase_order_with_details.purchase_order_number}';`;
+        if(sorted_collected_purchase_order_with_details.purchase_order_number === `PO.2021.02.00002`){
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(sql);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+        }
         await con.query(sql, async function(err, result) {
             if (err) await console.log(err);
         });
@@ -2858,6 +2901,7 @@ const insert_purchase_order_in_json_to_mysql = async(sorted_collected_purchase_o
             , total_amount
             , status
             , deleted
+            , contract_number
         ) values 
         ('${sorted_collected_purchase_order_with_details.purchase_order_number}'
         , '${year + "-" + month + "-" + day}'
@@ -2871,7 +2915,17 @@ const insert_purchase_order_in_json_to_mysql = async(sorted_collected_purchase_o
         , '${sorted_collected_purchase_order_with_details.total_amount}'
         , '232314'
         , 'DEV'
+        , '${sorted_collected_purchase_order_with_details.contract_number}'
         );`;
+        if(sorted_collected_purchase_order_with_details.purchase_order_number === `PO.2021.02.00002`){
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(sql);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+            console.log(`================== PO.2021.02.00002 ==================`);
+        }
         con.query(sql, function(err, result) {
             if (err) console.log(err);
         });
@@ -3058,20 +3112,39 @@ async function requesting_purchase_order_details_based_on_id_from_accurate(id) {
                                     total_price_based_on_quantity: result.d.detailItem[u].totalPrice
                                 });
                             }
-                            resolve({
-                                purchase_order_number: result.d.number,
-                                order_date: result.d.transDateView,
-                                period_date: result.d.paymentTerm.netDays,
-                                payment_method: result.d.paymentTerm.name,
-                                supplier_name: result.d.vendor.name,
-                                supplier_code: result.d.vendor.vendorNo,
-                                supplier_number: '',
-                                delivery_address: result.d.toAddress,
-                                total_quantities: totalQuantities,
-                                total_amount: result.d.totalAmount,
-                                order_details: detailItem,
-                                approval_status: result.d.approvalStatus
-                            });
+                            if(result.d.description != undefined){
+                                resolve({
+                                    purchase_order_number: result.d.number,
+                                    order_date: result.d.transDateView,
+                                    period_date: result.d.paymentTerm.netDays,
+                                    payment_method: result.d.paymentTerm.name,
+                                    supplier_name: result.d.vendor.name,
+                                    supplier_code: result.d.vendor.vendorNo,
+                                    supplier_number: '',
+                                    delivery_address: result.d.toAddress,
+                                    total_quantities: totalQuantities,
+                                    total_amount: result.d.totalAmount,
+                                    order_details: detailItem,
+                                    approval_status: result.d.approvalStatus,
+                                    contract_number: result.d.description
+                                });
+                            }else{
+                                resolve({
+                                    purchase_order_number: result.d.number,
+                                    order_date: result.d.transDateView,
+                                    period_date: result.d.paymentTerm.netDays,
+                                    payment_method: result.d.paymentTerm.name,
+                                    supplier_name: result.d.vendor.name,
+                                    supplier_code: result.d.vendor.vendorNo,
+                                    supplier_number: '',
+                                    delivery_address: result.d.toAddress,
+                                    total_quantities: totalQuantities,
+                                    total_amount: result.d.totalAmount,
+                                    order_details: detailItem,
+                                    approval_status: result.d.approvalStatus,
+                                    contract_number: "description does not exist"
+                                });
+                            }
                         }
                     }
                 }
@@ -3785,7 +3858,7 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_employee_details_based_on_id_from_accurate(id));
-            }else{
+            } else {
                 console.log("successfull retrieve access token ======= requesting_employee_details_based_on_id_from_accurate | id " + id);
                 var credentials = JSON.parse(await response.body);
                 options = {
@@ -3800,7 +3873,7 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
                     if (error) {
                         console.log(error);
                         resolve(await requesting_employee_details_based_on_id_from_accurate(id));
-                    }else{
+                    } else {
                         console.log("https://public.accurate.id/accurate/api/employee/detail.do?id= | id " + id);
                         if (response != undefined || response != null) {
                             console.log("parsing response.body ====== requesting_employee_details_based_on_id_from_accurate | id " + id);
@@ -3828,7 +3901,7 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
                                             emp_position: result.d.position
                                         });
                                     }
-                                }else{
+                                } else {
                                     console.log("requesting_employee_details_based_on_id_from_accurate | result.d.suspended = " + result.d.suspended + " for " + result.d.salesman);
                                     resolve({
                                         name: "",
@@ -3838,7 +3911,7 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
                                         emp_position: ""
                                     });
                                 }
-                            }else{
+                            } else {
                                 console.log("requesting_employee_details_based_on_id_from_accurate | result.d = UNDEFINED");
                                 resolve({
                                     name: "",
@@ -3848,7 +3921,7 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
                                     emp_position: ""
                                 });
                             }
-                        }else{
+                        } else {
                             console.log("requesting_employee_details_based_on_id_from_accurate | response = undefined");
                             resolve({
                                 name: "",
@@ -3859,7 +3932,7 @@ async function requesting_employee_details_based_on_id_from_accurate(id) {
                             });
                         }
                     }
-                });   
+                });
             }
         });
     });
@@ -3894,6 +3967,8 @@ app.get('/get-all-product-details', async(req, res) => {
         );
     }
     console.log("===============================================================");
+    await delete_all_products_in_json_to_mysql();
+    console.log("===============================================================");
     var current_id = 0;
     for (current_id; current_id < collected_product_details.length; current_id++) {
         if (await check_if_product_has_existed_in_MYSQL(collected_product_details[current_id].Product_Code).then(async value => {
@@ -3918,6 +3993,17 @@ app.get('/get-all-product-details', async(req, res) => {
         collected_product_details
     );
 })
+
+const delete_all_products_in_json_to_mysql = async() => {
+    return new Promise(async resolve => {
+        var sql = `delete from vtportal.product_data_accurate;`;
+        await con.query(sql, async function(err, result) {
+            if (err) console.log(err);
+        });
+        console.log("clear successful");
+        resolve(true);
+    });
+}
 
 async function check_if_product_has_existed_in_MYSQL(Product_Code) {
     return new Promise(async resolve => {
@@ -4066,7 +4152,7 @@ async function collecting_all_products_from_accurate() {
             await request(options, async function(error, response) {
                 if (error) {
                     console.log(error);
-                }else {
+                } else {
                     if (response != undefined || response != null) {
                         var result = JSON.parse(await response.body);
                         if (result != undefined && result.sp != undefined) {
@@ -4099,8 +4185,8 @@ async function requesting_product_ids_from_accurate(pageFlipper) {
             if (error) {
                 console.log(error);
                 resolve(await requesting_product_ids_from_accurate(pageFlipper));
-            }else{
-                if(response != undefined){
+            } else {
+                if (response != undefined) {
                     var credentials = JSON.parse(await response.body);
                     options = {
                         'method': 'GET',
@@ -4123,16 +4209,16 @@ async function requesting_product_ids_from_accurate(pageFlipper) {
                                 responseArray.push(result.d[i].id);
                             }
                             resolve(responseArray);
-                        }else{
+                        } else {
                             console.log(`requesting_product_ids_from_accurate(pageFlipper) FAIL /item/list.do?sp.page == ${response}`);
                             resolve(await requesting_product_ids_from_accurate(pageFlipper));
                         }
                     });
-                }else{
+                } else {
                     console.log(`requesting_product_ids_from_accurate(pageFlipper) FAIL == ${response}`);
                     resolve(await requesting_product_ids_from_accurate(pageFlipper));
                 }
-            }   
+            }
         });
     });
 }
@@ -4196,13 +4282,13 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
                             Weight_KG: result.d.numericField9,
                             itemType: result.d.itemType,
                             accurate_special_id_for_product: result.d.id
-                            // Dimension_CM_CUBIC: result.d.numericField10,
+                                // Dimension_CM_CUBIC: result.d.numericField10,
                         });
-                    }else{
+                    } else {
                         console.log("result.d = undefined | requesting_product_details_based_on_id_from_accurate");
                         resolve(await requesting_product_details_based_on_id_from_accurate(id));
                     }
-                }else{
+                } else {
                     console.log("FAILED TO GET PRODUCT DETAILS == requesting_product_details_based_on_id_from_accurate");
                     resolve(await requesting_product_details_based_on_id_from_accurate(id));
                 }
@@ -4223,7 +4309,7 @@ async function requesting_product_details_based_on_id_from_accurate(id) {
 //     });
 // }, 3.6e+6);
 
-app.get('/back-up-products-from-accurate-t0-product-management', async(req, res) => { 
+app.get('/back-up-products-from-accurate-t0-product-management', async(req, res) => {
     res.send(
         await get_products_in_product_data_accurate()
     );
@@ -4237,27 +4323,27 @@ const get_products_in_product_data_accurate = async() => {
                 console.log("== FAIL get_products_in_product_data_accurate ==");
                 console.log(err);
                 resolve(await get_products_in_product_data_accurate());
-            }else{
+            } else {
                 var i = 0;
-                for(i ; i < result.length; i ++){
-                    if(
+                for (i; i < result.length; i++) {
+                    if (
                         await check_product_in_product_management(result[i]).then(async value => {
                             return await value;
                         })
-                    ){
-                        if(await update_product_in_product_management(result[i]).then(async value => {
-                            return await value;
-                        })){
+                    ) {
+                        if (await update_product_in_product_management(result[i]).then(async value => {
+                                return await value;
+                            })) {
                             console.log("== SUCCESS update_product_in_product_management == " + result[i].Product_Code);
-                        }else{
+                        } else {
                             console.log("== FAIL update_product_in_product_management == " + result[i].Product_Code);
                         }
-                    }else{
-                        if(await add_product_in_product_management(result[i]).then(async value => {
-                            return await value;
-                        })){
+                    } else {
+                        if (await add_product_in_product_management(result[i]).then(async value => {
+                                return await value;
+                            })) {
                             console.log("== SUCCESS add_product_in_product_management == " + result[i].Product_Code);
-                        }else{
+                        } else {
                             console.log("== FAIL add_product_in_product_management == " + result[i].Product_Code);
                         }
                     }
@@ -4270,22 +4356,22 @@ const get_products_in_product_data_accurate = async() => {
 
 const check_product_in_product_management = async(product) => {
     return new Promise(async resolve => {
-        if(product.Product_Code != undefined){
-                var sql = `select count(*) as found from vtportal.product_management WHERE Product_Code='${product.Product_Code}';`;
+        if (product.Product_Code != undefined) {
+            var sql = `select count(*) as found from vtportal.product_management WHERE Product_Code='${product.Product_Code}';`;
             con.query(sql, async function(err, result) {
                 if (err) {
                     console.log("== FAIL check_product_in_product_management ==");
                     console.log(err);
                     resolve(await check_product_in_product_management(product));
-                }else{
-                    if(result[0].found > 0){
+                } else {
+                    if (result[0].found > 0) {
                         resolve(true);
-                    }else{
+                    } else {
                         resolve(false);
                     }
                 }
             });
-        }else{
+        } else {
             resolve(false);
         }
     });
@@ -4294,19 +4380,19 @@ const check_product_in_product_management = async(product) => {
 const update_product_in_product_management = async(product) => {
     return new Promise(async resolve => {
         // product.Sell_Price
-        if(product.Name != undefined
-            && product.Specification != undefined
-            && product.Description != undefined
-            ){
-                if(product.GroupBuy_Purchase != undefined){
-                    if(product.GroupBuy_Purchase.toUpperCase().includes("YES")){
-                        product.GroupBuy_Purchase = "true";
-                    }else if(product.GroupBuy_Purchase.toUpperCase().includes("NO")){
-                        product.GroupBuy_Purchase = "false";
-                    }
+        if (product.Name != undefined &&
+            product.Specification != undefined &&
+            product.Description != undefined
+        ) {
+            if (product.GroupBuy_Purchase != undefined) {
+                if (product.GroupBuy_Purchase.toUpperCase().includes("YES")) {
+                    product.GroupBuy_Purchase = "true";
+                } else if (product.GroupBuy_Purchase.toUpperCase().includes("NO")) {
+                    product.GroupBuy_Purchase = "false";
                 }
+            }
 
-                var sql = `UPDATE vtportal.product_management
+            var sql = `UPDATE vtportal.product_management
             SET Name='${product.Name.replace('\'', '')}'
             , Specification='${product.Specification.replace('\'', '')}'
             , Description='${product.Description.replace('\'', '')}'
@@ -4335,11 +4421,11 @@ const update_product_in_product_management = async(product) => {
                     console.log("== FAIL update_product_in_product_management ==");
                     console.log(err);
                     resolve(await update_product_in_product_management());
-                }else{
+                } else {
                     resolve(true);
                 }
             });
-        }else{
+        } else {
             resolve(false);
         }
     });
@@ -4348,12 +4434,12 @@ const update_product_in_product_management = async(product) => {
 const add_product_in_product_management = async(product) => {
     return new Promise(async resolve => {
         // console.log(product);
-        if(product.Name != undefined
-            && product.Specification != undefined
-            && product.Description != undefined
-            && product.Quantity != undefined
-            ){
-                var sql = `INSERT INTO vtportal.product_management
+        if (product.Name != undefined &&
+            product.Specification != undefined &&
+            product.Description != undefined &&
+            product.Quantity != undefined
+        ) {
+            var sql = `INSERT INTO vtportal.product_management
                 (
                 Product_Code,
                 Name,
@@ -4406,12 +4492,12 @@ const add_product_in_product_management = async(product) => {
                     console.log("== FAIL add_product_in_product_management ==");
                     console.log(err);
                     resolve(await add_product_in_product_management());
-                }else{
+                } else {
                     console.log("== success add_product_in_product_management ==");
                     resolve(true);
                 }
             });
-        }else{
+        } else {
             resolve(false);
         }
     });
@@ -4422,7 +4508,7 @@ const add_product_in_product_management = async(product) => {
 */
 app.get('/get-all-products-in-accurate', async(req, res) => {
     var page = req.query.page;
-    if(page == undefined){
+    if (page == undefined) {
         page = 1;
     }
     var collected_product_ids = [];
@@ -4453,7 +4539,7 @@ app.post('/add-or-edit-a-product-in-accurate', async(req, res) => {
     }))
 })
 
-async function update_andor_product_in_accurate_based_on_id(product){
+async function update_andor_product_in_accurate_based_on_id(product) {
     var options = {
         'method': 'GET',
         'url': 'http://localhost:5002/get-lastest-token-and-session',
@@ -4470,18 +4556,16 @@ async function update_andor_product_in_accurate_based_on_id(product){
                     'X-Session-ID': credentials.session_id
                 }
             };
-            await request(options, async function (error, response) {
+            await request(options, async function(error, response) {
                 if (error) {
                     console.log(error);
-                    resolve(
-                        {
-                            "s": false,
-                            "d": [
-                                "failing to send request via Accurate's API (POST) | https://public.accurate.id/accurate/api/item/save.do"
-                            ]
-                        }
-                    );
-                }else{
+                    resolve({
+                        "s": false,
+                        "d": [
+                            "failing to send request via Accurate's API (POST) | https://public.accurate.id/accurate/api/item/save.do"
+                        ]
+                    });
+                } else {
                     resolve(JSON.parse(response.body));
                 }
             });
