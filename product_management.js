@@ -2056,10 +2056,15 @@ app.post('/get-product-details',  async (req, res) => {
 })
 
 async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Category_Based_On_Category){
-    var sql = `
-    select Subcategory, Picture_1 from vtportal.product_management where Delete_Mark != '1' and Subcategory != 'undefined' and upper(Subcategory) != 'NULL'
-    and Category = '${Get_ALL_Sub_Category_Based_On_Category}' and (Picture_1 != 'NULL' or Picture_1 != null) group by Subcategory;
-    `;
+    // var sql = `
+    // select Subcategory, Picture_1 from vtportal.product_management where Delete_Mark != '1' and Subcategory != 'undefined' and upper(Subcategory) != 'NULL'
+    // and Category = '${Get_ALL_Sub_Category_Based_On_Category}' and (Picture_1 != 'NULL' or Picture_1 != null) group by Subcategory;
+    // `;
+    var sql = `select Subcategory, Picture_1, PIC_company_name, PIC_company_address from vtportal.product_management pm
+    inner join vtportal.sold_supplier ss
+    on id = Brand
+    where pm.Delete_Mark != '1' and pm.Subcategory != 'undefined' and upper(pm.Subcategory) != 'NULL'
+    and pm.Category = '${Get_ALL_Sub_Category_Based_On_Category}' and (pm.Picture_1 != 'NULL' or pm.Picture_1 != null) GROUP by pm.Category ;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {
