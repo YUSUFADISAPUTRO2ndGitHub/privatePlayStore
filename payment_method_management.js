@@ -2,6 +2,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const express = require('express');
 const cors = require('cors');
 var request = require('request');
+const nodemailer = require("nodemailer");
 var mysql = require('mysql');
 const app = express();
 const port = 3005;
@@ -257,6 +258,112 @@ app.get('/download-sold-co-id-trial', (req, res) => {
     const file = `./sold.apk`;
     res.download(file); // Set disposition and send it.
 })
+
+
+//send_email
+app.get('/send/email', async(req, res) => {
+    let resData = JSON.parse(req.query.data_customer);
+    let transporter = nodemailer.createTransport({
+        host: 'smtp.mxhichina.com',
+        secure: true,
+        auth: {
+            user: 'it@vtintl.id',
+            pass: 'wsl970420!'
+        }
+    });
+
+    let data = {
+        // email: 'recruitment@vtintl.id',
+        email: 'it@vtintl.id',
+        content: `
+        <p style="text-indent: 2em;">Dear mate </p>
+        <p>new application submitted： </p>
+        <p>email: ${resData.email},</p>
+        <p>first name: ${resData.first_name},</p>
+        <p>last name: ${resData.last_name},</p>
+        <p>primary number: ${resData.primary_number},</p>
+        <p>secondary number: ${resData.secondary_number},</p>
+        <p>self summary: ${resData.self_summary},</p>
+        <p>skills: ${resData.skills},</p>
+        <p>title: ${resData.title}</p>
+    `
+    }
+
+    console.log(data)
+
+    let mailOptions = {
+        from: '"IT Vantsing" <it@vtintl.id>',
+        to: data.email,
+        subject: 'job apply',
+        html: data.content
+    };
+    await transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log(error);
+            res.send({
+                sts: false,
+                msg: `Email failed to send`
+            });
+        }else{
+            res.send({
+                sts: true,
+                msg: `Email sent`
+            });
+        }
+    });
+})
+
+//send_email
+app.get('/send/email/mitra', async(req, res) => {
+    let resData = JSON.parse(req.query.data_customer);
+    let transporter = nodemailer.createTransport({
+        host: 'smtp.mxhichina.com',
+        secure: true,
+        auth: {
+            user: 'it@vtintl.id',
+            pass: 'wsl970420!'
+        }
+    });
+
+    let data = {
+        // email: 'recruitment@vtintl.id',
+        email: 'it@vtintl.id',
+        content: `
+        <p style="text-indent: 2em;">Dear mate </p>
+        <p>new application submitted： </p>
+        <p>email: ${resData.email},</p>
+        <p>first name: ${resData.first_name},</p>
+        <p>last name: ${resData.last_name},</p>
+        <p>primary number: ${resData.primary_number},</p>
+        <p>secondary number: ${resData.secondary_number},</p>
+        <p>quotation: ${resData.quotation}</p>
+    `
+    }
+
+    console.log(data)
+
+    let mailOptions = {
+        from: '"IT Vantsing" <it@vtintl.id>',
+        to: data.email,
+        subject: 'job apply',
+        html: data.content
+    };
+    await transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log(error);
+            res.send({
+                sts: false,
+                msg: `Email failed to send`
+            });
+        }else{
+            res.send({
+                sts: true,
+                msg: `Email sent`
+            });
+        }
+    });
+})
+
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)

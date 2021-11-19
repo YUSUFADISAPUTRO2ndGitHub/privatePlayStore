@@ -2064,7 +2064,7 @@ async function get_all_product_sub_category_based_on_category(Get_ALL_Sub_Catego
     inner join vtportal.sold_supplier ss
     on id = Brand
     where pm.Delete_Mark != '1' and pm.Subcategory != 'undefined' and upper(pm.Subcategory) != 'NULL'
-    and pm.Category = '${Get_ALL_Sub_Category_Based_On_Category}' and (pm.Picture_1 != 'NULL' or pm.Picture_1 != null) GROUP by pm.Category ;`;
+    and pm.Category = '${Get_ALL_Sub_Category_Based_On_Category}' and (pm.Picture_1 != 'NULL' or pm.Picture_1 != null) GROUP by pm.Subcategory ;`;
     return new Promise(async resolve => {
         await con.query(sql, async function (err, result) {
             if (err) {

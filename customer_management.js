@@ -180,6 +180,7 @@ async function generate_desktop_token(){
 }
 
 app.post('/get-profile-image',  async (req, res) => {
+    
     res.send(
         await get_profile_picture(req.query.Customer_Code)
     );
@@ -892,7 +893,7 @@ app.post('/customer-login-request',  async (req, res) => {
                     await update_last_login(email, encrypted_password).then(async value => {
                         return await value;
                     });
-                    res.send(login_data.data.Customer_Code);
+                    res.send(await encode_jwt(login_data.data.Customer_Code));
                 }else{
                     res.send(false);
                 }
@@ -910,6 +911,42 @@ app.post('/customer-login-request',  async (req, res) => {
         res.send(false);
     }
 })
+
+async function decode_jwt(jwt_tkn){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/decode_res_cust_code?jwt_tkn=' + jwt_tkn,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(response.body)
+            }
+        })
+    })  
+}
+
+async function encode_jwt(cust_code){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/encode_res_cust_code?cust_code=' + cust_code,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(response.body)
+            }
+        })
+    })  
+}
 
 async function verify_OTP_function(User_Password, Email, otp){
     var encrypted_password = await encrypt_password(User_Password).then(async value => {
