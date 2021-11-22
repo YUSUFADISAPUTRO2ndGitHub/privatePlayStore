@@ -286,7 +286,7 @@ async function get_access_token_tiki(){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/user/auth',
+            'url': 'https://apix.mytiki.net/user/auth',
             'headers': {
             'Content-Type': 'application/json'
             },
@@ -425,7 +425,7 @@ async function send_delivery_order_to_tiki(body_json){
         var json_to_be_sent;
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/v02/mde/manifestorder',
+            'url': 'https://apix.mytiki.net/v02/mde/manifestorder',
             'headers': {
               'content-type': 'application/json ',
               'x-access-token': await get_access_token_tiki()
@@ -623,7 +623,7 @@ async function get_actual_shipping_fee_charged_tiki(cnno){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/connote/information',
+            'url': 'https://apix.mytiki.net/connote/information',
             'headers': {
             'content-type': 'application/json ',
             'x-access-token': await get_access_token_tiki()
@@ -665,7 +665,7 @@ async function get_tracking_tiki_history(cnno){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/connote/information',
+            'url': 'https://apix.mytiki.net/connote/information',
             'headers': {
             'content-type': 'application/json ',
             'x-access-token': await get_access_token_tiki()
@@ -689,7 +689,7 @@ async function get_area_covered_by_tiki(token){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apix.mytiki.net/tariff/areainfo',
+            'url': 'https://apix.mytiki.net/tariff/areainfo',
             'headers': {
               'content-type': 'application/json ',
               'x-access-token': `${token}`
@@ -1134,7 +1134,7 @@ async function get_shipping_options(Courier_Price_Code_orig
                 };
                 var options = {
                     'method': 'POST',
-                    'url': 'http://apix.mytiki.net/v02/tariff/product',
+                    'url': 'https://apix.mytiki.net/v02/tariff/product',
                     'headers': {
                     'content-type': 'application/json ',
                     'x-access-token': await get_access_token_tiki()
