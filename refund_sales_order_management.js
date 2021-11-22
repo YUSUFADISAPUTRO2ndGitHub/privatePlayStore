@@ -79,7 +79,7 @@ const get_latest_recorded_token = async () => {
 //create-cancel-and-refund-order
 app.post('/create-cancel-and-refund-order',  async (req, res) => {
     var Order_Number = req.query.Order_Number;
-    var Customer_Code = req.body.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     if(Order_Number != undefined && Customer_Code != undefined){
         if(
             (await check_Order_Number_existance(Order_Number).then(async value => {
@@ -247,6 +247,42 @@ async function check_Order_Number_existance(Order_Number){
             }
         });
     });
+}
+
+async function decode_jwt(jwt_tkn){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/decode_res_cust_code?jwt_tkn=' + jwt_tkn,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(JSON.parse(response.body).response)
+            }
+        })
+    })  
+}
+
+async function encode_jwt(cust_code){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/encode_res_cust_code?cust_code=' + cust_code,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(JSON.parse(response.body).response)
+            }
+        })
+    })  
 }
 
 app.listen(port, () => {

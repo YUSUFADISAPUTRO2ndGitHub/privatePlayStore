@@ -113,7 +113,7 @@ app.post('/check-token-desktop',  async (req, res) => {
 
 app.post('/generate-login-code-for-desktop',  async (req, res) => {
     var token = req.query.token;
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var accepting = false;
     if(token != undefined){
         for(var i = 0; i < accepted_token.length; i++){
@@ -182,7 +182,7 @@ async function generate_desktop_token(){
 app.post('/get-profile-image',  async (req, res) => {
     
     res.send(
-        await get_profile_picture(req.query.Customer_Code)
+        await get_profile_picture(await decode_jwt(req.query.Customer_Code))
     );
 })
 
@@ -219,7 +219,7 @@ function get_profile_picture(Customer_Code){
 
 app.post('/upload-profile-image',  async (req, res) => {
     res.send(
-        await save_profile_picture(req.body.profile_picture, req.query.Customer_Code).then(async value => {
+        await save_profile_picture(req.body.profile_picture, await decode_jwt(req.query.Customer_Code)).then(async value => {
             return await value;
         })
     );
@@ -278,7 +278,7 @@ async function check_email_status(Email){
 //get-saved-user-shopping
 app.post('/get-saved-user-shopping',  async (req, res) => {
     res.send(
-        await get_saved_user_shopping_cart(req.query.Customer_Code).then(async value => {
+        await get_saved_user_shopping_cart(await decode_jwt(req.query.Customer_Code)).then(async value => {
             return await value;
         })
     );
@@ -305,11 +305,11 @@ async function get_saved_user_shopping_cart(Customer_Code){
 //save-user-shopping-cart
 app.post('/save-user-shopping-cart',  async (req, res) => {
     console.log('/save-user-shopping-cart');
-    console.log(await save_user_shopping_cart(req.query.Customer_Code, req.query.cart).then(async value => {
+    console.log(await save_user_shopping_cart(await decode_jwt(req.query.Customer_Code), req.query.cart).then(async value => {
         return await value;
     }));
     if(
-        await save_user_shopping_cart(req.query.Customer_Code, req.query.cart).then(async value => {
+        await save_user_shopping_cart(await decode_jwt(req.query.Customer_Code), req.query.cart).then(async value => {
             return await value;
         })
     ){
@@ -346,7 +346,7 @@ async function save_user_shopping_cart(Customer_Code, cart){
 //get-total-commission-of-all-months-gross
 app.post('/get-total-commission-of-all-months-gross',  async (req, res) => {
     res.send(
-        await get_total_commission_of_all_months(req.query.Customer_Code).then(async value => {
+        await get_total_commission_of_all_months(await decode_jwt(req.query.Customer_Code)).then(async value => {
             return await value;
         })
     );
@@ -378,7 +378,7 @@ async function get_total_commission_of_all_months(Customer_Code){
 //get-total-active-customers-of-a-referral-code
 app.post('/get-total-active-customers-of-a-referral-code',  async (req, res) => {
     res.send(
-        await get_total_active_customers_from_a_referral_code(req.query.Customer_Code).then(async value => {
+        await get_total_active_customers_from_a_referral_code(await decode_jwt(req.query.Customer_Code)).then(async value => {
             return await value;
         })
     );
@@ -410,7 +410,7 @@ async function get_total_active_customers_from_a_referral_code(Customer_Code){
 //get-total-customers-of-a-referral-code
 app.post('/get-total-customers-of-a-referral-code',  async (req, res) => {
     res.send(
-        await get_total_customers_from_a_referral_code(req.query.Customer_Code).then(async value => {
+        await get_total_customers_from_a_referral_code(await decode_jwt(req.query.Customer_Code)).then(async value => {
             return await value;
         })
     );
@@ -893,6 +893,7 @@ app.post('/customer-login-request',  async (req, res) => {
                     await update_last_login(email, encrypted_password).then(async value => {
                         return await value;
                     });
+                    console.log(await encode_jwt(login_data.data.Customer_Code));
                     res.send(await encode_jwt(login_data.data.Customer_Code));
                 }else{
                     res.send(false);
@@ -924,7 +925,7 @@ async function decode_jwt(jwt_tkn){
             if (error) {
                 console.log(error)
             }else{
-                resolve(response.body)
+                resolve(JSON.parse(response.body).response)
             }
         })
     })  
@@ -942,7 +943,7 @@ async function encode_jwt(cust_code){
             if (error) {
                 console.log(error)
             }else{
-                resolve(response.body)
+                resolve(JSON.parse(response.body).response)
             }
         })
     })  
@@ -1073,7 +1074,7 @@ async function checkTime(i) {
 
 //get customer information
 app.post('/get-customer-information-production-api',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var First_Name = req.query.First_Name;
     var Last_Name = req.query.Last_Name;
     var Email = req.query.Email;
@@ -1118,7 +1119,7 @@ app.post('/get-customer-information-production-api',  async (req, res) => {
 
 //get customer information
 app.post('/get-customer-information',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var First_Name = req.query.First_Name;
     var Last_Name = req.query.Last_Name;
     var Email = req.query.Email;
@@ -1758,7 +1759,7 @@ async function update_customer_direct_from_customer(customer_data){
 
 //update-customer-status-approving
 app.post('/update-customer-status-approving',  async (req, res) => {
-    var customer_code = req.query.Customer_Code;
+    var customer_code = await decode_jwt(req.query.Customer_Code);
     var Auditor_Id = req.query.Auditor_Id;
     if(customer_code != undefined || Auditor_Id != undefined){
         res.send(await update_customer_status_to_approving(customer_code, Auditor_Id).then(async value => {
@@ -1787,7 +1788,7 @@ async function update_customer_status_to_approving(customer_code, Auditor_Id){
 
 //update-customer-status-pending
 app.post('/update-customer-status-pending',  async (req, res) => {
-    var customer_code = req.query.Customer_Code;
+    var customer_code = await decode_jwt(req.query.Customer_Code);
     var Rejector_Id = req.query.Rejector_Id;
     if(customer_code != undefined || Rejector_Id != undefined){
         res.send(await update_customer_status_to_pending(customer_code, Rejector_Id).then(async value => {
@@ -1820,7 +1821,7 @@ async function update_customer_status_to_pending(customer_code, Rejector_Id){
 
 //delete customer
 app.post('/delete-customer',  async (req, res) => {
-    var customer_code = req.query.Customer_Code;
+    var customer_code = await decode_jwt(req.query.Customer_Code);
     var Deleter = req.query.Deleter;
     if(customer_code != undefined || Deleter != undefined){
         res.send(await delete_customer(customer_code, Deleter).then(async value => {

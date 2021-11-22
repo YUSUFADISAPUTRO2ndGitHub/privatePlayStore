@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "9d7fb062-58d0-4ed2-b3a8-4199f4ff5c10";
+var refreshtoken = "10132119-73cb-4da4-ae0b-09c46caaf3f0";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -384,10 +384,10 @@ app.get('/get-lastest-token-and-session-from-accurate', async(req, res) => {
 /*
     new interval
 */
-// console.log("============================================================ " + synchonize_trigger().then(async value => {
-//     engine_starter = 18;
-//     return await value;
-// }));
+console.log("============================================================ " + synchonize_trigger().then(async value => {
+    engine_starter = 18;
+    return await value;
+}));
 let today_time = new Date();
 let today_time_hour = today_time.getHours();
 var engine_starter = 12;
@@ -3553,18 +3553,33 @@ async function requesting_delivery_order_details_based_on_id_from_accurate(id) {
                                     total_price: result.d.detailItem[u].totalPrice
                                 });
                             }
-                            resolve({
-                                delivery_number: result.d.number,
-                                delivery_time: result.d.printedTime,
-                                customer_name: result.d.customer.name,
-                                responsible_user: result.d.printUserName,
-                                sales_order_number: result.d.detailItem[0].salesOrder.number,
-                                shipping_address: result.d.toAddress,
-                                total_quantity: totalQuantities,
-                                total_price: totalPrice,
-                                order_details: detailItem,
-                                status: result.d.approvalStatus
-                            });
+                            if(result.d.detailItem.length > 0){
+                                resolve({
+                                    delivery_number: result.d.number,
+                                    delivery_time: result.d.printedTime,
+                                    customer_name: result.d.customer.name,
+                                    responsible_user: result.d.printUserName,
+                                    sales_order_number: result.d.detailItem[0].salesOrder.number,
+                                    shipping_address: result.d.toAddress,
+                                    total_quantity: totalQuantities,
+                                    total_price: totalPrice,
+                                    order_details: detailItem,
+                                    status: result.d.approvalStatus
+                                });
+                            }else{  
+                                resolve({
+                                    delivery_number: result.d.number,
+                                    delivery_time: result.d.printedTime,
+                                    customer_name: result.d.customer.name,
+                                    responsible_user: result.d.printUserName,
+                                    sales_order_number: `sales order number is undefined, please check ${result.d.number}`,
+                                    shipping_address: result.d.toAddress,
+                                    total_quantity: totalQuantities,
+                                    total_price: totalPrice,
+                                    order_details: detailItem,
+                                    status: result.d.approvalStatus
+                                });
+                            }
                         }
                     }
                 }

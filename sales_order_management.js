@@ -258,7 +258,7 @@ async function check_group_buy_quantity_so_far_gross(Group_Buy_Purchase_PC){
 
 //get-unpaid-sales-order-per-customer
 app.post('/get-unpaid-sales-order-per-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Order_Number =  req.query.Order_Number;
     if(Customer_Code != undefined){
         res.send(
@@ -325,7 +325,7 @@ async function get_unpaid_sales_order_based_on_Customer_Code(Customer_Code){
 
 //get-unpaid-group-buy-sales-order-per-customer
 app.post('/get-unpaid-group-buy-sales-order-per-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Group_Buy_Purchase_PC = req.query.Group_Buy_Purchase_PC;
     if(Customer_Code != undefined && Group_Buy_Purchase_PC != undefined){
         res.send(
@@ -366,7 +366,7 @@ async function get_unpaid_sales_order_based_on_Group_Buy_Purchase_PC(Customer_Co
 
 //get-sales-order-data-per-customer
 app.post('/get-sales-order-data-per-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Order_Number = req.query.Order_Number;
     if(Customer_Code != undefined){
         res.send(
@@ -605,7 +605,7 @@ async function update_Sales_Order_Payment_status_to_payment(Order_Number){
 
 //update-sales-order-detail-by-customer
 app.post('/update-sales-order-detail-by-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Order_Number = req.query.Order_Number;
     var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
     if(Customer_Code != undefined && Order_Number != undefined && Sales_Order_Detail_data != undefined){
@@ -749,7 +749,7 @@ async function delete_all_Sales_Order_Detail_data(Order_Number, Customer_Code){
 
 //update-sales-order-by-customer
 app.post('/update-sales-order-by-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Order_Number = req.query.Order_Number;
     var Sales_Order_Data = req.body.Sales_Order_Data;
     if(Customer_Code != undefined && Order_Number != undefined && Sales_Order_Data != undefined){
@@ -851,7 +851,7 @@ async function check_delivery_order_data_regarding_sales_order_number(Order_Numb
 
 //delete-sales-order
 app.post('/delete-sales-order',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Deleter = req.query.Deleter;
     var Order_Number = req.query.Order_Number;
     if(Customer_Code != undefined && Order_Number != undefined && Deleter != undefined){
@@ -965,7 +965,7 @@ async function check_if_sales_order_exist_with_customer_code(Customer_Code, Orde
 
 //create-new-group-buy-sales-order-by-customer
 app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     var Sales_Order_Data = req.body.Sales_Order_Data;
     var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
     if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
@@ -1113,7 +1113,7 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
             var verification = await verify_OTP_to_customer_management_function("", "", "");
             if(verification != false){
                 console.log("Verfication OTP successful ========================================= Verfication OTP successful");
-                var Customer_Code = req.query.Customer_Code;
+                var Customer_Code = await decode_jwt(req.query.Customer_Code);
                 var Sales_Order_Data = req.body.Sales_Order_Data;
                 var Sales_Order_Detail_data = req.body.Sales_Order_Detail_data;
                 if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
@@ -2084,6 +2084,42 @@ async function get_customer_email_address(Customer_Code){
             }
         });
     });
+}
+
+async function decode_jwt(jwt_tkn){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/decode_res_cust_code?jwt_tkn=' + jwt_tkn,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(JSON.parse(response.body).response)
+            }
+        })
+    })  
+}
+
+async function encode_jwt(cust_code){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/encode_res_cust_code?cust_code=' + cust_code,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(JSON.parse(response.body).response)
+            }
+        })
+    })  
 }
 
 app.listen(port, () => {

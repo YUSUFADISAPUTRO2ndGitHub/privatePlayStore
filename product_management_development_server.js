@@ -1191,7 +1191,7 @@ app.post('/update-product-groupbuy-status-price-quantity',  async (req, res) => 
             return await value;
         }) != false){
             res.send(
-                await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(req.query.GroupBuy_Purchase, req.query.GroupBuy_SellPrice, req.query.GroupBuy_SellQuantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
+                await update_product_groupbuyStatus_groupbuyPrice_groupbuyQuantity(req.query.GroupBuy_Purchase, req.query.GroupBuy_SellPrice, req.query.GroupBuy_SellQuantity, req.query.Product_Code, await decode_jwt(req.query.Customer_Code)).then(async value => {
                     return await value;
                 })
             );
@@ -1295,7 +1295,7 @@ app.post('/update-product-name-price-quantity',  async (req, res) => {
             return await value;
         }) != false){
             res.send(
-                await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code, req.query.Customer_Code).then(async value => {
+                await update_product_name_price_quantity(req.query.Name, req.query.Sell_Price, req.query.Stock_Quantity, req.query.Product_Code, await decode_jwt(req.query.Customer_Code)).then(async value => {
                     return await value;
                 })
             );
@@ -1483,7 +1483,7 @@ async function get_products_belong_to_supplier(Creator){
 //get-unpaid-sales-order-specific-for-a-product
 app.post('/get-unpaid-sales-order-specific-for-a-product',  async (req, res) => {
     var Product_Code = req.query.Product_Code;
-    var Customer_Code = req.query.Customer_Code;
+    var Customer_Code = await decode_jwt(req.query.Customer_Code);
     if(Product_Code != undefined && Customer_Code != undefined){
         res.send(
             (await check_upaid_order_in_regards_to_product_code(Product_Code, Customer_Code).then(async value => {
@@ -2428,6 +2428,42 @@ app.get('/download-sample-product-management-excel', (req, res) => {
     const file = `./Product Details Sample.xlsx`;
     res.download(file); // Set disposition and send it.
 })
+
+async function decode_jwt(jwt_tkn){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/decode_res_cust_code?jwt_tkn=' + jwt_tkn,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(JSON.parse(response.body).response)
+            }
+        })
+    })  
+}
+
+async function encode_jwt(cust_code){
+    return new Promise(async (resolve, reject) => {
+        let options = {
+            'method': 'GET',
+            'url': 'http://localhost:5555/encode_res_cust_code?cust_code=' + cust_code,
+            'headers': {
+            }
+        };
+        await request(options, async function (error, response) {
+            if (error) {
+                console.log(error)
+            }else{
+                resolve(JSON.parse(response.body).response)
+            }
+        })
+    })  
+}
 
 app.listen(port, () => {
     // console.log(`Example app listening at http://localhost:${port}`)
