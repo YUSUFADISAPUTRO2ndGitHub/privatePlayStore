@@ -394,10 +394,10 @@ async function send_delivery_order_to_tiki_with_pickup_request(body_json){
     return new Promise(async resolve => {
         var options = {
             'method': 'POST',
-            'url': 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
+            'url': 'https://apix.mytiki.net/v02/mde/manifestorder', // 'http://apis.mytiki.net:8321/v02/mde/manifestorder',
             'headers': {
                 'content-type': 'application/json ',
-                'x-access-token': await get_debug_mode_access_token_tiki()
+                'x-access-token': await get_access_token_tiki() // await get_debug_mode_access_token_tiki()
             },
             body: JSON.stringify(body_json)
           

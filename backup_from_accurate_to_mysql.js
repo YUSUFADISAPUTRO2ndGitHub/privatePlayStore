@@ -61,7 +61,7 @@ function handle_disconnect() {
 }
 
 var accesstoken = "";
-var refreshtoken = "10132119-73cb-4da4-ae0b-09c46caaf3f0";
+var refreshtoken = "d8f24bcc-e037-43f0-b061-de278ca130d1";
 var sessionid = "";
 var d = new Date();
 var recorded_seconds = d.getSeconds();
@@ -2840,7 +2840,7 @@ const update_purchase_order_in_json_to_mysql = async(sorted_collected_purchase_o
         , deleted = 'DEV'
         , contract_number = '${sorted_collected_purchase_order_with_details.contract_number}'
         WHERE po_number = '${sorted_collected_purchase_order_with_details.purchase_order_number}';`;
-        if(sorted_collected_purchase_order_with_details.purchase_order_number === `PO.2021.02.00002`){
+        if (sorted_collected_purchase_order_with_details.purchase_order_number === `PO.2021.02.00002`) {
             console.log(`================== PO.2021.02.00002 ==================`);
             console.log(`================== PO.2021.02.00002 ==================`);
             console.log(`================== PO.2021.02.00002 ==================`);
@@ -2917,7 +2917,7 @@ const insert_purchase_order_in_json_to_mysql = async(sorted_collected_purchase_o
         , 'DEV'
         , '${sorted_collected_purchase_order_with_details.contract_number}'
         );`;
-        if(sorted_collected_purchase_order_with_details.purchase_order_number === `PO.2021.02.00002`){
+        if (sorted_collected_purchase_order_with_details.purchase_order_number === `PO.2021.02.00002`) {
             console.log(`================== PO.2021.02.00002 ==================`);
             console.log(`================== PO.2021.02.00002 ==================`);
             console.log(`================== PO.2021.02.00002 ==================`);
@@ -3112,7 +3112,7 @@ async function requesting_purchase_order_details_based_on_id_from_accurate(id) {
                                     total_price_based_on_quantity: result.d.detailItem[u].totalPrice
                                 });
                             }
-                            if(result.d.description != undefined){
+                            if (result.d.description != undefined) {
                                 resolve({
                                     purchase_order_number: result.d.number,
                                     order_date: result.d.transDateView,
@@ -3128,7 +3128,7 @@ async function requesting_purchase_order_details_based_on_id_from_accurate(id) {
                                     approval_status: result.d.approvalStatus,
                                     contract_number: result.d.description
                                 });
-                            }else{
+                            } else {
                                 resolve({
                                     purchase_order_number: result.d.number,
                                     order_date: result.d.transDateView,
@@ -3553,20 +3553,50 @@ async function requesting_delivery_order_details_based_on_id_from_accurate(id) {
                                     total_price: result.d.detailItem[u].totalPrice
                                 });
                             }
-                            if(result.d.detailItem.length > 0){
-                                resolve({
-                                    delivery_number: result.d.number,
-                                    delivery_time: result.d.printedTime,
-                                    customer_name: result.d.customer.name,
-                                    responsible_user: result.d.printUserName,
-                                    sales_order_number: result.d.detailItem[0].salesOrder.number,
-                                    shipping_address: result.d.toAddress,
-                                    total_quantity: totalQuantities,
-                                    total_price: totalPrice,
-                                    order_details: detailItem,
-                                    status: result.d.approvalStatus
-                                });
-                            }else{  
+                            if (result.d.detailItem.length > 0) {
+                                if (result.d.detailItem[0].salesOrder != undefined) {
+                                    if (result.d.detailItem[0].salesOrder.number != undefined) {
+                                        resolve({
+                                            delivery_number: result.d.number,
+                                            delivery_time: result.d.printedTime,
+                                            customer_name: result.d.customer.name,
+                                            responsible_user: result.d.printUserName,
+                                            sales_order_number: result.d.detailItem[0].salesOrder.number,
+                                            shipping_address: result.d.toAddress,
+                                            total_quantity: totalQuantities,
+                                            total_price: totalPrice,
+                                            order_details: detailItem,
+                                            status: result.d.approvalStatus
+                                        });
+                                    } else {
+                                        resolve({
+                                            delivery_number: result.d.number,
+                                            delivery_time: result.d.printedTime,
+                                            customer_name: result.d.customer.name,
+                                            responsible_user: result.d.printUserName,
+                                            sales_order_number: `sales order number is undefined, please check ${result.d.number} | ${result.d.detailItem[0].salesOrder}`,
+                                            shipping_address: result.d.toAddress,
+                                            total_quantity: totalQuantities,
+                                            total_price: totalPrice,
+                                            order_details: detailItem,
+                                            status: result.d.approvalStatus
+                                        });
+                                    }
+                                } else {
+                                    resolve({
+                                        delivery_number: result.d.number,
+                                        delivery_time: result.d.printedTime,
+                                        customer_name: result.d.customer.name,
+                                        responsible_user: result.d.printUserName,
+                                        sales_order_number: `sales order number is undefined, please check ${result.d.number} | ${result.d.detailItem[0]}`,
+                                        shipping_address: result.d.toAddress,
+                                        total_quantity: totalQuantities,
+                                        total_price: totalPrice,
+                                        order_details: detailItem,
+                                        status: result.d.approvalStatus
+                                    });
+                                }
+                            } else {
                                 resolve({
                                     delivery_number: result.d.number,
                                     delivery_time: result.d.printedTime,

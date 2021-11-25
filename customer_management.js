@@ -1173,8 +1173,12 @@ async function get_customer_details_based_on_customer_code(Customer_Code){
             if(result != undefined && result[0] != undefined){
                 if(result[0].Customer_Code != undefined){
                     if(result[0].Customer_Code == Customer_Code){
-                        console.log(Customer_Code);
-                        resolve(result[0]);
+                        if(result[0].Customer_Code.length > 0){
+                            console.log(Customer_Code);
+                            resolve(result[0]);
+                        }else{
+                            resolve(false);
+                        }
                     }else{
                         resolve(false);
                     }
