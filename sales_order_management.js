@@ -389,6 +389,7 @@ app.post('/get-sales-order-data-per-customer',  async (req, res) => {
 })
 
 async function get_sales_order_based_on_Order_Number_all(Order_Number){
+    console.log(`get_sales_order_based_on_Order_Number_all ${Order_Number}`)
     var sql = `
         select 
         so.Order_Number 
@@ -807,7 +808,7 @@ async function update_sales_order_data_requested_by_customer(Order_Number, Sales
         Payment_Method = '${Sales_Order_Data.Payment_Method}',
         Shipping_Fee = '${Sales_Order_Data.Shipping_Fee}',
         Primary_Recipient_Name = '${Sales_Order_Data.Primary_Recipient_Name}',
-        Modifier = '${Sales_Order_Data.Customer_Code}',
+        Modifier = '${await decode_jwt(Sales_Order_Data.Customer_Code)}',
         Update_date = CURRENT_TIMESTAMP(),
         Status = 'pending'
         WHERE Order_Number = '${Order_Number}';
@@ -976,7 +977,7 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
             Customer_Code
         );
         console.log(
-            Sales_Order_Data.Customer_Code
+            await decode_jwt(Sales_Order_Data.Customer_Code)
         );
         console.log(
             (await check_customer_code_existance(Customer_Code).then(async value => {
@@ -984,7 +985,7 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
             }))
         );
         console.log(
-            (await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+            (await check_customer_code_existance(await decode_jwt(Sales_Order_Data.Customer_Code)).then(async value => {
                 return await value;
             }))
         );
@@ -992,7 +993,7 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
             (await check_customer_code_existance(Customer_Code).then(async value => {
                 return await value;
             }))
-            &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+            &&(await check_customer_code_existance(await decode_jwt(Sales_Order_Data.Customer_Code)).then(async value => {
                 return await value;
             }))
             &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
@@ -1003,7 +1004,7 @@ app.post('/create-new-group-buy-sales-order-by-customer',  async (req, res) => {
             (await check_customer_code_existance(Customer_Code).then(async value => {
                 return await value;
             }))
-            &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
+            &&(await check_customer_code_existance(await decode_jwt(Sales_Order_Data.Customer_Code)).then(async value => {
                 return await value;
             }))
             &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
@@ -1119,15 +1120,15 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
                 if(Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined){
                     console.log("========================================= Customer_Code != undefined && Sales_Order_Data != undefined && Sales_Order_Detail_data != undefined");
                     if(
-                        (await check_customer_code_existance(Customer_Code).then(async value => {
+                        // (await check_customer_code_existance(Customer_Code).then(async value => {
+                        //     return await value;
+                        // }))
+                        // &&(await check_customer_code_existance(await decode_jwt(Sales_Order_Data.Customer_Code)).then(async value => {
+                        //     return await value;
+                        // }))
+                        await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
                             return await value;
-                        }))
-                        &&(await check_customer_code_existance(Sales_Order_Data.Customer_Code).then(async value => {
-                            return await value;
-                        }))
-                        &&(await check_sales_order_details(Sales_Order_Data, Sales_Order_Detail_data).then(async value => {
-                            return await value;
-                        }))
+                        })
                     ){
                         console.log("========================================= check_customer_code_existance check_customer_code_existance check_sales_order_details");
                         if(
@@ -1316,7 +1317,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
         )
         VALUES 
         (
-            '${Sales_Order_Detail_data.Customer_Code}',
+            '${await decode_jwt(Sales_Order_Detail_data.Customer_Code)}',
             '${Order_Number}',
             '${Sales_Order_Detail_data.Product_Code}',
             '${Sales_Order_Detail_data.Product_Name}',
@@ -1353,7 +1354,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
             )
             VALUES 
             (
-                '${Sales_Order_Detail_data.Customer_Code}',
+                '${await decode_jwt(Sales_Order_Detail_data.Customer_Code)}',
                 '${Order_Number}',
                 '${Sales_Order_Detail_data.Product_Code}',
                 '${Sales_Order_Detail_data.Product_Name}',
@@ -1379,7 +1380,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
 
 async function insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code){
     return new Promise(async resolve => {
-        console.log(Product_Code);
+        console.log(`insert_into_sales_order_management ========= ` + Order_Number);
         Sales_Order_Data.Total_Quantity =  (Sales_Order_Data.Total_Quantity*1) - 1;
         var zipcode = [];
         if(Sales_Order_Data.Shipping_Address != undefined){
@@ -1389,6 +1390,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 zipcode = "";
             }
         } 
+        console.log(`insert_into_sales_order_management ========= 1.5 ` + Order_Number);
         var sql = `
             INSERT INTO vtportal.sales_order_management 
             (
@@ -1416,7 +1418,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             VALUES 
             (
                 '${Order_Number}',
-                '${Sales_Order_Data.Customer_Code}',
+                '${await decode_jwt(Sales_Order_Data.Customer_Code)}',
                 '${Sales_Order_Data.Total_Price}',
                 '${Sales_Order_Data.Total_Quantity}',
                 '${Sales_Order_Data.Unit}',
@@ -1439,14 +1441,18 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
         `;
         if(Sales_Order_Data.Payment_Method.toUpperCase().includes('GoPay'.toUpperCase())
         || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
-            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '${Sales_Order_Data.Customer_Code}';`;
+            console.log(`insert_into_sales_order_management ========= 1.5.5 ` + Order_Number);
+            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '${await decode_jwt(Sales_Order_Data.Customer_Code)}';`;
+            console.log(`insert_into_sales_order_management ========= 1.5.5 ` + get_email_address_sql);
             await con.query(get_email_address_sql, async function (err, result) {
                 if (err){
                     await console.log(err);
                     resolve(false);
                 }else{
+                    console.log(`insert_into_sales_order_management ========= 1.5.5 ` + result.length);
                     if(result.length > 0){
                         if(result[0] != undefined){
+                            console.log(`insert_into_sales_order_management ========= 1.5.5 ` + result[0]);
                             var options = {
                                 'method': 'POST',
                                 'url': `http://localhost:3003/get-midtrans-payment?Order_Number=${Order_Number}&total_amount=${Sales_Order_Data.Total_Price}&first_name=${Sales_Order_Data.Primary_Recipient_Name}&last_name=${Sales_Order_Data.Primary_Recipient_Name}&email=${result[0].Email}&phone=${Sales_Order_Data.Shipping_Contact_Number}`,
@@ -1490,7 +1496,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                                         VALUES 
                                         (
                                             '${Order_Number}',
-                                            '${Sales_Order_Data.Customer_Code}',
+                                            '${await decode_jwt(Sales_Order_Data.Customer_Code)}',
                                             '${Sales_Order_Data.Total_Price}',
                                             '${Sales_Order_Data.Total_Quantity}',
                                             '${Sales_Order_Data.Unit}',
@@ -1532,11 +1538,13 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                 }
             });
         }else{
+            console.log(`insert_into_sales_order_management ========= 2 ========= ` + Order_Number);
                 await con.query(sql, async function (err, result) {
                     if (err){
                         await console.log(err);
                         resolve(false);
                     }else{
+                        console.log(`insert_into_sales_order_management ========= 3 ========= ` + Order_Number);
                         resolve(true);
                     }
                 });
@@ -1563,11 +1571,12 @@ async function order_number_creation(){
 
 async function validation_check(Sales_Order_Data, Customer_Code){
     return new Promise(async resolve => {
-        console.log("===== validation_check ===== | Customer_Code " + Customer_Code);
+        console.log("===== validation_check ===== " + await decode_jwt(Sales_Order_Data.Customer_Code));
+        console.log("===== validation_check ===== " + Customer_Code);
         console.log(Sales_Order_Data);
         if(
-            (Sales_Order_Data.Customer_Code == Customer_Code)
-            && (parseFloat(Sales_Order_Data.Total_Price) > 0)
+            // (await decode_jwt(Sales_Order_Data.Customer_Code) == Customer_Code)
+            (parseFloat(Sales_Order_Data.Total_Price) > 0)
             && (parseInt(Sales_Order_Data.Total_Quantity) > 0)
             && await check_payment_method(Sales_Order_Data.Payment_Method).then(async value => {
                 return await value;
@@ -1887,7 +1896,7 @@ var transporter = nodemailer.createTransport({
 
 async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
     var customer_email = (
-        await get_customer_email_address(Sales_Order_Data.Customer_Code).then(async value => {
+        await get_customer_email_address(await decode_jwt(Sales_Order_Data.Customer_Code)).then(async value => {
             return await value;
         })
     );
@@ -1900,7 +1909,6 @@ async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
             text: `
                 Order Number: ${Order_Number}
                 Customer Name: ${Sales_Order_Data.Primary_Recipient_Name}
-                Your Customer Code: ${Sales_Order_Data.Customer_Code}
                 Total Price: ${Sales_Order_Data.Total_Price}
                 Total Quantity: ${Sales_Order_Data.Total_Quantity}
                 Unit: ${Sales_Order_Data.Unit}
@@ -1927,7 +1935,6 @@ async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
                     text: `
                         Order Number: ${Order_Number}
                         Customer Name: ${Sales_Order_Data.Primary_Recipient_Name}
-                        Your Customer Code: ${Sales_Order_Data.Customer_Code}
                         Total Price: ${Sales_Order_Data.Total_Price}
                         Total Quantity: ${Sales_Order_Data.Total_Quantity}
                         Unit: ${Sales_Order_Data.Unit}
@@ -1948,7 +1955,7 @@ async function send_email_copy_of_sales_orders(Sales_Order_Data, Order_Number){
 
 async function send_email_copy_of_sales_orders_for_supplier(Sales_Order_Data, Sales_Order_Detail_data, Order_Number){
     // var customer_email = (
-    //     await get_customer_email_address(Sales_Order_Data.Customer_Code).then(async value => {
+    //     await get_customer_email_address(await decode_jwt(Sales_Order_Data.Customer_Code)).then(async value => {
     //         return await value;
     //     })
     // );
