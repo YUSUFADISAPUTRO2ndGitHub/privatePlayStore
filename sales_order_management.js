@@ -366,15 +366,20 @@ async function get_unpaid_sales_order_based_on_Group_Buy_Purchase_PC(Customer_Co
 
 //get-sales-order-data-per-customer
 app.post('/get-sales-order-data-per-customer',  async (req, res) => {
-    var Customer_Code = await decode_jwt(req.query.Customer_Code);
+    var Customer_Code = req.query.Customer_Code;
     var Order_Number = req.query.Order_Number;
+    console.log(`get-sales-order-data-per-customer ${Order_Number}`)
+    console.log(`get-sales-order-data-per-customer ${Customer_Code != undefined}`)
+    console.log(`get-sales-order-data-per-customer ${Order_Number != undefined}`)
     if(Customer_Code != undefined){
+        Customer_Code = await decode_jwt(req.query.Customer_Code);
         res.send(
             (await get_sales_order_based_on_customer_code(Customer_Code).then(async value => {
                 return await value;
             }))
         );
     }else if(Order_Number != undefined){
+        console.log(`get-sales-order-data-per-customer ${Order_Number}`)
         res.send(
             (await get_sales_order_based_on_Order_Number_all(Order_Number).then(async value => {
                 return await value;
@@ -389,38 +394,39 @@ app.post('/get-sales-order-data-per-customer',  async (req, res) => {
 })
 
 async function get_sales_order_based_on_Order_Number_all(Order_Number){
-    console.log(`get_sales_order_based_on_Order_Number_all ${Order_Number}`)
-    var sql = `
-        select 
-        so.Order_Number 
-        , so.Customer_Code
-        , so.Total_Price
-        , so.Total_Quantity 
-        , so.Unit 
-        , so.Shipping_Address 
-        , so.Shipping_Contact_Number 
-        , so.Payment_Method 
-        , so.Primary_Recipient_Name 
-        , so.Create_Date 
-        , so.Status 
-        , sod.Product_Name
-        , sod.Product_Code
-        , sod.Quantity_Requested
-        , sod.Price_Based_On_Total_Quantity
-        from
-        vtportal.sales_order_management so
-        inner join 
-        vtportal.sales_order_detail_management sod 
-        on so.Order_Number = sod.Order_Number
-        where so.Order_Number = '${Order_Number}'
-        and so.Delete_Mark != '1';
-    `;
-    console.log(sql);
     return new Promise(async resolve => {
+        console.log(`get_sales_order_based_on_Order_Number_all ${Order_Number}`)
+        var sql = `
+            select 
+            so.Order_Number 
+            , so.Customer_Code
+            , so.Total_Price
+            , so.Total_Quantity 
+            , so.Unit 
+            , so.Shipping_Address 
+            , so.Shipping_Contact_Number 
+            , so.Payment_Method 
+            , so.Primary_Recipient_Name 
+            , so.Create_Date 
+            , so.Status 
+            , sod.Product_Name
+            , sod.Product_Code
+            , sod.Quantity_Requested
+            , sod.Price_Based_On_Total_Quantity
+            from
+            vtportal.sales_order_management so
+            inner join 
+            vtportal.sales_order_detail_management sod 
+            on so.Order_Number = sod.Order_Number
+            where so.Order_Number = '${Order_Number}'
+            and so.Delete_Mark != '1';
+        `;
+        console.log(sql);
+        console.log(`get_sales_order_based_on_Order_Number_all ${Order_Number}`)
         await con.query(sql, async function (err, result) {
             if (err) await console.log(err);
             if(result != undefined){
-                resolve(result);
+                resolve(await result);
             }else{
                 resolve(false);
             }
