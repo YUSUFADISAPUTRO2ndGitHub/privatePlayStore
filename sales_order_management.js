@@ -1201,6 +1201,13 @@ app.post('/create-new-sales-order-by-customer',  async (req, res) => {
                             reason: "Customer Validation or product Validation fail"
                         });
                     }
+                }else{
+                    console.log("Verification failed. YOUR Customer_Code: " + Customer_Code);
+                    res.send({
+                        status: false,
+                        reason: "Verification failed. YOUR Customer_Code: " + Customer_Code,
+                        conclusion: "order is not placed"
+                    });
                 }
             }else{
                 console.log("OTP Verification failed. YOUR OTP: " + req.query.otp);
@@ -1309,6 +1316,10 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
         var total_weight = product_specs.Weight_KG * 1 * Sales_Order_Detail_data.Quantity_Requested;
         total_weight = total_weight.toFixed(2);
     }
+    var decoded_customer_code = await decode_jwt(Sales_Order_Data.Customer_Code)
+    if(decoded_customer_code === undefined){
+        resolve(await insert_into_sales_order_detail_management(Sales_Order_Detail_data, Order_Number))
+    }
     var sql = `
         INSERT INTO vtportal.sales_order_detail_management 
         (
@@ -1323,7 +1334,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
         )
         VALUES 
         (
-            '${await decode_jwt(Sales_Order_Detail_data.Customer_Code)}',
+            '${decoded_customer_code}',
             '${Order_Number}',
             '${Sales_Order_Detail_data.Product_Code}',
             '${Sales_Order_Detail_data.Product_Name}',
@@ -1346,6 +1357,10 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
                 }
             }
         }
+        var decoded_customer_code = await decode_jwt(Sales_Order_Data.Customer_Code)
+        if(decoded_customer_code === undefined){
+            resolve(await insert_into_sales_order_detail_management(Sales_Order_Detail_data, Order_Number))
+        }
         sql = `
             INSERT INTO vtportal.sales_order_detail_management 
             (
@@ -1360,7 +1375,7 @@ async function insert_into_sales_order_detail_management(Sales_Order_Detail_data
             )
             VALUES 
             (
-                '${await decode_jwt(Sales_Order_Detail_data.Customer_Code)}',
+                '${decoded_customer_code}',
                 '${Order_Number}',
                 '${Sales_Order_Detail_data.Product_Code}',
                 '${Sales_Order_Detail_data.Product_Name}',
@@ -1397,6 +1412,10 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             }
         } 
         console.log(`insert_into_sales_order_management ========= 1.5 ` + Order_Number);
+        var decoded_customer_code = await decode_jwt(Sales_Order_Data.Customer_Code)
+        if(decoded_customer_code === undefined){
+            resolve(await insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code))
+        }
         var sql = `
             INSERT INTO vtportal.sales_order_management 
             (
@@ -1424,7 +1443,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
             VALUES 
             (
                 '${Order_Number}',
-                '${await decode_jwt(Sales_Order_Data.Customer_Code)}',
+                '${decoded_customer_code}',
                 '${Sales_Order_Data.Total_Price}',
                 '${Sales_Order_Data.Total_Quantity}',
                 '${Sales_Order_Data.Unit}',
@@ -1448,7 +1467,11 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
         if(Sales_Order_Data.Payment_Method.toUpperCase().includes('GoPay'.toUpperCase())
         || Sales_Order_Data.Payment_Method.toUpperCase().includes('VA')){
             console.log(`insert_into_sales_order_management ========= 1.5.5 ` + Order_Number);
-            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '${await decode_jwt(Sales_Order_Data.Customer_Code)}';`;
+            var decoded_customer_code = await decode_jwt(Sales_Order_Data.Customer_Code)
+            if(decoded_customer_code === undefined){
+                resolve(await insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code))
+            }
+            var get_email_address_sql = `select Email from vtportal.customer_management som where Customer_Code = '${decoded_customer_code}';`;
             console.log(`insert_into_sales_order_management ========= 1.5.5 ` + get_email_address_sql);
             await con.query(get_email_address_sql, async function (err, result) {
                 if (err){
@@ -1472,7 +1495,10 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                                     console.log(`http://localhost:3003/get-midtrans-payment`);
                                     console.log(response.body);
                                     console.log(`http://localhost:3003/get-midtrans-payment`);
-                                    
+                                    var decoded_customer_code = await decode_jwt(Sales_Order_Data.Customer_Code)
+                                    if(decoded_customer_code === undefined){
+                                        resolve(await insert_into_sales_order_management(Sales_Order_Data, Order_Number, Product_Code))
+                                    }
                                     sql = `
                                         INSERT INTO vtportal.sales_order_management 
                                         (
@@ -1502,7 +1528,7 @@ async function insert_into_sales_order_management(Sales_Order_Data, Order_Number
                                         VALUES 
                                         (
                                             '${Order_Number}',
-                                            '${await decode_jwt(Sales_Order_Data.Customer_Code)}',
+                                            '${decoded_customer_code}',
                                             '${Sales_Order_Data.Total_Price}',
                                             '${Sales_Order_Data.Total_Quantity}',
                                             '${Sales_Order_Data.Unit}',
