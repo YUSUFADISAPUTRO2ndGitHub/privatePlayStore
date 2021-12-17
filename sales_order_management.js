@@ -397,7 +397,8 @@ async function get_sales_order_based_on_Order_Number_all(Order_Number){
     return new Promise(async resolve => {
         console.log(`get_sales_order_based_on_Order_Number_all ${Order_Number}`)
         var sql = `
-            select 
+            SELECT * from 
+            (select 
             so.Order_Number 
             , so.Customer_Code
             , so.Total_Price
@@ -419,7 +420,10 @@ async function get_sales_order_based_on_Order_Number_all(Order_Number){
             vtportal.sales_order_detail_management sod 
             on so.Order_Number = sod.Order_Number
             where so.Order_Number = '${Order_Number}'
-            and so.Delete_Mark != '1';
+            and so.Delete_Mark != '1') as soi
+            INNER JOIN 
+            vtportal.product_management pm 
+            on pm.Product_Code = soi.Product_Code
         `;
         console.log(sql);
         console.log(`get_sales_order_based_on_Order_Number_all ${Order_Number}`)

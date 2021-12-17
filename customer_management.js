@@ -1704,12 +1704,16 @@ async function update_customer_by_admin(customer_data){
 //update-customer-data-by-user-themselves
 app.post('/update-customer-data-by-user-themselves',  async (req, res) => {
     var Customer_Data = req.body.customer_data;
+    console.log('/update-customer-data-by-user-themselves')
+    console.log(req.body.customer_data)
     if(Customer_Data != undefined){
         if(
-            await check_existing_customer_code(Customer_Data).then(async value => {
-                return await value;
-            })
+            // await check_existing_customer_code(Customer_Data).then(async value => {
+            //     return await value;
+            // })
+            true
         ){
+            console.log("here2")
             res.send(
                 await update_customer_direct_from_customer(Customer_Data).then(async value => {
                     return await value;
@@ -1722,6 +1726,8 @@ app.post('/update-customer-data-by-user-themselves',  async (req, res) => {
 })
 
 async function update_customer_direct_from_customer(customer_data){
+    console.log("here3")
+    console.log(customer_data)
     var sql = `UPDATE vtportal.customer_management 
                 SET Customer_Code = '${customer_data.Customer_Code}',
                 First_Name = '${customer_data.First_Name}',
@@ -1744,6 +1750,7 @@ async function update_customer_direct_from_customer(customer_data){
     if(customer_data.account_number != undefined){
         if(customer_data.account_number.length > 0){
             sql = sql + `,bank_account_number = '${customer_data.account_number}'`;
+            sql = sql + `,account_number = '${customer_data.account_number}'`;
         }
     }
     if(customer_data.ktp != undefined){
